@@ -40,7 +40,7 @@ class PasswordResetController extends Controller
         ]);
 
         // Correction de l'URL (doublon https:// et ::4200)
-        $resetLink = 'https://localhost:4200/reset-password/' . $token;
+        $resetLink = 'http://localhost:4200/reset_password?token='.$token;
         
         $htmlContent = "<p>Hello,</p>
         <p>We received a request to reset your password for your account.</p>
