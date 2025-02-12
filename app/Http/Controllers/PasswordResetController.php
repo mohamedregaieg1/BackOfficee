@@ -39,8 +39,7 @@ class PasswordResetController extends Controller
             'created_at' => now(),
         ]);
 
-        $resetLink = 'http://localhost:4200/reset-password?token='.$token;
-        
+        $resetLink = 'http://localhost:4200/reset-password?token='.$token;  
         $htmlContent = "<p>Hello,</p>
         <p>We received a request to reset your password for your account.</p>
         <p>If you did not make this request, please ignore this email.</p>
