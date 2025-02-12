@@ -13,11 +13,18 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('avatar_path')->nullable();
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->enum('sex', ['female', 'male'])->default('male');
+            $table->string('username')->unique();
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['admin', 'employe', 'rh'])->default('employe'); // Nouveau champ "role"
+            $table->enum('company', ['adequat', 'procan'])->default('procan');
+            $table->enum('role', ['admin', 'employe', 'hr','accountat'])->default('employe');
+            $table->date('start_date');
+            $table->double('initial_leave_balance', 8, 2)->default(0);
+            $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

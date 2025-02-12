@@ -17,9 +17,9 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('name', 'password');
+        $credentials = $request->only('username', 'password');
         $request->validate([
-            'name' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -31,7 +31,7 @@ class AuthController extends Controller
             ], 429);
         }
 
-        $user = \App\Models\User::where('name', $credentials['name'])->first();
+        $user = \App\Models\User::where('username', $credentials['username'])->first();
         if (!$user) {
             RateLimiter::hit($key, 300);
             return response()->json(['error' => 'Invalid username.'], 401);

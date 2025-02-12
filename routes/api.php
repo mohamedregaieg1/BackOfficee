@@ -2,18 +2,30 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\authController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
 ], function ($router) {
-    Route::post('login', [authController::class, 'login']);
-    Route::post('logout', [authController::class, 'logout']);
-    Route::post('refresh', [authController::class, 'refresh']);
-    Route::post('me', [authController::class, 'me']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('me', [AuthController::class, 'me']);
 
 });
 Route::post('password/email', [PasswordResetController::class, 'sendResetLink']);
 Route::post('password/reset', [PasswordResetController::class, 'resetPassword']);
+
+
+//route for admin
+Route::middleware(['auth:api', 'role:admin'])->group(function () {
+    Route::post('/admin/users', [UserController::class, 'store']);
+    Route::get('/admin/users', [UserController::class, 'index']);
+    Route::put('/admin/users/{id}', [UserController::class, 'update']);
+    Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
+
+
+});
