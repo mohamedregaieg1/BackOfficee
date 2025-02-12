@@ -35,31 +35,21 @@ class UserController extends Controller
             $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
-                'sex' => 'required|in:male,female',
+                'gender' => 'required|in:male,female',
                 'username' => 'required|string|unique:users,username',
                 'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|confirmed|min:8',
+                'password' => 'required|string|min:8',
                 'company' => 'required|in:adequat,procan',
                 'start_date' => 'required|date',
-                'role' => 'required|in:employe,rh',
+                'role' => 'required|in:employe,hr',
                 'initial_leave_balance' => 'required|numeric|min:0',
-            ], [
-                // Messages d'erreur
-                'first_name.required' => 'First name is required.',
-                'last_name.required' => 'Last name is required.',
-                'username.unique' => 'Username is already taken.',
-                'email.unique' => 'Email is already registered.',
-                'password.confirmed' => 'Passwords do not match.',
-                'start_date.date' => 'Start date must be a valid date.',
-                'initial_leave_balance.numeric' => 'Leave balance must be a numeric value.',
-                'initial_leave_balance.min' => 'Leave balance cannot be negative.',
             ]);
-            $avatarFileName = $validated['sex'] === 'female' ? 'avatarfemale.png' : 'avatarmale.png';
+            $avatarFileName = $validated['gender'] === 'female' ? 'avatarfemale.png' : 'avatarmale.png';
             $avatarPath = asset('storage/dist/img/' . $avatarFileName); // Génère une URL publique
-            $user = User::create([
+            User::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
-                'sex' => $validated['sex'],
+                'gender' => $validated['gender'],
                 'avatar_path' => $avatarPath,
                 'username' => $validated['username'],
                 'email' => $validated['email'],
@@ -70,24 +60,20 @@ class UserController extends Controller
                 'initial_leave_balance' => $validated['initial_leave_balance'],
             ]);
             return response()->json([
-                'message' => 'User created successfully!',
-                'user' => $user,
+                'message' => 'User created successfully!'
             ], 201);
 
         } catch (QueryException $qe) {
-            // Gestion des erreurs liées à la base de données
             return response()->json([
                 'error' => 'A database error occurred.',
                 'details' => $qe->getMessage(),
             ], 500);
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            // Gestion des erreurs de validation
             return response()->json([
                 'error' => 'Validation failed.',
                 'details' => $ve->errors(),
             ], 422);
         } catch (\Exception $e) {
-            // Gestion des erreurs générales
             return response()->json([
                 'error' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
@@ -151,6 +137,29 @@ class UserController extends Controller
             ], 500);
         }
     }
+    public function search(Request $request)
+    {
+        $search = trim($request->input('search'));
+
+        $query = User::query();
+
+        if (str_contains($search, ' ')) {
+            [$firstName, $lastName] = explode(' ', $search, 2);
+            $query->where('first_name', 'LIKE', "%$firstName%")
+                ->where('last_name', 'LIKE', "%$lastName%");
+        } else {
+            $query->where('first_name', 'LIKE', "%$search%")
+                ->orWhere('last_name', 'LIKE', "%$search%");
+        }
+        $users = $query->select('first_name', 'last_name', 'email', 'company', 'role', 'start_date', 'initial_leave_balance')
+                    ->paginate(6);
+
+        return response()->json([
+            'message' => 'Search results.',
+            'users' => $users,
+        ]);
+    }
+
 
 }
 

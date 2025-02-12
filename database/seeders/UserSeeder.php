@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
                         'email' => 'mohamedregaieg54057@gmail.com',
                         'password' => Hash::make('admin123'),
                         'role' => 'admin',
-                        'sex' => 'male',
+                        'gender' => 'male',
                         'company' => 'procan',
                         'start_date' => now(),
                         'initial_leave_balance' => 0,

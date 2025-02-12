@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('avatar_path')->nullable();
             $table->string('first_name');
             $table->string('last_name');
-            $table->enum('sex', ['female', 'male'])->default('male');
+            $table->enum('gender', ['female', 'male'])->default('male');
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');

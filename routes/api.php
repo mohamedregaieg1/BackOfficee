@@ -21,10 +21,12 @@ Route::post('password/reset', [PasswordResetController::class, 'resetPassword'])
 
 //route for admin
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
-    Route::post('/admin/users', [UserController::class, 'store']);
     Route::get('/admin/users', [UserController::class, 'index']);
+    Route::post('/admin/users', [UserController::class, 'store']);
     Route::put('/admin/users/{id}', [UserController::class, 'update']);
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
+    Route::get('/admin/users/search', [UserController::class, 'search']);
+
 
 
 });
