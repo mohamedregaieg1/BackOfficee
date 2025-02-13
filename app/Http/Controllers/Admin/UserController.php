@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -12,22 +11,37 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::where('role', '!=', 'admin')
-            ->select('first_name', 'last_name', 'email', 'company', 'role', 'start_date', 'initial_leave_balance')
-            ->orderBy('first_name', 'asc')
-            ->paginate(6);
-        $data = $users->items();
-        $meta = [
-            'current_page' => $users->currentPage(),
-            'per_page' => $users->perPage(),
-            'total_pages' => $users->lastPage(),
-            'total_employees' => $users->total(),
-        ];
+        $search = trim($request->input('search'));
+        $query = User::where('role', '!=', 'admin');
+    
+        if (!empty($search)) {
+            if (str_contains($search, ' ')) {
+                [$firstName, $lastName] = explode(' ', $search, 2);
+                $query->where('first_name', 'LIKE', "%$firstName%")
+                    ->where('last_name', 'LIKE', "%$lastName%");
+            } else {
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'LIKE', "%$search%")
+                      ->orWhere('last_name', 'LIKE', "%$search%");
+                });
+            }
+        }
+    
+        $users = $query->select('id', 'first_name', 'last_name', 'email', 'company', 'role', 'start_date', 'initial_leave_balance', 'avatar_path','job_description')
+                       ->orderBy('first_name', 'asc')
+                       ->paginate(6);
+    
         return response()->json([
-            'data' => $data,
-            'meta' => $meta,
+            'data' => $users->items(),
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'per_page' => $users->perPage(),
+                'total_pages' => $users->lastPage(),
+                'total_employees' => $users->total(),
+            ],
         ]);
     }
+    
 
     public function store(Request $request)
     {
@@ -41,11 +55,30 @@ class UserController extends Controller
                 'password' => 'required|string|min:8',
                 'company' => 'required|in:adequat,procan',
                 'start_date' => 'required|date',
-                'role' => 'required|in:employe,hr',
-                'initial_leave_balance' => 'required|numeric|min:0',
+                'role' => 'required|in:employee,hr',
+                'job_description' => 'required|string|max:15',
+            ], [
+                'first_name.required' => 'The first name is required.',
+                'last_name.required' => 'The last name is required.',
+                'gender.required' => 'The gender is required.',
+                'username.required' => 'The username is required.',
+                'username.unique' => 'This username is already taken.',
+                'email.required' => 'The email is required.',
+                'email.email' => 'The email must be a valid email address.',
+                'email.unique' => 'This email is already registered.',
+                'password.required' => 'The password is required.',
+                'password.min' => 'The password must be at least 8 characters.',
+                'company.required' => 'The company is required.',
+                'start_date.required' => 'The start date is required.',
+                'role.required' => 'The role is required.',
+                'role.in' => 'Invalid role. Only "employee" and "hr" are allowed.',
+                'job_description.required' => 'The job description is required.',
+                'job_description.max' => 'The job description must not exceed 15 characters.',
             ]);
+
+            // Déterminer le chemin de l'avatar par défaut
             $avatarFileName = $validated['gender'] === 'female' ? 'avatarfemale.png' : 'avatarmale.png';
-            $avatarPath = asset('storage/dist/img/' . $avatarFileName); // Génère une URL publique
+            $avatarPath = asset('/dist/img/' . $avatarFileName); // L'URL publique ne peut pas être nulle
             User::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
@@ -57,17 +90,13 @@ class UserController extends Controller
                 'company' => $validated['company'],
                 'start_date' => $validated['start_date'],
                 'role' => $validated['role'],
-                'initial_leave_balance' => $validated['initial_leave_balance'],
+                'job_description' => $validated['job_description'],
             ]);
+
             return response()->json([
                 'message' => 'User created successfully!'
             ], 201);
 
-        } catch (QueryException $qe) {
-            return response()->json([
-                'error' => 'A database error occurred.',
-                'details' => $qe->getMessage(),
-            ], 500);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json([
                 'error' => 'Validation failed.',
@@ -80,45 +109,47 @@ class UserController extends Controller
             ], 500);
         }
     }
+
     
     public function update(Request $request, $id)
     {
         try {
             $user = User::where('id', $id)->lockForUpdate()->firstOrFail();
+
             $validated = $request->validate([
-                'username' => 'required|string|unique:users,username,' . $id,
+                'job_description' => 'required|string|max:15',
                 'company' => 'required|in:adequat,procan',
-                'role' => 'required|in:employe,rh',
+                'role' => 'required|in:employee,hr',
             ], [
-                'username.required' => 'Le nom d\'utilisateur est obligatoire.',
-                'username.unique' => 'Ce nom d\'utilisateur est déjà pris.',
-                'company.required' => 'Le champ "company" est requis.',
-                'role.required' => 'Le rôle est requis.',
+                'job_description.required' => 'The job description is required.',
+                'job_description.max' => 'The job description must not exceed 15 characters.',
+                'company.required' => 'The company is required.',
+                'role.required' => 'The role is required.',
+                'role.in' => 'Invalid role. Only "employee" and "hr" are allowed.',
             ]);
-    
+
             $user->update([
-                'username' => $validated['username'],
+                'job_description' => $validated['job_description'],
                 'company' => $validated['company'],
                 'role' => $validated['role'],
             ]);
-    
+
             return response()->json([
-                'message' => 'Utilisateur mis à jour avec succès!',
-                'user' => $user,
+                'message' => 'User updated successfully!'
             ]);
+
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json([
-                'error' => 'La validation a échoué.',
+                'error' => 'Validation failed.',
                 'details' => $ve->errors(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Une erreur inattendue est survenue.',
+                'error' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
     }
-    
 
     public function destroy($id)
     {
@@ -128,7 +159,7 @@ class UserController extends Controller
             $user->delete();
 
             return response()->json([
-                'message' => 'Utilisateur supprimé avec succès!',
+                'message' => 'User successfully deleted!',
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -137,29 +168,5 @@ class UserController extends Controller
             ], 500);
         }
     }
-    public function search(Request $request)
-    {
-        $search = trim($request->input('search'));
-
-        $query = User::query();
-
-        if (str_contains($search, ' ')) {
-            [$firstName, $lastName] = explode(' ', $search, 2);
-            $query->where('first_name', 'LIKE', "%$firstName%")
-                ->where('last_name', 'LIKE', "%$lastName%");
-        } else {
-            $query->where('first_name', 'LIKE', "%$search%")
-                ->orWhere('last_name', 'LIKE', "%$search%");
-        }
-        $users = $query->select('first_name', 'last_name', 'email', 'company', 'role', 'start_date', 'initial_leave_balance')
-                    ->paginate(6);
-
-        return response()->json([
-            'message' => 'Search results.',
-            'users' => $users,
-        ]);
-    }
-
-
 }
 

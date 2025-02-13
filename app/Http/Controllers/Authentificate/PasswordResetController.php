@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Authentificate;
+use App\Http\Controllers\Controller;
 use App\Models\PasswordResetToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -60,12 +60,12 @@ class PasswordResetController extends Controller
     {
         $request->validate([
             'token' => 'required|string',
-            'new_password' => 'required|string|min:8|regex:/[A-Za-z]/|regex:/[0-9]/',
+            'new_password' => 'required|string|min:6|regex:/[A-Za-z]/|regex:/[0-9]/',
             'confirm_password' => 'required|string|same:new_password',
         ], [
             'token.required' => 'The token is required.',
             'new_password.required' => 'The password is required.',
-            'new_password.min' => 'The password must be at least 8 characters long.',
+            'new_password.min' => 'The password must be at least 6 characters long.',
             'new_password.regex' => 'The password must contain letters and numbers.',
             'confirm_password.required' => 'The password confirmation is required.',
             'confirm_password.same' => 'The password and confirmation do not match.',

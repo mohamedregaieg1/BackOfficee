@@ -29,8 +29,10 @@ class User extends Authenticatable implements JWTSubject
         'email',
         'company',
         'role',
+        'job_description',
         'start_date',
         'initial_leave_balance',
+        
     ];
 
     protected $casts = [
@@ -75,5 +77,11 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+    //relation avec table leaverequest
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
 
 }

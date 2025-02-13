@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('company', ['adequat', 'procan'])->default('procan');
-            $table->enum('role', ['admin', 'employe', 'hr','accountat'])->default('employe');
+            $table->enum('role', ['admin', 'employee', 'hr','accountat'])->default('employee');
+            $table->string('job_description');
             $table->date('start_date');
             $table->double('initial_leave_balance', 8, 2)->default(0);
             $table->timestamp('email_verified_at')->nullable();

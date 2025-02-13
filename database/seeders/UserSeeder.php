@@ -19,6 +19,7 @@ class UserSeeder extends Seeder
                         'role' => 'admin',
                         'gender' => 'male',
                         'company' => 'procan',
+                        'job_description' => 'admin',
                         'start_date' => now(),
                         'initial_leave_balance' => 0,
                     ]);
