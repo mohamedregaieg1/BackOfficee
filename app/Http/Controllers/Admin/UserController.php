@@ -52,7 +52,7 @@ class UserController extends Controller
                 'gender' => 'required|in:male,female',
                 'username' => 'required|string|unique:users,username',
                 'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:8',
+                'password' => 'required|string|min:6',
                 'company' => 'required|in:adequat,procan',
                 'start_date' => 'required|date',
                 'role' => 'required|in:employee,hr',
@@ -67,11 +67,10 @@ class UserController extends Controller
                 'email.email' => 'The email must be a valid email address.',
                 'email.unique' => 'This email is already registered.',
                 'password.required' => 'The password is required.',
-                'password.min' => 'The password must be at least 8 characters.',
+                'password.min' => 'The password must be at least 6 characters.',
                 'company.required' => 'The company is required.',
                 'start_date.required' => 'The start date is required.',
                 'role.required' => 'The role is required.',
-                'role.in' => 'Invalid role. Only "employee" and "hr" are allowed.',
                 'job_description.required' => 'The job description is required.',
                 'job_description.max' => 'The job description must not exceed 15 characters.',
             ]);
@@ -79,6 +78,7 @@ class UserController extends Controller
             // Déterminer le chemin de l'avatar par défaut
             $avatarFileName = $validated['gender'] === 'female' ? 'avatarfemale.png' : 'avatarmale.png';
             $avatarPath = asset('/dist/img/' . $avatarFileName); // L'URL publique ne peut pas être nulle
+            
             User::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
@@ -98,10 +98,7 @@ class UserController extends Controller
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json([
-                'error' => 'Validation failed.',
-                'details' => $ve->errors(),
-            ], 422);
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An unexpected error occurred.',
@@ -109,8 +106,7 @@ class UserController extends Controller
             ], 500);
         }
     }
-
-    
+ 
     public function update(Request $request, $id)
     {
         try {
@@ -125,8 +121,7 @@ class UserController extends Controller
                 'job_description.max' => 'The job description must not exceed 15 characters.',
                 'company.required' => 'The company is required.',
                 'role.required' => 'The role is required.',
-                'role.in' => 'Invalid role. Only "employee" and "hr" are allowed.',
-            ]);
+                ]);
 
             $user->update([
                 'job_description' => $validated['job_description'],
@@ -139,10 +134,7 @@ class UserController extends Controller
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json([
-                'error' => 'Validation failed.',
-                'details' => $ve->errors(),
-            ], 422);
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An unexpected error occurred.',
@@ -169,4 +161,3 @@ class UserController extends Controller
         }
     }
 }
-

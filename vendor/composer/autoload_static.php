@@ -638,12 +638,12 @@ class ComposerStaticInit626b9e7ddd47fb7eff9aaa53cce0c9ad
 
     public static $classMap = array (
         'App\\Http\\Controllers\\Admin\\UserController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/UserController.php',
-        'App\\Http\\Controllers\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/AuthController.php',
+        'App\\Http\\Controllers\\Authentificate\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/Authentificate/AuthController.php',
+        'App\\Http\\Controllers\\Authentificate\\PasswordResetController' => __DIR__ . '/../..' . '/app/Http/Controllers/Authentificate/PasswordResetController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
-        'App\\Http\\Controllers\\LeaveRequest\\LeaveRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/LeaveRequest/LeaveRequestController.php',
-        'App\\Http\\Controllers\\PasswordResetController' => __DIR__ . '/../..' . '/app/Http/Controllers/PasswordResetController.php',
+        'App\\Http\\Controllers\\Leave\\LeaveController' => __DIR__ . '/../..' . '/app/Http/Controllers/Leave/LeaveController.php',
         'App\\Http\\Middleware\\RoleMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/RoleMiddleware.php',
-        'App\\Models\\LeaveRequest' => __DIR__ . '/../..' . '/app/Models/LeaveRequest.php',
+        'App\\Models\\Leave' => __DIR__ . '/../..' . '/app/Models/Leave.php',
         'App\\Models\\PasswordResetToken' => __DIR__ . '/../..' . '/app/Models/PasswordResetToken.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',

@@ -1,0 +1,114 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API BackOffice",
+        "description": "Documentation de l'API pour BackOffice",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/leaves": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Créer une demande de congé",
+                "operationId": "d7b0697618a95b8b9204fb297c773340",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "start_date",
+                                    "end_date",
+                                    "leave_days_requested",
+                                    "reason"
+                                ],
+                                "properties": {
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-07-15"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-07-20"
+                                    },
+                                    "leave_days_requested": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "enum": [
+                                            "vacation",
+                                            "travel_leave",
+                                            "paternity_leave",
+                                            "maternity_leave",
+                                            "sick_leave",
+                                            "other"
+                                        ],
+                                        "example": "vacation"
+                                    },
+                                    "other_reason": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "attachment": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Demande de congé soumise avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Leave request submitted successfully!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "start_date": [
+                                                    "Le champ start_date est obligatoire."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Congés",
+            "description": "API pour gérer les congés des utilisateurs"
+        }
+    ]
+}

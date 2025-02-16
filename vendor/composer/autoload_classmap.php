@@ -7,12 +7,12 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'App\\Http\\Controllers\\Admin\\UserController' => $baseDir . '/app/Http/Controllers/Admin/UserController.php',
-    'App\\Http\\Controllers\\AuthController' => $baseDir . '/app/Http/Controllers/AuthController.php',
+    'App\\Http\\Controllers\\Authentificate\\AuthController' => $baseDir . '/app/Http/Controllers/Authentificate/AuthController.php',
+    'App\\Http\\Controllers\\Authentificate\\PasswordResetController' => $baseDir . '/app/Http/Controllers/Authentificate/PasswordResetController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
-    'App\\Http\\Controllers\\LeaveRequest\\LeaveRequestController' => $baseDir . '/app/Http/Controllers/LeaveRequest/LeaveRequestController.php',
-    'App\\Http\\Controllers\\PasswordResetController' => $baseDir . '/app/Http/Controllers/PasswordResetController.php',
+    'App\\Http\\Controllers\\Leave\\LeaveController' => $baseDir . '/app/Http/Controllers/Leave/LeaveController.php',
     'App\\Http\\Middleware\\RoleMiddleware' => $baseDir . '/app/Http/Middleware/RoleMiddleware.php',
-    'App\\Models\\LeaveRequest' => $baseDir . '/app/Models/LeaveRequest.php',
+    'App\\Models\\Leave' => $baseDir . '/app/Models/Leave.php',
     'App\\Models\\PasswordResetToken' => $baseDir . '/app/Models/PasswordResetToken.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',

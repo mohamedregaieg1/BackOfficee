@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Authentificate\AuthController;
 use App\Http\Controllers\Authentificate\PasswordResetController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\LeaveRequest\LeaveRequestController;
+use App\Http\Controllers\Leave\LeaveController;
 
 
 Route::group([
@@ -21,10 +21,14 @@ Route::post('password/email', [PasswordResetController::class, 'sendResetLink'])
 Route::post('password/reset', [PasswordResetController::class, 'resetPassword']);
 
 
-//route for admin and hr 
+//route for admin and hr
 Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::get('/admin/users', [UserController::class, 'index']);
     Route::post('/admin/users', [UserController::class, 'store']);
     Route::put('/admin/users/{id}', [UserController::class, 'update']);
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
+});
+
+Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
+    Route::post('user/leaves', [LeaveController::class, 'store']);
 });
