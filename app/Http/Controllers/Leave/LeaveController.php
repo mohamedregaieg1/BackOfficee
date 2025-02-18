@@ -8,48 +8,9 @@ use App\Models\Leave;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-/**
- *
- * @OA\Tag(
- *     name="Congés",
- *     description="API pour gérer les congés des utilisateurs"
- * )
- */
+
 class LeaveController extends Controller
 {
-    /**
-     * @OA\Post(
-     *     path="/api/leaves",
-     *     summary="Créer une demande de congé",
-     *     tags={"Congés"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"start_date", "end_date", "leave_days_requested", "reason"},
-     *             @OA\Property(property="start_date", type="string", format="date", example="2024-07-15"),
-     *             @OA\Property(property="end_date", type="string", format="date", example="2024-07-20"),
-     *             @OA\Property(property="leave_days_requested", type="integer", example=5),
-     *             @OA\Property(property="reason", type="string", enum={"vacation", "travel_leave", "paternity_leave", "maternity_leave", "sick_leave", "other"}, example="vacation"),
-     *             @OA\Property(property="other_reason", type="string", nullable=true),
-     *             @OA\Property(property="attachment", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Demande de congé soumise avec succès",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Leave request submitted successfully!")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Erreur de validation",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="errors", type="object", example={"start_date": {"The start date field is required.."}})
-     *         )
-     *     )
-     * )
-     */
     public function store(Request $request) {
         $validatedData = $this->validateLeaveRequest($request);
         if ($validatedData instanceof \Illuminate\Http\JsonResponse) {
@@ -69,7 +30,7 @@ class LeaveController extends Controller
             'leave_days_next_year' => 'nullable|numeric|min:0',
             'reason' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
             'other_reason' => 'nullable|required_if:reason,other|string|max:255',
-            'attachment' => 'nullable|required_if:reason,sick_leave|mimes:pdf,jpg,png,jpeg|max:2048',
+            'attachment' => 'nullable|required_if:reason,sick_leave|mimes:pdf,jpg,jpeg|max:2048',
         ],[
             'start_date.required' => 'The start date field is required.',
             'start_date.date' => 'The start date field must be a valid date.',
@@ -85,7 +46,7 @@ class LeaveController extends Controller
             'reason.in' => 'The selected leave type is invalid.',
             'other_reason.required_if' => 'The "Other reason" field is required if the leave type is "other".',
             'attachment.required_if' => 'An attachment is required for sick leave.',
-            'attachment.mimes' => 'The attachment must be a file of type PDF, JPG, PNG, or JPEG.',
+            'attachment.mimes' => 'The attachment must be a file of type PDF, JPG, or JPEG.',
 
         ]);
         

@@ -27,7 +27,7 @@ class UserController extends Controller
             }
         }
     
-        $users = $query->select('id', 'first_name', 'last_name', 'email', 'company', 'role', 'start_date', 'initial_leave_balance', 'avatar_path','job_description')
+        $users = $query->select('id', 'first_name', 'last_name', 'email', 'company', 'role', 'start_date', 'avatar_path','job_description')
                        ->orderBy('first_name', 'asc')
                        ->paginate(6);
     

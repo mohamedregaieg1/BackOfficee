@@ -82,6 +82,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(LeaveRequest::class);
     }
-
+    //relation avec table leavebalance
+    public function leaveBalances() 
+    {
+        return $this->hasMany(LeaveBalance::class);
+    }
 
 }
