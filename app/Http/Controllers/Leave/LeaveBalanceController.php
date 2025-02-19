@@ -10,7 +10,39 @@ use Illuminate\Validation\ValidationException;
 
 class LeaveBalanceController extends Controller
 {
+    public function index(Request $request)
+    {
+        $search = trim($request->input('search'));
+        $query = User::where('role', '!=', 'admin');
     
+        if (!empty($search)) {
+            if (str_contains($search, ' ')) {
+                [$firstName, $lastName] = explode(' ', $search, 2);
+                $query->where('first_name', 'LIKE', "%$firstName%")
+                    ->where('last_name', 'LIKE', "%$lastName%");
+            } else {
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'LIKE', "%$search%")
+                      ->orWhere('last_name', 'LIKE', "%$search%");
+                });
+            }
+        }
+    
+        $users = $query->select('id', 'first_name', 'last_name' ,'avatar_path')
+                       ->orderBy('first_name', 'asc')
+                       ->paginate(6);
+    
+        return response()->json([
+            'data' => $users->items(),
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'per_page' => $users->perPage(),
+                'total_pages' => $users->lastPage(),
+                'total_employees' => $users->total(),
+            ],
+        ]);
+    }
+
     public function store(Request $request, $id)
     {
         try {
@@ -42,28 +74,28 @@ class LeaveBalanceController extends Controller
     }
 
 
-        public function show($userId)
-        {
-            $user = User::findOrFail($userId);
+    public function show($userId)
+    {
+        $user = User::findOrFail($userId);
 
-            $leaves = $user->leaveBalances()
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+        $leaves = $user->leaveBalances()
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-            return response()->json([
-                'data' => $leaves->items(),
-                'meta' => [
-                    'current_page' => $leaves->currentPage(),
-                    'per_page' => $leaves->perPage(),
-                    'total_pages' => $leaves->lastPage(),
-                    'total_leaves' => $leaves->total(),
-                ],
-                'user' => [
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                ]
-            ]);
-        }
+        return response()->json([
+            'data' => $leaves->items(),
+            'meta' => [
+                'current_page' => $leaves->currentPage(),
+                'per_page' => $leaves->perPage(),
+                'total_pages' => $leaves->lastPage(),
+                'total_leaves' => $leaves->total(),
+            ],
+            'user' => [
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+            ]
+        ]);
+    }
 
     public function destroy($id)
     {
