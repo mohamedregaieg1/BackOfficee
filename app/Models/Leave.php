@@ -16,7 +16,9 @@ class Leave extends Model {
         'effective_leave_days',
         'reason',
         'other_reason',
-        'attachment_path'
+        'attachment_path',
+        'status',
+
     ];
 
     public function user() {

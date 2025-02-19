@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Authentificate\AuthController;
 use App\Http\Controllers\Authentificate\PasswordResetController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ViewLeaveController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Employee\ProfileController;
@@ -29,6 +30,8 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::post('/leave-balances/{userId}', [LeaveBalanceController::class, 'store']);
     Route::get('/leave-balances/{userId}', [LeaveBalanceController::class, 'show']);
     Route::delete('/leave-balances/{id}', [LeaveBalanceController::class, 'destroy']);
+    Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
+
 });
 
 
@@ -38,6 +41,8 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::post('/admin/users', [UserController::class, 'store']);
     Route::put('/admin/users/{id}', [UserController::class, 'update']);
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
+    Route::get('/admin/employees', [ViewLeaveController::class, 'index']);
+    Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeaves']);
 
 });
 
