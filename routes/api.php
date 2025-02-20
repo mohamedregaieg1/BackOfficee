@@ -52,5 +52,5 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::post('user/leaves', [LeaveController::class, 'store']);
     Route::get('/user/sidebar', [ProfileController::class, 'showsidebar']);
     Route::get('/user/profile', [ProfileController::class, 'show']);
-    Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
+    Route::put('/user/profile/update', [ProfileController::class, 'updateProfile']);
 });
