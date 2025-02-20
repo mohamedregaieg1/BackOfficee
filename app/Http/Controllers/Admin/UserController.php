@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
+
 
 class UserController extends Controller
 {
@@ -32,7 +34,19 @@ class UserController extends Controller
                        ->paginate(6);
     
         return response()->json([
-            'data' => $users->items(),
+            'data' => $users->makeHidden('avatar_path')->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'company' => $user->company,
+                    'role' => $user->role,
+                    'start_date' => $user->start_date->format('Y-m-d'),
+                    'job_description' => $user->job_description,
+                    'avatar_path' => $user->avatar_path,
+                ];
+            }),
             'meta' => [
                 'current_page' => $users->currentPage(),
                 'per_page' => $users->perPage(),

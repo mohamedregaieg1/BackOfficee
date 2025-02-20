@@ -19,6 +19,7 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var list<string>
      */
+    protected $appends = ['avatar_path'];
     protected $fillable = [
         'avatar_path',
         'first_name',
@@ -78,6 +79,12 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+    public function getAvatarPathAttribute()
+    {
+        return $this->attributes['avatar_path']
+            ? asset($this->attributes['avatar_path'])
+            : null;
     }
     //relation avec table leaverequest
     public function leaveRequests()

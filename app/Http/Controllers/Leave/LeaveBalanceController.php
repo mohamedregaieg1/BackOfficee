@@ -14,7 +14,7 @@ class LeaveBalanceController extends Controller
     {
         $search = trim($request->input('search'));
         $query = User::where('role', '!=', 'admin');
-    
+
         if (!empty($search)) {
             if (str_contains($search, ' ')) {
                 [$firstName, $lastName] = explode(' ', $search, 2);
@@ -23,17 +23,24 @@ class LeaveBalanceController extends Controller
             } else {
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'LIKE', "%$search%")
-                      ->orWhere('last_name', 'LIKE', "%$search%");
+                    ->orWhere('last_name', 'LIKE', "%$search%");
                 });
             }
         }
-    
-        $users = $query->select('id', 'first_name', 'last_name' ,'avatar_path')
-                       ->orderBy('first_name', 'asc')
-                       ->paginate(6);
-    
+
+        $users = $query->select('id', 'first_name', 'last_name', 'avatar_path')
+                    ->orderBy('first_name', 'asc')
+                    ->paginate(6);
+
         return response()->json([
-            'data' => $users->items(),
+            'data' => $users->makeHidden('avatar_path')->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'avatar_path' => $user->avatar_path,
+                ];
+            }),
             'meta' => [
                 'current_page' => $users->currentPage(),
                 'per_page' => $users->perPage(),
