@@ -6,19 +6,40 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Leave;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ViewLeaveController extends Controller
 {
-    public function showLeaves($userId)
+    
+    public function showLeaves(Request $request, $userId)
     {
         $user = User::findOrFail($userId);
-
-        $leaves = Leave::where('user_id', $userId)
-                    ->select('id', 'start_date', 'end_date', 'reason', 'other_reason', 'status')
-                    ->paginate(10);
-
+        $year = $request->input('year');
+        $minYear = Leave::where('user_id', $userId)->min(DB::raw('YEAR(start_date)'));
+        $maxYear = Carbon::now()->year + 1;
+        $availableYears = range($minYear, $maxYear);
+        $leavesQuery = Leave::where('user_id', $userId)
+        ->select('id', 'start_date', 'end_date', 'reason', 'other_reason', 'leave_days_requested', 'effective_leave_days', 'status');
+    
+        if ($year) {
+            $leavesQuery->whereYear('start_date', $year);
+        }
+    
+        $leaves = $leavesQuery->paginate(10);
+            $totalLeaveDaysQuery = Leave::where('user_id', $userId)
+            ->selectRaw("SUM(leave_days_requested + IF(reason = 'sick', effective_leave_days, 0)) AS total_leave_days");
+    
+        if ($year) {
+            $totalLeaveDaysQuery->whereYear('start_date', $year);
+        }
+    
+        $totalLeaveDays = $totalLeaveDaysQuery->value('total_leave_days') ?? 0;
+    
         return response()->json([
             'full_name' => "{$user->first_name} {$user->last_name}",
+            'available_years' => $availableYears,
+            'total_leave_days' => $totalLeaveDays,
             'data' => $leaves->items(),
             'meta' => [
                 'current_page' => $leaves->currentPage(),
@@ -28,7 +49,7 @@ class ViewLeaveController extends Controller
             ],
         ]);
     }
-
+    
 
     public function updateStatus(Request $request, $leaveId)
     {
@@ -42,6 +63,4 @@ class ViewLeaveController extends Controller
 
         return response()->json(['message' => 'Leave status updated successfully!']);
     }
-
-
 }
