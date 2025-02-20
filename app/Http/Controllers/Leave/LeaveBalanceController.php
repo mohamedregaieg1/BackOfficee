@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\LeaveBalance;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class LeaveBalanceController extends Controller
@@ -13,7 +14,8 @@ class LeaveBalanceController extends Controller
     public function index(Request $request)
     {
         $search = trim($request->input('search'));
-        $query = User::where('role', '!=', 'admin');
+        $query = User::where('role', '!=', 'admin')
+                        ->where('id', '!=', Auth::id());
 
         if (!empty($search)) {
             if (str_contains($search, ' ')) {

@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
                         'company' => 'procan',
                         'job_description' => 'admin',
                         'start_date' => now(),
-                        'initial_leave_balance' => 0,
+                        'leave_balance' => 0,
                     ]);
     }
 }

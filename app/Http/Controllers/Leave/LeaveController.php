@@ -58,7 +58,7 @@ class LeaveController extends Controller
         $data = $request->all();
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $path = $file->store('public/attachments');
+            $path = $file->store('attachments', 'public');
             $filename = basename($path);
             $data['attachment_path'] = env('STORAGE').'/attachments/'.$filename;
         }

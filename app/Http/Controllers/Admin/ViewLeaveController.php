@@ -13,42 +13,73 @@ class ViewLeaveController extends Controller
 {
     
     public function showLeaves(Request $request, $userId)
-    {
-        $user = User::findOrFail($userId);
-        $year = $request->input('year');
-        $minYear = Leave::where('user_id', $userId)->min(DB::raw('YEAR(start_date)'));
-        $maxYear = Carbon::now()->year + 1;
-        $availableYears = range($minYear, $maxYear);
-        $leavesQuery = Leave::where('user_id', $userId)
-        ->select('id', 'start_date', 'end_date', 'reason', 'other_reason', 'leave_days_requested', 'effective_leave_days', 'status');
-    
-        if ($year) {
-            $leavesQuery->whereYear('start_date', $year);
-        }
-    
-        $leaves = $leavesQuery->paginate(10);
-            $totalLeaveDaysQuery = Leave::where('user_id', $userId)
-            ->selectRaw("SUM(leave_days_requested + IF(reason = 'sick', effective_leave_days, 0)) AS total_leave_days");
-    
-        if ($year) {
-            $totalLeaveDaysQuery->whereYear('start_date', $year);
-        }
-    
-        $totalLeaveDays = $totalLeaveDaysQuery->value('total_leave_days') ?? 0;
-    
-        return response()->json([
-            'full_name' => "{$user->first_name} {$user->last_name}",
-            'available_years' => $availableYears,
-            'total_leave_days' => $totalLeaveDays,
-            'data' => $leaves->items(),
-            'meta' => [
-                'current_page' => $leaves->currentPage(),
-                'per_page' => $leaves->perPage(),
-                'total_pages' => $leaves->lastPage(),
-                'total_leaves' => $leaves->total(),
-            ],
-        ]);
+{
+    $user = User::findOrFail($userId);
+    $year = $request->input('year', null);
+
+    $minYear = Carbon::parse($user->start_date)->year;
+    $maxYear = Carbon::now()->year + 1;
+    $availableYears = range($minYear, $maxYear);
+
+    $leavesQuery = Leave::where('user_id', $userId)
+        ->select('id', 'start_date', 'end_date', 'reason', 'other_reason', 'leave_days_requested', 'effective_leave_days', 'attachment_path', 'status');
+
+    if ($year) {
+        $leavesQuery->whereYear('start_date', $year);
     }
+
+    $leaves = $leavesQuery->orderBy('start_date', 'desc')
+                          ->paginate(10);
+
+    $totalLeaveDaysQuery = $leaves->sum(function($leave) {
+        return ($leave->reason === 'sick_leave') 
+            ? $leave->effective_leave_days
+            : $leave->leave_days_requested;
+    });
+
+    $totalLeaveDays = $totalLeaveDaysQuery ?? 0;
+
+    $data = $leaves->map(function($leave) {
+        $leaveData = [
+            'start_date' => $leave->start_date,
+            'end_date' => $leave->end_date,
+            'reason' => $leave->reason,
+            'status' => $leave->status,
+        ];
+
+        if ($leave->attachment_path) {
+            $leaveData['attachment'] = asset($leave->attachment_path);
+        }
+
+        if ($leave->reason === 'other') {
+            $leaveData['other_reason'] = $leave->other_reason;
+            unset($leaveData['reason']);
+        } elseif ($leave->reason === 'sick_leave') {
+            $leaveData['effective_leave_days'] = $leave->effective_leave_days;
+            unset($leaveData['leave_days_requested']);
+            unset($leaveData['other_reason']);
+        } else {
+            $leaveData['leave_days_requested'] = $leave->leave_days_requested;
+        }
+
+        return $leaveData;
+    });
+
+    return response()->json([
+        'full_name' => "{$user->first_name} {$user->last_name}",
+        'available_years' => $availableYears,
+        'total_leave_days' => $totalLeaveDays,
+        'data' => $data,
+        'meta' => [
+            'selected_year' => $year,
+            'current_page' => $leaves->currentPage(),
+            'per_page' => $leaves->perPage(),
+            'total_pages' => $leaves->lastPage(),
+            'total_leaves' => $leaves->total(),
+        ],
+    ]);
+}
+
     
 
     public function updateStatus(Request $request, $leaveId)

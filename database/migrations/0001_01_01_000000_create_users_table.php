@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->enum('gender', ['female', 'male'])->default('male');
+            $table->string('phone', 12)->nullable();
+            $table->string('address')->nullable();
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
@@ -24,7 +26,7 @@ return new class extends Migration
             $table->enum('role', ['admin', 'employee', 'hr','accountat'])->default('employee');
             $table->string('job_description');
             $table->date('start_date');
-            $table->double('initial_leave_balance', 8, 2)->default(0);
+            $table->double('leave_balance', 8, 2)->default(0);
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

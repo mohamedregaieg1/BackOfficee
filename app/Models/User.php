@@ -34,7 +34,7 @@ class User extends Authenticatable implements JWTSubject
         'role',
         'job_description',
         'start_date',
-        'initial_leave_balance',
+        'leave_balance',
         
     ];
 
