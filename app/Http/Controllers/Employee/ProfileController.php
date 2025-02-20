@@ -92,7 +92,7 @@ class ProfileController extends Controller
                 $avatar = $request->file('avatar_path');
                 $avatarName = uniqid() . '_' . $avatar->getClientOriginalName();
                 $path = $avatar->storeAs('avatars', $avatarName, 'public');
-                $user->avatar_path = '/storage/avatars/' . $avatarName;
+                $user->avatar_path = env('STORAGE') . '/avatars/' . $avatarName;
                 $user->save();
             }
 
