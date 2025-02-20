@@ -41,7 +41,6 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::post('/admin/users', [UserController::class, 'store']);
     Route::put('/admin/users/{id}', [UserController::class, 'update']);
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy']);
-    Route::get('/admin/employees', [ViewLeaveController::class, 'index']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeaves']);
 
 });
