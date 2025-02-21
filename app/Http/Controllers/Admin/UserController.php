@@ -31,7 +31,7 @@ class UserController extends Controller
             }
         }
     
-        $users = $query->select('id', 'first_name', 'last_name', 'email', 'company', 'role', 'start_date', 'avatar_path','job_description')
+        $users = $query->select('id', 'first_name', 'last_name', 'email', 'phone','company', 'role', 'start_date', 'avatar_path','job_description')
                        ->orderBy('first_name', 'asc')
                        ->paginate(6);
     
@@ -42,6 +42,7 @@ class UserController extends Controller
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'email' => $user->email,
+                    'phone' => $user->phone,
                     'company' => $user->company,
                     'role' => $user->role,
                     'start_date' => $user->start_date->format('Y-m-d'),

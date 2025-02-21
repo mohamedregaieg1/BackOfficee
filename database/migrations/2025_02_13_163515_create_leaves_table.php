@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('reason', ['vacation', 'travel_leave', 'paternity_leave', 'maternity_leave', 'sick_leave', 'other']);
             $table->string('other_reason')->nullable();
             $table->string('attachment_path')->nullable();
-            $table->enum('status', ['accepted', 'rejected', 'on_hold'])->default('on_hold');
+            $table->enum('status', ['approved', 'rejected', 'on_hold'])->default('on_hold');
             $table->timestamps();
         });
     }

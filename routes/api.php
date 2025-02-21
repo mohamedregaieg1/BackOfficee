@@ -5,10 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Authentificate\AuthController;
 use App\Http\Controllers\Authentificate\PasswordResetController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\ViewLeaveController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
-use App\Http\Controllers\Leave\LeaveHistoryController;
+use App\Http\Controllers\Leave\ViewLeaveController;
 use App\Http\Controllers\Employee\ProfileController;
 
 
@@ -44,6 +43,7 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::get('/leave-balances/{userId}', [LeaveBalanceController::class, 'show']);
     Route::delete('/leave-balances/{id}', [LeaveBalanceController::class, 'destroy']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeaves']);
+    Route::get('/admin/leaves/{leaveId}/download', [ViewLeaveController::class, 'downloadAttachment']);
 
 });
 
@@ -55,7 +55,10 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::get('/user/profile', [ProfileController::class, 'show']);
     Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
-    Route::get('leave-history', [LeaveHistoryController::class, 'index']);
+    Route::get('/employee/leaves/{userId}', [ViewLeaveController::class, 'showLeaves']);
+    Route::put('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
+    Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
+    Route::get('/employee/leaves/{leaveId}/download', [ViewLeaveController::class, 'downloadAttachment']);
 
 
 });
