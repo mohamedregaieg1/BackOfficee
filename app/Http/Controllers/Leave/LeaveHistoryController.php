@@ -18,22 +18,28 @@ class LeaveHistoryController extends Controller
         $year = $request->input('year', null);
         $maxYear = Carbon::now()->year + 1;
         $availableYears = range($minYear, $maxYear);
+
         $query = Leave::where('user_id', $userId);
         if ($year) {
             $query->whereYear('start_date', $year);
         }
+
         $leaves = $query->orderBy('start_date', 'desc')
-                        ->paginate(6);
+                        ->paginate(6)
+                        ->appends(['year' => $year]);
+
         $totalLeaveDays = $leaves->sum(function($leave) {
             return ($leave->reason === 'sick_leave') 
                 ? $leave->effective_leave_days
                 : $leave->leave_days_requested;
         });
+
         $data = $leaves->map(function($leave) {
             $leaveData = [
                 'start_date' => $leave->start_date,
                 'end_date' => $leave->end_date,
                 'reason' => $leave->reason,
+                'leave_days_requested' => $leave->leave_days_requested,
                 'status' => $leave->status,
             ];
 
@@ -48,18 +54,16 @@ class LeaveHistoryController extends Controller
                 $leaveData['effective_leave_days'] = $leave->effective_leave_days;
                 unset($leaveData['leave_days_requested']);
                 unset($leaveData['other_reason']);
-            } else {
-                $leaveData['leave_days_requested'] = $leave->leave_days_requested;
-            }
+            } 
 
             return $leaveData;
         });
 
         return response()->json([
             'data' => $data,
+            'total_leave_days' => $totalLeaveDays,
+            'available_years' => $availableYears,
             'meta' => [
-                'total_leave_days' => $totalLeaveDays,
-                'available_years' => $availableYears,
                 'selected_year' => $year,
                 'current_page' => $leaves->currentPage(),
                 'per_page' => $leaves->perPage(),
