@@ -43,7 +43,6 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::get('/leave-balances/{userId}', [LeaveBalanceController::class, 'show']);
     Route::delete('/leave-balances/{id}', [LeaveBalanceController::class, 'destroy']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeaves']);
-    Route::get('/admin/leaves/{leaveId}/download', [ViewLeaveController::class, 'downloadAttachment']);
 
 });
 
@@ -58,7 +57,6 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::get('/employee/leaves/{userId}', [ViewLeaveController::class, 'showLeaves']);
     Route::put('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
     Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
-    Route::get('/employee/leaves/{leaveId}/download', [ViewLeaveController::class, 'downloadAttachment']);
 
 
 });

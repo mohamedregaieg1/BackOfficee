@@ -9,6 +9,7 @@ use App\Models\Leave;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 class ViewLeaveController extends Controller
@@ -57,7 +58,7 @@ class ViewLeaveController extends Controller
                 ];
 
                 if ($leave->attachment_path) {
-                    $leaveData['attachment'] = asset($leave->attachment_path);
+                    $leaveData['attachment_path'] = asset($leave->attachment_path);
                 }
 
                 if ($leave->reason === 'other') {
@@ -78,6 +79,7 @@ class ViewLeaveController extends Controller
                 'data' => $data,
                 
                 'meta' => [
+                    'selected_year' => $year,
                     'current_page' => $leaves->currentPage(),
                     'per_page' => $leaves->perPage(),
                     'total_pages' => $leaves->lastPage(),
@@ -124,37 +126,56 @@ class ViewLeaveController extends Controller
         try {
             $authUser = Auth::user();
             $leave = Leave::findOrFail($leaveId);
-
+    
             if ($leave->status !== 'on_hold') {
                 return response()->json(['error' => 'Only pending leaves can be modified.'], 403);
             }
-
+    
             $validated = $request->validate([
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
-                'reason' => 'required|string',
-                'other_reason' => 'nullable|string',
-                'leave_days_requested' => 'required|integer|min:1',
-                'attachment' => 'nullable|file|mimes:pdf,jpg,png|max:2048'
+                'reason' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
+                'other_reason' => 'nullable|required_if:reason,other|string|max:255',
+                'leave_days_requested' => 'required|numeric|min:1',
+                'attachment' => 'nullable|file|mimes:pdf,jpg,png|max:2048|required_if:reason,sick_leave'
+            ], [
+                'other_reason.required_if' => 'The "Other reason" field is required if the leave type is "other".',
+                'attachment.required_if' => 'An attachment is required for sick leave.'
+
             ]);
-
-            $leave->update($validated);
-
-            if ($request->hasFile('attachment')) {
+            $leave->start_date = $validated['start_date'];
+            $leave->end_date = $validated['end_date'];
+            $leave->reason = $validated['reason'];
+            $leave->leave_days_requested = $validated['leave_days_requested'];
+    
+            // Gérer le cas "other"
+            $leave->other_reason = $validated['reason'] === 'other' ? $validated['other_reason'] : null;
+                if ($validated['reason'] === 'sick_leave') {
+                $leave->effective_leave_days = max(0, $validated['leave_days_requested'] - 2);
+            } else {
+                $leave->effective_leave_days = 0;
+            }
+                if ($request->hasFile('attachment')) {
                 if ($leave->attachment_path) {
                     Storage::delete($leave->attachment_path);
                 }
+    
                 $leave->attachment_path = $request->file('attachment')->store('attachments', 'public');
-                $leave->save();
             }
-
+    
+            $leave->save();
+    
             return response()->json(['message' => 'Leave updated successfully!']);
+    
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error updating leave.', 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Error updating leave.',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
-
-    // Supprimer un congé (seulement si "on_hold")
+    
+    
     public function deleteLeave($leaveId)
     {
         try {
@@ -164,8 +185,8 @@ class ViewLeaveController extends Controller
                 return response()->json(['error' => 'Only pending leaves can be deleted.'], 403);
             }
 
-            if ($leave->attachment_path) {
-                Storage::delete($leave->attachment_path);
+            if ($leave->attachment_path && Storage::disk('public')->exists($leave->attachment_path)) {
+                Storage::disk('public')->delete($leave->attachment_path);
             }
 
             $leave->delete();
@@ -176,22 +197,5 @@ class ViewLeaveController extends Controller
         }
     }
 
-    public function downloadAttachment($leaveId)
-    {
-        try {
-            $leave = Leave::findOrFail($leaveId);
-
-            if ($leave->status === 'on_hold') {
-                return response()->json(['error' => 'Cannot download attachment for pending leaves.'], 403);
-            }
-
-            if (!$leave->attachment_path || !Storage::exists($leave->attachment_path)) {
-                return response()->json(['error' => 'File not found.'], 404);
-            }
-
-            return Storage::download($leave->attachment_path);
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Error downloading attachment.', 'message' => $e->getMessage()], 500);
-        }
-    }
+    
 }

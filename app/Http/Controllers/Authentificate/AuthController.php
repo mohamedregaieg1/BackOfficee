@@ -45,12 +45,14 @@ class AuthController extends Controller
         }
 
         $role = $user->role;
+        $id=$user->id;
         RateLimiter::clear($key);
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 1440,
+            'id'=>$id,
             'role' => $role,
         ]);
     }
