@@ -29,20 +29,25 @@
     </style>
 </head>
 <body>
-    @if($leave->status == 'approved')
-        <img src="{{ storage_path('dist/img/approved.png') }}" class="background" />
-    @elseif($leave->status == 'rejected')
-        <img src="{{ storage_path('dist/img/rejected.png') }}" class="background" />
-    @endif
-
     <div class="container">
         <div class="company-name">{{ $leave->user->company }}</div>
+        <div class="date">
+            DATE {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+        </div>
         <div class="header">Leave Request Details</div>
         <div class="{{ $leave->status == 'approved' ? 'approved' : 'rejected' }}">
             <p><strong>Name:</strong> {{ $leave->user->first_name }} {{ $leave->user->last_name }}</p>
             <p><strong>Start Date:</strong> {{ $leave->start_date }}</p>
             <p><strong>End Date:</strong> {{ $leave->end_date }}</p>
+            
             <p><strong>Reason:</strong> {{ ucfirst(str_replace('_', ' ', $leave->reason)) }}</p>
+
+            <!-- Conditionally display leave days based on reason -->
+            @if($leave->reason == 'sick_leave')
+                <p><strong>Effective Leave Days:</strong> {{ $leave->effective_leave_days }}</p>
+            @else
+                <p><strong>Leave Days Requested:</strong> {{ $leave->leave_days_requested }}</p>
+            @endif
         </div>
     </div>
 

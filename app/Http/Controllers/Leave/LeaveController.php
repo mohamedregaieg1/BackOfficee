@@ -8,7 +8,7 @@ use App\Models\Leave;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade as PDF;
+use TCPDF;
 
 
 class LeaveController extends Controller
@@ -100,18 +100,26 @@ class LeaveController extends Controller
         ]);
     }
 
-        public function downloadLeavePdf($leaveId)
+    public function downloadLeavePdf($leaveId)
     {
         $leave = Leave::where('id', $leaveId)
             ->whereIn('status', ['approved', 'rejected'])
             ->where('user_id', Auth::id())
             ->first();
-
+    
         if (!$leave) {
             return response()->json(['message' => 'Unauthorized or leave not found'], 403);
         }
-
-        $pdf = PDF::loadView('pdf.leave', compact('leave'));
-        return $pdf->download('leave_request_'.$leave->id.'.pdf');
+    
+        $pdf = new TCPDF();
+        $pdf->AddPage();
+        $view = view('pdf.leave', compact('leave'))->render();
+        $pdf->writeHTML($view, true, false, true, false, '');
+    
+        // Return the PDF as a downloadable file
+        return response($pdf->Output('leave_request_'.$leave->id.'.pdf', 'S'), 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="leave_request_'.$leave->id.'.pdf"');
     }
+    
 }
