@@ -159,7 +159,8 @@ class UserController extends Controller
             ], 500);
         }
     }
-public function destroy($id)
+
+    public function destroy($id)
     {
         try {
             $user = User::where('id', $id)->lockForUpdate()->firstOrFail();
@@ -171,10 +172,9 @@ public function destroy($id)
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Une erreur inattendue est survenue.',
+                'error' => 'An unexpected error has occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
     }
-    
 }

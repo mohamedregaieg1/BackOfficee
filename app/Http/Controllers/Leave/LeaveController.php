@@ -8,6 +8,8 @@ use App\Models\Leave;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade as PDF;
+
 
 class LeaveController extends Controller
 {
@@ -25,9 +27,9 @@ class LeaveController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-            'leave_days_requested' => 'required|numeric|min:1',
-            'leave_days_current_year' => 'nullable|numeric|min:0',
-            'leave_days_next_year' => 'nullable|numeric|min:0',
+            'leave_days_requested' => 'required|numeric|min:0.5',
+            'leave_days_current_year' => 'nullable|numeric|min:0.5',
+            'leave_days_next_year' => 'nullable|numeric|min:0.5',
             'reason' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
             'other_reason' => 'nullable|required_if:reason,other|string|max:255',
             'attachment' => 'nullable|required_if:reason,sick_leave|mimes:pdf,jpg,jpeg|max:2048',
@@ -96,5 +98,20 @@ class LeaveController extends Controller
             'other_reason' => $data['other_reason'] ?? null,
             'attachment_path' => $data['attachment_path'] ?? null,
         ]);
+    }
+
+        public function downloadLeavePdf($leaveId)
+    {
+        $leave = Leave::where('id', $leaveId)
+            ->whereIn('status', ['approved', 'rejected'])
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$leave) {
+            return response()->json(['message' => 'Unauthorized or leave not found'], 403);
+        }
+
+        $pdf = PDF::loadView('pdf.leave', compact('leave'));
+        return $pdf->download('leave_request_'.$leave->id.'.pdf');
     }
 }

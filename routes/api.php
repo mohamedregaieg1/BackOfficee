@@ -50,6 +50,7 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
 //route for employee and hr
 Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::post('user/leaves', [LeaveController::class, 'store']);
+    Route::get('/leave/{id}/download', [LeaveController::class, 'downloadLeavePdf']);
     Route::get('/user/sidebar', [ProfileController::class, 'showsidebar']);
     Route::get('/user/profile', [ProfileController::class, 'show']);
     Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
