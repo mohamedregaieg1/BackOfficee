@@ -89,7 +89,7 @@ class LeaveBalanceController extends Controller
 
         $leaves = $user->leaveBalances()
             ->orderBy('created_at', 'desc')
-            ->paginate(7);
+            ->paginate(8);
 
         return response()->json([
             'data' => $leaves->items(),
