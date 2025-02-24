@@ -23,6 +23,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $appends = ['avatar_path'];
     protected $fillable = [
+        'id',
         'avatar_path',
         'first_name',
         'last_name',
@@ -89,9 +90,9 @@ class User extends Authenticatable implements JWTSubject
             : null;
     }
     //relation avec table leaverequest
-    public function leaveRequests()
+    public function leave()
     {
-        return $this->hasMany(LeaveRequest::class);
+        return $this->hasMany(Leave²::class);
     }
     //relation avec table leavebalance
     public function leaveBalances() 
