@@ -34,7 +34,7 @@ class ProfileController extends Controller
             'address' => $user->address,
             'company' => $user->company,
             'job_description' => $user->job_description,
-            'start_date' => $user->start_date,
+            'start_date' => $user->start_date->format('Y-m-d'),        
         ]);
     }
     public function updateProfile(Request $request)

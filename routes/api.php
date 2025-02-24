@@ -55,7 +55,7 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
     Route::get('/employee/leaves/{userId}', [ViewLeaveController::class, 'showLeaves']);
-    Route::put('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
+    Route::post('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
     Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
 
 

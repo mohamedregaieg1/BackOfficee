@@ -155,12 +155,14 @@ class ViewLeaveController extends Controller
             } else {
                 $leave->effective_leave_days = 0;
             }
-                if ($request->hasFile('attachment')) {
+            if ($request->hasFile('attachment')) {
                 if ($leave->attachment_path) {
-                    Storage::delete($leave->attachment_path);
+                    Storage::disk('public')->delete(str_replace(env('STORAGE').'/attachments/', '', $leave->attachment_path));
                 }
-    
-                $leave->attachment_path = $request->file('attachment')->store('attachments', 'public');
+                $file = $request->file('attachment');
+                $path = $file->store('attachments', 'public');
+                $filename = basename($path);
+                $leave->attachment_path = env('STORAGE').'/attachments/'.$filename;
             }
     
             $leave->save();
