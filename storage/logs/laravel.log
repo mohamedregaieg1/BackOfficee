@@ -7946,3 +7946,23 @@ Did you mean one of these?
 #40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('C:\\\\Users\\\\MSI\\\\On...')
 #41 {main}
 "} 
+[2025-02-24 17:56:05] local.ERROR: App\Http\Controllers\Leave\LeaveController cannot use TCPDF - it is not a trait {"userId":2,"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): App\\Http\\Controllers\\Leave\\LeaveController cannot use TCPDF - it is not a trait at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Leave\\LeaveController.php:14)
+[stacktrace]
+#0 {main}
+"} 
+[2025-02-24 17:56:16] local.ERROR: App\Http\Controllers\Leave\LeaveController cannot use TCPDF - it is not a trait {"userId":2,"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): App\\Http\\Controllers\\Leave\\LeaveController cannot use TCPDF - it is not a trait at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Leave\\LeaveController.php:14)
+[stacktrace]
+#0 {main}
+"} 
+[2025-02-24 17:59:24] local.ERROR: App\Http\Controllers\Leave\LeaveController cannot use TCPDF - it is not a trait {"userId":2,"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): App\\Http\\Controllers\\Leave\\LeaveController cannot use TCPDF - it is not a trait at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Leave\\LeaveController.php:14)
+[stacktrace]
+#0 {main}
+"} 
+[2025-02-24 18:04:33] local.ERROR: App\Http\Controllers\Leave\LeaveController cannot use TCPDF - it is not a trait {"userId":2,"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): App\\Http\\Controllers\\Leave\\LeaveController cannot use TCPDF - it is not a trait at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Leave\\LeaveController.php:14)
+[stacktrace]
+#0 {main}
+"} 
+[2025-02-24 18:06:48] local.ERROR: App\Http\Controllers\Leave\LeaveController cannot use TCPDF - it is not a trait {"userId":2,"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): App\\Http\\Controllers\\Leave\\LeaveController cannot use TCPDF - it is not a trait at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Leave\\LeaveController.php:14)
+[stacktrace]
+#0 {main}
+"} 

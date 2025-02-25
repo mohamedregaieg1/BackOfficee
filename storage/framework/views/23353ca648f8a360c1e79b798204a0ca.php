@@ -29,6 +29,7 @@
     </style>
 </head>
 <body>
+    <!-- Image de fond -->
     <div class="container">
         <div class="company-name"><?php echo e($leave->user->company); ?></div>
         <div class="date">
@@ -40,8 +41,12 @@
             <p><strong>Name:</strong> <?php echo e($leave->user->first_name); ?> <?php echo e($leave->user->last_name); ?></p>
             <p><strong>Start Date:</strong> <?php echo e($leave->start_date); ?></p>
             <p><strong>End Date:</strong> <?php echo e($leave->end_date); ?></p>
-            
-            <p><strong>Reason:</strong> <?php echo e(ucfirst(str_replace('_', ' ', $leave->reason))); ?></p>
+
+            <?php if($leave->reason=='other'): ?>
+                <p><strong>Reason:</strong> <?php echo e(ucfirst(str_replace('_', ' ', $leave->other_reason))); ?></p>
+            <?php else: ?>
+                <p><strong>Reason:</strong> <?php echo e(ucfirst(str_replace('_', ' ', $leave->reason))); ?></p>
+            <?php endif; ?>
 
             <!-- Conditionally display leave days based on reason -->
             <?php if($leave->reason == 'sick_leave'): ?>

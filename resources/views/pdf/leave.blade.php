@@ -29,6 +29,7 @@
     </style>
 </head>
 <body>
+    <!-- Image de fond -->
     <div class="container">
         <div class="company-name">{{ $leave->user->company }}</div>
         <div class="date">
@@ -39,8 +40,12 @@
             <p><strong>Name:</strong> {{ $leave->user->first_name }} {{ $leave->user->last_name }}</p>
             <p><strong>Start Date:</strong> {{ $leave->start_date }}</p>
             <p><strong>End Date:</strong> {{ $leave->end_date }}</p>
-            
-            <p><strong>Reason:</strong> {{ ucfirst(str_replace('_', ' ', $leave->reason)) }}</p>
+
+            @if ($leave->reason=='other')
+                <p><strong>Reason:</strong> {{ ucfirst(str_replace('_', ' ', $leave->other_reason)) }}</p>
+            @else
+                <p><strong>Reason:</strong> {{ ucfirst(str_replace('_', ' ', $leave->reason)) }}</p>
+            @endif
 
             <!-- Conditionally display leave days based on reason -->
             @if($leave->reason == 'sick_leave')
