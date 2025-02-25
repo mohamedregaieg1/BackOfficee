@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('company', ['adequat', 'procan'])->default('procan');
+            $table->enum('company', ['adequate', 'procan'])->default('procan');
             $table->enum('role', ['admin', 'employee', 'hr','accountat'])->default('employee');
             $table->string('job_description');
             $table->date('start_date');

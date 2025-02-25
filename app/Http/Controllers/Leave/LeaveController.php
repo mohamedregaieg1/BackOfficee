@@ -112,31 +112,21 @@ class LeaveController extends Controller
         if (!$leave) {
             return response()->json(['message' => 'Unauthorized or leave not found'], 403);
         }
-
-        // ✅ Déterminer le logo de l'entreprise
         $user = Auth::user();
-        $companyLogoPath = ($user->company == 'procan') 
+        $companyLogoPath = ($user->company == 'procan')
         ? public_path('dist/img/logo-procan.webp')
         : public_path('dist/img/logo-Adequate.webp');
-        
-        // ✅ Déterminer l'image du statut (approved/rejected)
-        $statusImagePath = ($leave->status == 'approved') 
-            ? public_path( 'dist/img/approved.webp')
-            : public_path('dist/img/rejected.webp');
-
-        // ✅ Encodage Base64 des images
+        $statusImagePath = ($leave->status == 'approved')
+        ? public_path( 'dist/img/approved.webp')
+        : public_path('dist/img/rejected.webp');
         $companyLogoBase64 = base64_encode(file_get_contents($companyLogoPath));
         $statusImageBase64 = base64_encode(file_get_contents($statusImagePath));
-
-        // ✅ Passer les données à la vue
         $view = view('pdf.leave', compact('leave', 'companyLogoBase64', 'statusImageBase64'))->render();
-
-        // ✅ Options optimisées pour améliorer la vitesse
         $options = new Options();
         $options->set('defaultFont', 'Arial');
-        $options->set('isRemoteEnabled', true);  // Autorise les images externes
+        $options->set('isRemoteEnabled', true);
         $options->set('isHtml5ParserEnabled', true);
-        $options->set('dpi', 96);
+         $options->set('dpi', 96);
         $pdf = new Dompdf($options);
         $pdf->loadHtml($view);
         $pdf->setPaper('A4', 'portrait');

@@ -40,14 +40,90 @@ class PasswordResetController extends Controller
         ]);
 
         $resetLink = 'http://localhost:4200/reset-password?token='.$token;  
-        $htmlContent = "<p>Hello,</p>
-        <p>We received a request to reset your password for your account.</p>
-        <p>If you did not make this request, please ignore this email.</p>
-        <p>To reset your password, please click the link below:</p>
-        <p><a href='{$resetLink}'>Reset your password</a></p>
-        <p>This link will expire in 60 minutes.</p>
-        <p>If you have any questions, feel free to contact us.</p>
-        <p>Best regards,<br>The Support Team</p>";
+        $htmlContent = "
+    <html>
+    <head>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f8f9fa;
+                margin: 0;
+                padding: 0;
+            }
+            .email-container {
+                max-width: 600px;
+                margin: 40px auto;
+                background: #ffffff;
+                padding: 30px;
+                border-radius: 10px;
+                border: 1px solid #ddd;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+            .logo-container {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .logo {
+                font-size: 28px;
+                font-weight: bold;
+                color: #007BFF;
+            }
+            h2 {
+                color: #333;
+                font-size: 22px;
+                font-weight: bold;
+                margin-bottom: 20px;
+            }
+            p {
+                color: #555;
+                font-size: 16px;
+                line-height: 1.6;
+                margin: 15px 0;
+            }
+            .button {
+                display: inline-block;
+                background: transparent;
+                color: #007BFF;
+                padding: 12px 28px;
+                border: 2px solid #007BFF;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 16px;
+                transition: 0.3s;
+            }
+            .button:hover {
+                background: #007BFF;
+                color: #fff;
+                transform: translateY(-2px);
+            }
+            .footer {
+                margin-top: 30px;
+                font-size: 12px;
+                color: #888;
+                border-top: 1px solid #ddd;
+                padding-top: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class='email-container'>
+            <div class='logo-container'>
+                <span class='logo'>PROCAN</span>
+            </div>
+            <h2>Password Reset Request</h2>
+            <p>Hello,</p>
+            <p>We received a request to reset the password for your account.</p>
+            <p>If you did not request this, please ignore this email.</p>
+            <p>To reset your password, click the button below:</p>
+            <a href='{$resetLink}' class='button'>Reset Your Password</a>
+            <p>This link will expire in 60 minutes.</p>
+            <p>If you have any questions, feel free to contact our support team.</p>
+            <p class='footer'>Best regards,<br>The Support Team</p>
+        </div>
+    </body>
+    </html>";
         Mail::html($htmlContent, function ($message) use ($request) {
             $message->to($request->email)
                 ->subject('Password Reset Link');

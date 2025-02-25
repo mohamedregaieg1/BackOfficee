@@ -70,10 +70,10 @@ class UserController extends Controller
                 'username' => 'required|string|unique:users,username',
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:6',
-                'company' => 'required|in:adequat,procan',
+                'company' => 'required|in:adequate,procan',
                 'start_date' => 'required|date',
                 'role' => 'required|in:employee,hr',
-                'job_description' => 'required|string|max:15',
+                'job_description' => 'required|string|max:20',
             ], [
                 'first_name.required' => 'The first name is required.',
                 'last_name.required' => 'The last name is required.',
@@ -89,7 +89,7 @@ class UserController extends Controller
                 'start_date.required' => 'The start date is required.',
                 'role.required' => 'The role is required.',
                 'job_description.required' => 'The job description is required.',
-                'job_description.max' => 'The job description must not exceed 15 characters.',
+                'job_description.max' => 'The job description must not exceed 20 characters.',
             ]);
 
             // Déterminer le chemin de l'avatar par défaut
@@ -135,7 +135,7 @@ class UserController extends Controller
                 'role' => 'required|in:employee,hr',
             ], [
                 'job_description.required' => 'The job description is required.',
-                'job_description.max' => 'The job description must not exceed 15 characters.',
+                'job_description.max' => 'The job description must not exceed 20 characters.',
                 'company.required' => 'The company is required.',
                 'role.required' => 'The role is required.',
                 ]);
