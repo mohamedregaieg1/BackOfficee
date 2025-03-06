@@ -9,19 +9,23 @@ class Leave extends Model {
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'start_date',
-        'end_date',
-        'leave_days_requested',
-        'effective_leave_days',
-        'reason',
-        'other_reason',
-        'attachment_path',
-        'status',
-
+        'user_id', 'start_date', 'end_date', 'leave_type', 'fixed_leave_id',
+        'other_type', 'leave_days_requested', 'effective_leave_days',
+        'attachment_path', 'status'
     ];
 
     public function user() {
         return $this->belongsTo(User::class);
+    }
+
+    
+    public function leaveLimit()
+    {
+        return $this->belongsTo(FixedLeaves::class, 'leave_type', 'leave_type');
+    }
+
+    public function leaveBalance()
+    {
+        return $this->belongsTo(LeaveBalance::class, 'user_id');
     }
 }

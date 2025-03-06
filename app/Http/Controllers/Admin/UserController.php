@@ -15,9 +15,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = trim($request->input('search'));
-        $query = User::where('role', '!=', 'admin')
-                       ->where('id', '!=', Auth::id());
-    
+        $query = User::where('role', '!=', 'admin');    
         if (!empty($search)) {
             if (str_contains($search, ' ')) {
                 [$firstName, $lastName] = explode(' ', $search, 2);

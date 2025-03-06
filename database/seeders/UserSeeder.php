@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
-        // ✅ Création d'un seul admin
+        //  Création d'un seul admin
         DB::table('users')->insert([
             'first_name' => 'Admin',
             'last_name' => 'Damak',
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
             'leave_balance' => 0,
         ]);
 
-        // ✅ Création des 7 autres utilisateurs (Employee et HR)
+        // Création des 7 autres utilisateurs (Employee et HR)
         $users = [
             [
                 'first_name' => 'Ali',
@@ -37,6 +37,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'company' => 'procan',
                 'job_description' => 'Developer',
+                'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarmale.png',
             ],
             [
                 'first_name' => 'Sara',
@@ -48,6 +49,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'company' => 'adequate',
                 'job_description' => 'Designer',
+                'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarfemale.png',
             ],
             [
                 'first_name' => 'Karim',
@@ -59,6 +61,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'company' => 'procan',
                 'job_description' => 'Project Manager',
+                'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarmale.png',
             ],
             [
                 'first_name' => 'Fatma',
@@ -70,6 +73,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'company' => 'adequate',
                 'job_description' => 'HR Assistant',
+                'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarfemale.png',
             ],
             [
                 'first_name' => 'Ahmed',
@@ -81,6 +85,8 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'company' => 'procan',
                 'job_description' => 'HR Manager',
+                'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarmale.png',
+
             ],
             [
                 'first_name' => 'Leila',
@@ -92,6 +98,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'company' => 'adequate',
                 'job_description' => 'HR Specialist',
+                'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarfemale.png',
             ],
             [
                 'first_name' => 'Omar',
@@ -103,6 +110,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'company' => 'procan',
                 'job_description' => 'Technician',
+                'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarmale.png',
             ],
         ];
 

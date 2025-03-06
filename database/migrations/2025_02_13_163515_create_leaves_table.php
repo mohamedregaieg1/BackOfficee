@@ -6,31 +6,46 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
+        Schema::create('fixed_leaves', function (Blueprint $table) {
+            $table->id();
+            $table->string('leave_type', 100)->unique();
+            $table->integer('max_days')->default(0);
+            $table->timestamps();
+        });
+        
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->date('start_date');
             $table->date('end_date');
-            $table->double('leave_days_requested')->check('leave_days_requested >= 0');
-            $table->double('effective_leave_days')->default(0)->check('effective_leave_days >= 0');
-            $table->enum('reason', ['vacation', 'travel_leave', 'paternity_leave', 'maternity_leave', 'sick_leave', 'other']);
-            $table->string('other_reason')->nullable();
+            $table->enum('leave_type', ['paternity_leave', 'maternity_leave', 'sick_leave', 'vacation', 'travel_leave', 'other']); 
+            $table->string('other_type')->nullable();
+            $table->double('leave_days_requested');
+            $table->double('effective_leave_days')->default(0);
             $table->string('attachment_path')->nullable();
             $table->enum('status', ['approved', 'rejected', 'on_hold'])->default('on_hold');
             $table->timestamps();
         });
+        
+        Schema::create('leaves_balances', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->double('leave_day_limit');
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
+        Schema::table('leaves', function (Blueprint $table) {
+            $table->dropForeign(['leave_type']);
+        });
         Schema::dropIfExists('leaves');
+        Schema::dropIfExists('fixed_leaves');
+        Schema::dropIfExists('leaves_balances');
     }
 };

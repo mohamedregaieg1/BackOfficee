@@ -30,14 +30,9 @@ class ViewLeaveController extends Controller
                 $totalLeaveDaysQuery->whereYear('start_date', $year);
             }
     
-            $totalLeaveDays = $totalLeaveDaysQuery->sum(DB::raw("
-                CASE
-                    WHEN reason = 'sick_leave' THEN effective_leave_days
-                    ELSE leave_days_requested
-                END
-            "));
+            $totalLeaveDays = $totalLeaveDaysQuery->sum('effective_leave_days');
                 $leavesQuery = Leave::where('user_id', $userId)
-                ->select('id', 'start_date', 'end_date', 'reason', 'other_reason', 'leave_days_requested', 'effective_leave_days', 'attachment_path', 'status');
+                ->select('id', 'start_date', 'end_date', 'leave_type', 'other_type', 'leave_days_requested', 'effective_leave_days', 'attachment_path', 'status');
     
             if ($year) {
                 $leavesQuery->whereYear('start_date', $year);
@@ -101,6 +96,36 @@ class ViewLeaveController extends Controller
     }
 
 
+
+    public function updateLeaveForAdmin(Request $request, $leaveId)
+    {
+        try {
+            $validated = $request->validate([
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'leave_type' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
+                'other_reason' => 'nullable|required_if:leave_type,other|string|max:255',
+                'leave_days_requested' => 'required|numeric|min:1',
+                'effective_leave_days' => 'nullable|numeric|min:0',
+            ]);
+            $leave = Leave::findOrFail($leaveId);
+            $leave->start_date = $validated['start_date'];
+            $leave->end_date = $validated['end_date'];
+            $leave->leave_type = $validated['leave_type'];
+            $leave->other_reason = isset($validated['other_reason']) ? $validated['other_reason'] : null;
+            $leave->leave_days_requested = $validated['leave_days_requested'];
+            $leave->save();
+            return response()->json(['message' => 'Leave updated successfully!']);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Error updating leave.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    
     public function updateStatus(Request $request, $leaveId)
     {
         try {
@@ -147,11 +172,9 @@ class ViewLeaveController extends Controller
             $leave->end_date = $validated['end_date'];
             $leave->reason = $validated['reason'];
             $leave->leave_days_requested = $validated['leave_days_requested'];
-    
-            // Gérer le cas "other"
             $leave->other_reason = $validated['reason'] === 'other' ? $validated['other_reason'] : null;
-                if ($validated['reason'] === 'sick_leave') {
-                $leave->effective_leave_days = max(0, $validated['leave_days_requested'] - 2);
+            if ($validated['reason'] === 'sick_leave') {
+            $leave->effective_leave_days = max(0, $validated['leave_days_requested'] - 2);
             } else {
                 $leave->effective_leave_days = 0;
             }
