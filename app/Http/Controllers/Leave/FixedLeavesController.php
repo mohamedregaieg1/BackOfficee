@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Leave;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\FixedLeave;
+use App\Models\FixedLeaves;
 use Illuminate\Database\QueryException;
 
 class FixedLeavesController extends Controller
@@ -13,7 +13,7 @@ class FixedLeavesController extends Controller
     public function index()
     {
         try {
-            $limits = FixedLeave::select('id', 'leave_type', 'max_days')->get();
+            $limits = FixedLeaves::select('id', 'leave_type', 'max_days')->get();
             return response()->json($limits, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to retrieve specific leave types.'], 500);
@@ -28,12 +28,12 @@ class FixedLeavesController extends Controller
                 'max_days' => 'required|integer|min:0',
             ]);
 
-            $existingLeave = FixedLeave::where('leave_type', $request->leave_type)->first();
+            $existingLeave = FixedLeaves::where('leave_type', $request->leave_type)->first();
             if ($existingLeave) {
                 return response()->json(['message' => 'This leave type already exists.'], 400);
             }
 
-            FixedLeave::create([
+            FixedLeaves::create([
                 'leave_type' => $request->leave_type,
                 'max_days' => $request->max_days
             ]);
@@ -53,7 +53,7 @@ class FixedLeavesController extends Controller
                 'max_days' => 'required|integer|min:0',
             ]);
 
-            $leaveLimit = FixedLeave::findOrFail($id);
+            $leaveLimit = FixedLeaves::findOrFail($id);
             $leaveLimit->update(['max_days' => $request->max_days]);
 
             return response()->json(['message' => 'Leave updated successfully.'], 200);
@@ -67,7 +67,7 @@ class FixedLeavesController extends Controller
     public function destroy($id)
     {
         try {
-            $leaveLimit = FixedLeave::findOrFail($id);
+            $leaveLimit = FixedLeaves::findOrFail($id);
             $leaveLimit->delete();
 
             return response()->json(['message' => 'Leave deleted successfully.'], 200);

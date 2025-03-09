@@ -24,45 +24,55 @@ class ViewLeaveController extends Controller
             $minYear = Carbon::parse($user->start_date)->year;
             $maxYear = Carbon::now()->year + 1;
             $availableYears = range($minYear, $maxYear);
+            $totalLeaveDaysQuery = Leave::where('user_id', $userId)
+                                        ->where('status', 'approved');
 
-            $totalLeaveDaysQuery = Leave::where('user_id', $userId);
             if ($year) {
                 $totalLeaveDaysQuery->whereYear('start_date', $year);
             }
-    
-            $totalLeaveDays = $totalLeaveDaysQuery->sum('effective_leave_days');
-                $leavesQuery = Leave::where('user_id', $userId)
-                ->select('id', 'start_date', 'end_date', 'leave_type', 'other_type', 'leave_days_requested', 'effective_leave_days', 'attachment_path', 'status');
-    
-            if ($year) {
-                $leavesQuery->whereYear('start_date', $year);
-            }
-    
-            $leaves = $leavesQuery->orderBy('start_date', 'desc')
-                                  ->paginate(6)
-                                  ->appends($request->query());
 
+            $totalLeaveDays = $totalLeaveDaysQuery->sum('effective_leave_days');
+            $leavesQuery = Leave::where('user_id', $userId)
+                                ->select(
+                                    'id',
+                                    'start_date',
+                                    'end_date',
+                                    'leave_type',
+                                    'other_type',
+                                    'leave_days_requested',
+                                    'effective_leave_days',
+                                    'attachment_path',
+                                    'status'
+                                 );
+            if ($year) {
+                $leavesQuery->whereYear('start_date', $year)
+                            ->where('status', 'approved');
+            }
+            $leaves = $leavesQuery->orderBy('created_at', 'desc')
+                                ->paginate(6)
+                                ->appends($request->query());
             $data = $leaves->map(function ($leave) {
                 $leaveData = [
-                    'id'=> $leave->id,
+                    'id' => $leave->id,
                     'start_date' => $leave->start_date,
                     'end_date' => $leave->end_date,
-                    'reason' => $leave->reason,
+                    'leave_type' => $leave->leave_type,
                     'status' => $leave->status,
                     'leave_days_requested' => $leave->leave_days_requested,
+                    'effective_leave_days' => $leave->effective_leave_days
                 ];
 
                 if ($leave->attachment_path) {
                     $leaveData['attachment_path'] = asset($leave->attachment_path);
                 }
 
-                if ($leave->reason === 'other') {
-                    $leaveData['other_reason'] = $leave->other_reason;
-                    unset($leaveData['reason']);
-                } elseif ($leave->reason === 'sick_leave') {
+                if ($leave->leave_type === 'other') {
+                    $leaveData['other_type'] = $leave->other_type;
+                    unset($leaveData['leave_type']);
+                } elseif ($leave->leave_type === 'sick_leave') {
                     $leaveData['effective_leave_days'] = $leave->effective_leave_days;
                     unset($leaveData['leave_days_requested']);
-                    unset($leaveData['other_reason']);
+                    unset($leaveData['other_type']);
                 }
 
                 return $leaveData;
@@ -72,7 +82,6 @@ class ViewLeaveController extends Controller
                 'available_years' => $availableYears,
                 'total_leave_days' => $totalLeaveDays,
                 'data' => $data,
-                
                 'meta' => [
                     'selected_year' => $year,
                     'current_page' => $leaves->currentPage(),
@@ -87,6 +96,7 @@ class ViewLeaveController extends Controller
             }
 
             return response()->json($response);
+
         } catch (Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while retrieving leave data.',
@@ -94,6 +104,8 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
+
+    
 
 
 
@@ -104,7 +116,7 @@ class ViewLeaveController extends Controller
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
                 'leave_type' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
-                'other_reason' => 'nullable|required_if:leave_type,other|string|max:255',
+                'other_type' => 'nullable|required_if:leave_type,other|string|max:255',
                 'leave_days_requested' => 'required|numeric|min:1',
                 'effective_leave_days' => 'nullable|numeric|min:0',
             ]);
@@ -112,7 +124,7 @@ class ViewLeaveController extends Controller
             $leave->start_date = $validated['start_date'];
             $leave->end_date = $validated['end_date'];
             $leave->leave_type = $validated['leave_type'];
-            $leave->other_reason = isset($validated['other_reason']) ? $validated['other_reason'] : null;
+            $leave->other_type = isset($validated['other_type']) ? $validated['other_type'] : null;
             $leave->leave_days_requested = $validated['leave_days_requested'];
             $leave->save();
             return response()->json(['message' => 'Leave updated successfully!']);
@@ -159,21 +171,21 @@ class ViewLeaveController extends Controller
             $validated = $request->validate([
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
-                'reason' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
-                'other_reason' => 'nullable|required_if:reason,other|string|max:255',
+                'leave_type' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
+                'other_type' => 'nullable|required_if:leave_type,other|string|max:255',
                 'leave_days_requested' => 'required|numeric|min:1',
-                'attachment' => 'nullable|file|mimes:pdf,jpg,png|max:2048|required_if:reason,sick_leave'
+                'attachment' => 'nullable|file|mimes:pdf,jpg,png|max:2048|required_if:leave_type,sick_leave'
             ], [
-                'other_reason.required_if' => 'The "Other reason" field is required if the leave type is "other".',
+                'other_type.required_if' => 'The "Other leave_type" field is required if the leave type is "other".',
                 'attachment.required_if' => 'An attachment is required for sick leave.'
 
             ]);
             $leave->start_date = $validated['start_date'];
             $leave->end_date = $validated['end_date'];
-            $leave->reason = $validated['reason'];
+            $leave->leave_type = $validated['leave_type'];
             $leave->leave_days_requested = $validated['leave_days_requested'];
-            $leave->other_reason = $validated['reason'] === 'other' ? $validated['other_reason'] : null;
-            if ($validated['reason'] === 'sick_leave') {
+            $leave->other_type = $validated['leave_type'] === 'other' ? $validated['other_type'] : null;
+            if ($validated['leave_type'] === 'sick_leave') {
             $leave->effective_leave_days = max(0, $validated['leave_days_requested'] - 2);
             } else {
                 $leave->effective_leave_days = 0;
