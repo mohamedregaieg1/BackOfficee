@@ -118,7 +118,6 @@ class LeaveController extends Controller
             ]);
         }
 
-        // ✅ Partie notification
         $this->sendLeaveNotification(auth()->user(), $request->leave_type);
 
         return response()->json([
@@ -127,7 +126,6 @@ class LeaveController extends Controller
         ], 201);
     }
 
-    // ✅ Fonction pour gérer les notifications
     private function sendLeaveNotification($authUser, $leaveType)
     {
         $title = 'Nouvelle demande de congé';
