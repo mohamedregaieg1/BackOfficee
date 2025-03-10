@@ -21,10 +21,14 @@ class NotificationController extends Controller
             ->where('notifications.receiver_id', $user->id)
             ->orderBy('notifications.created_at', 'desc')
             ->get();
-        broadcast(new NewNotificationEvent($notification))->toOthers();
+
+        foreach ($notifications as $notification) {
+            broadcast(new NewNotificationEvent($notification))->toOthers();
+        }
 
         return response()->json($notifications);
     }
+
 
 
     public function markAsRead($id)
