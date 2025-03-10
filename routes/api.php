@@ -50,11 +50,7 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeaves']);
     Route::put('/leave/{leaveId}/update', [ViewLeaveController::class, 'updateLeaveForAdmin']);
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
-
+  
 
 
 });
@@ -73,5 +69,12 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::post('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
     Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
 
+
+});
+Route::middleware(['auth:api', 'role:employee,hr,admin'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
 
 });

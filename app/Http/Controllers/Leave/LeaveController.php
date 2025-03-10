@@ -145,7 +145,7 @@ class LeaveController extends Controller
         }
 
         foreach ($receivers as $receiver) {
-            Notification::create([
+            $notifications=Notification::create([
                 'sender_id' => $authUser->id,
                 'receiver_id' => $receiver->id,
                 'title' => $title,
@@ -153,7 +153,7 @@ class LeaveController extends Controller
             ]);
             
         }
-        broadcast(new NewNotificationEvent($notification))->toOthers();
+        broadcast(new NewNotificationEvent($notifications))->toOthers();
 
     }
 
