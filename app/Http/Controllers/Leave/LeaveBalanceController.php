@@ -64,7 +64,7 @@ class LeaveBalanceController extends Controller
                 'leave_day_limit.min' => 'The leave day limit must be at least 0.',
                 'description.max' => 'The description may not be greater than 255 characters.',
             ]);
-            $leave = LeaveBalance::create([
+            $leave = LeavesBalance::create([
                 'user_id' => $user->id,
                 'leave_day_limit' => $validated['leave_day_limit'],
                 'description' => $validated['description'],
@@ -108,7 +108,7 @@ class LeaveBalanceController extends Controller
     public function destroy($id)
     {
         try {
-            $leave = LeaveBalance::where('id', $id)->lockForUpdate()->firstOrFail();
+            $leave = LeavesBalance::where('id', $id)->lockForUpdate()->firstOrFail();
     
             $leave->delete();
     

@@ -59,7 +59,8 @@ class ViewLeaveController extends Controller
                     'leave_type' => $leave->leave_type,
                     'status' => $leave->status,
                     'leave_days_requested' => $leave->leave_days_requested,
-                    'effective_leave_days' => $leave->effective_leave_days
+                    'effective_leave_days' => $leave->effective_leave_days,
+                    'attachment_path'=>$leave->attachment_path,
                 ];
 
                 if ($leave->attachment_path) {
@@ -70,8 +71,6 @@ class ViewLeaveController extends Controller
                     $leaveData['other_type'] = $leave->other_type;
                     unset($leaveData['leave_type']);
                 } elseif ($leave->leave_type === 'sick_leave') {
-                    $leaveData['effective_leave_days'] = $leave->effective_leave_days;
-                    unset($leaveData['leave_days_requested']);
                     unset($leaveData['other_type']);
                 }
 
@@ -104,10 +103,6 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
-
-    
-
-
 
     public function updateLeaveForAdmin(Request $request, $leaveId)
     {

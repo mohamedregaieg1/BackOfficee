@@ -5,12 +5,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Authentificate\AuthController;
 use App\Http\Controllers\Authentificate\PasswordResetController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Leave\ViewLeaveController;
 use App\Http\Controllers\Leave\FixedLeavesController;
 use App\Http\Controllers\Employee\ProfileController;
+use App\Http\Controllers\NotificationController;
+
+
 
 
 
@@ -48,6 +50,9 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeaves']);
     Route::put('/leave/{leaveId}/update', [ViewLeaveController::class, 'updateLeaveForAdmin']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 
 
 });

@@ -129,7 +129,7 @@ class UserController extends Controller
 
             $validated = $request->validate([
                 'job_description' => 'required|string|max:15',
-                'company' => 'required|in:adequat,procan',
+                'company' => 'required|in:adequate,procan',
                 'role' => 'required|in:employee,hr',
             ], [
                 'job_description.required' => 'The job description is required.',
