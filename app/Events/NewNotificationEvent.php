@@ -14,16 +14,20 @@ class NewNotificationEvent implements ShouldBroadcast
 
     public $notification;
 
-    public function __construct(Notification $notifications)
+    // On passe une seule notification dans le constructeur
+    public function __construct(Notification $notification)
     {
-        $this->notification = $notifications;
+        $this->notification = $notification;
     }
 
+    // Diffuser sur un canal public ou privé en fonction des besoins
     public function broadcastOn()
     {
-        return ['notifications-channel'];
+        // Canal privé pour l'utilisateur récepteur
+        return new Channel('notifications.' . $this->notification->receiver_id); 
     }
 
+    // Nom de l'événement émis
     public function broadcastAs()
     {
         return 'new-notification';

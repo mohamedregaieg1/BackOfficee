@@ -169,6 +169,8 @@ class ViewLeaveController extends Controller
             'title' => $title,
             'message' => $message,
         ]);
+        broadcast(new NewNotificationEvent($notification))->toOthers();
+
     }
 
 

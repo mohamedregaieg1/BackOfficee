@@ -151,7 +151,10 @@ class LeaveController extends Controller
                 'title' => $title,
                 'message' => $message,
             ]);
+            
         }
+        broadcast(new NewNotificationEvent($notification))->toOthers();
+
     }
 
     private function calculateLeaveDaysRequested($leaveType, $leaveDays)
