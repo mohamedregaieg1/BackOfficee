@@ -128,14 +128,12 @@ class LeaveController extends Controller
 
     private function sendLeaveNotification($authUser, $leaveType)
     {
-        $title = 'Nouvelle demande de congé';
-        $message = "{$authUser->first_name} {$authUser->last_name} a demandé un congé de type {$leaveType}.";
+        $title = 'New leave request';
+        $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$leaveType}.";
 
         if ($authUser->role === 'employee') {
-            // Envoyer aux admins + RH
             $receivers = User::whereIn('role', ['admin', 'hr'])->get();
         } elseif ($authUser->role === 'hr') {
-            // Envoyer aux admins + RH sauf lui-même
             $receivers = User::where('role', 'admin')
                 ->orWhere(function ($query) use ($authUser) {
                     $query->where('role', 'hr')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Notification;
+use App\Events\NewNotificationEvent;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
@@ -20,6 +21,7 @@ class NotificationController extends Controller
             ->where('notifications.receiver_id', $user->id)
             ->orderBy('notifications.created_at', 'desc')
             ->get();
+        broadcast(new NewNotificationEvent($notification))->toOthers();
 
         return response()->json($notifications);
     }
@@ -44,4 +46,23 @@ class NotificationController extends Controller
 
         return response()->json(['unread_count' => $count]);
     }
+
+    public function deleteNotification($id)
+    {
+        try {
+            $notification = Notification::where('id', $id)
+                                        ->where('receiver_id', Auth::id())
+                                        ->firstOrFail();
+
+            $notification->delete();
+
+            return response()->json(['message' => 'Notification deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while deleting the notification.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

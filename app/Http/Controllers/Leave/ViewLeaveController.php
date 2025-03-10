@@ -141,8 +141,11 @@ class ViewLeaveController extends Controller
             ]);
 
             $leave = Leave::findOrFail($leaveId);
+
             $leave->status = $validated['status'];
             $leave->save();
+
+            $this->sendLeaveStatusNotification($leave);
 
             return response()->json(['message' => 'Leave status updated successfully!']);
         } catch (Exception $e) {
@@ -152,6 +155,22 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
+
+    protected function sendLeaveStatusNotification(Leave $leave)
+    {
+        $receiver = $leave->user;
+        $sender = Auth::user();
+        $statusText = $leave->status === 'approved' ? 'approved' : 'rejected';
+        $title = "Update on your leave request";
+        $message = "{$sender->first_name} {$sender->last_name} has {$statusText} your leave request for {$leave->leave_type}.";
+        Notification::create([
+            'sender_id' => $sender->id,
+            'receiver_id' => $receiver->id,
+            'title' => $title,
+            'message' => $message,
+        ]);
+    }
+
 
     public function updateLeave(Request $request, $leaveId)
     {
