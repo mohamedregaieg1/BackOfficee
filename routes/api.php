@@ -48,7 +48,7 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::get('/leave-balances/{userId}', [LeaveBalanceController::class, 'show']);
     Route::delete('/leave-balances/{id}', [LeaveBalanceController::class, 'destroy']);
     Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
-    Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeaves']);
+    Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeavesForAdmin']);
     Route::put('/leave/{leaveId}/update', [ViewLeaveController::class, 'updateLeaveForAdmin']);
   
 
@@ -65,7 +65,7 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::get('/user/profile', [ProfileController::class, 'show']);
     Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
-    Route::get('/employee/leaves/{userId}', [ViewLeaveController::class, 'showLeaves']);
+    Route::get('/employee/leaves', [ViewLeaveController::class, 'showLeavesForEmployee']);
     Route::post('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
     Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
 
