@@ -9,6 +9,7 @@ use App\Models\FixedLeaves;
 use App\Models\LeavesBalance;
 use App\Models\User;
 use App\Models\Notification;
+use App\Events\NewNotificationEvent;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
