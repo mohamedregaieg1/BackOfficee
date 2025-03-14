@@ -9,8 +9,10 @@ use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Leave\ViewLeaveController;
 use App\Http\Controllers\Leave\FixedLeavesController;
+use App\Http\Controllers\Leave\PublicHolidayController;
 use App\Http\Controllers\Employee\ProfileController;
 use App\Http\Controllers\NotificationController;
+
 
 
 
@@ -30,10 +32,8 @@ Route::post('password/reset', [PasswordResetController::class, 'resetPassword'])
 
 //route for admin 
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
-
     Route::apiResource('leave-limits', FixedLeavesController::class);
-
-
+    Route::apiResource('public-holidays', PublicHolidayController::class);
 });
 
 

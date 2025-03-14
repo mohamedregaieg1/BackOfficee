@@ -18,11 +18,12 @@ use Dompdf\Options;
 
 class LeaveController extends Controller
 {
+
     public function calculateLeaveDays(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => 'required|date_format:Y-m-d H:i:s',
+            'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
             'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,vacation,travel_leave,other',
             'other_type' => 'required_if:leave_type,other',
         ]);
@@ -33,7 +34,9 @@ class LeaveController extends Controller
 
         $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
         $user = Auth::user();
+
         $remainingDays = $this->getRemainingLeaveDays($user->id, $request->leave_type, $leaveDays);
+        $remainingDays = round($remainingDays, 2);
 
         return response()->json([
             'start_date' => $request->start_date,
@@ -48,10 +51,10 @@ class LeaveController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => 'required|date_format:Y-m-d H:i:s',
+            'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
             'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,vacation,travel_leave,other',
-            'leave_days' => 'required|integer|min:1',
+            'leave_days' => 'required|regex:/^\d+(\.\d{1})?$/',
             'other_type' => 'required_if:leave_type,other|string|max:255',
             'attachment' => 'required_if:leave_type,sick_leave|file',
         ]);
@@ -216,20 +219,54 @@ class LeaveController extends Controller
         }
     }
 
-    private function getWorkingDays($startDate, $endDate)
+    public static function getWorkingDays($startDate, $endDate)
     {
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
-
+    
         $workingDays = 0;
-
-        while ($start <= $end) {
-            if (!$start->isWeekend()) {
-                $workingDays++;
+    
+        if ($start->isSameDay($end)) {
+            if ($end->gt($start)) {
+                $hoursDifference = $start->diffInHours($end);
+            } else {
+                $hoursDifference = 0;
             }
-            $start->addDay();
+    
+            if ($hoursDifference > 0) {
+                $workingDays = $hoursDifference / 8;
+                $workingDays = round($workingDays, 1);
+            }
+        } else {
+            $holidays = \App\Models\PublicHoliday::where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($query) use ($startDate, $endDate) {
+                        $query->where('start_date', '<=', $startDate)
+                              ->where('end_date', '>=', $endDate);
+                    });
+            })->get();
+    
+            $holidayDates = [];
+            foreach ($holidays as $holiday) {
+                $holidayStart = Carbon::parse($holiday->start_date);
+                $holidayEnd = Carbon::parse($holiday->end_date);
+                
+                while ($holidayStart <= $holidayEnd) {
+                    $holidayDates[] = $holidayStart->toDateString();
+                    $holidayStart->addDay();
+                }
+            }
+    
+            while ($start <= $end) {
+                if (!$start->isWeekend() && !in_array($start->toDateString(), $holidayDates)) {
+                    $workingDays++;
+                }
+    
+                $start->addDay();
+            }
         }
-
+    
         return $workingDays;
     }
 

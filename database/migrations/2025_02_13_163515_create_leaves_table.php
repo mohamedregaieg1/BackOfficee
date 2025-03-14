@@ -19,8 +19,8 @@ return new class extends Migration
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
             $table->enum('leave_type', ['paternity_leave', 'maternity_leave', 'sick_leave', 'vacation', 'travel_leave', 'other']); 
             $table->string('other_type')->nullable();
             $table->double('leave_days_requested');
