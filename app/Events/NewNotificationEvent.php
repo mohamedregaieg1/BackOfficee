@@ -22,8 +22,9 @@ class NewNotificationEvent implements ShouldBroadcastNow
 
     public function broadcastOn()
     {
-        return ['notifications-channel'];
+        return ['notifications-channel.' . $this->notification->receiver_id];
     }
+
 
     public function broadcastAs()
     {

@@ -152,9 +152,8 @@ class LeaveController extends Controller
                 'title' => $title,
                 'message' => $message,
             ]);
-            
+            broadcast(new NewNotificationEvent($notifications))->toOthers();
         }
-        broadcast(new NewNotificationEvent($notifications))->toOthers();
 
     }
 
