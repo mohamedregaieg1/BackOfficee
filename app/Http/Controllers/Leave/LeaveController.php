@@ -18,7 +18,9 @@ use Dompdf\Options;
 
 class LeaveController extends Controller
 {
-
+    /**
+     * Calculate the number of working days between two dates.
+     */
     public function calculateLeaveDays(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -48,6 +50,9 @@ class LeaveController extends Controller
         ], 200);
     }
 
+    /**
+     * Store a new leave request in the database.
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -88,23 +93,23 @@ class LeaveController extends Controller
             $leaveEntries[] = Leave::create([
                 'user_id' => auth()->id(),
                 'start_date' => $request->start_date,
-                'end_date' => $midYearDate->toDateString(),
+                'end_date' => $midYearDate->toDateString() . ' 23:59:59',
                 'leave_type' => $request->leave_type,
                 'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
-                'leave_days_requested' => $this->getWorkingDays($request->start_date, $midYearDate),
-                'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($request->start_date, $midYearDate)),
+                'leave_days_requested' => $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 23:59:59'),
+                'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 23:59:59')),
                 'attachment_path' => $attachmentPath,
                 'status' => 'on_hold'
             ]);
 
             $leaveEntries[] = Leave::create([
                 'user_id' => auth()->id(),
-                'start_date' => $midYearDate->addDay()->toDateString(),
+                'start_date' => $midYearDate->addDay()->toDateString() . ' 00:00:00',
                 'end_date' => $request->end_date,
                 'leave_type' => $request->leave_type,
                 'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
-                'leave_days_requested' => $this->getWorkingDays($midYearDate, $request->end_date),
-                'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($midYearDate, $request->end_date)),
+                'leave_days_requested' => $this->getWorkingDays($midYearDate->toDateString() . ' 00:00:00', $request->end_date),
+                'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($midYearDate->toDateString() . ' 00:00:00', $request->end_date)),
                 'attachment_path' => $attachmentPath,
                 'status' => 'on_hold'
             ]);
@@ -130,6 +135,9 @@ class LeaveController extends Controller
         ], 201);
     }
 
+    /**
+     * Send a notification to relevant users about a new leave request.
+     */
     private function sendLeaveNotification($authUser, $leaveType)
     {
         $title = 'New leave request';
@@ -149,7 +157,7 @@ class LeaveController extends Controller
         }
 
         foreach ($receivers as $receiver) {
-            $notifications=Notification::create([
+            $notifications = Notification::create([
                 'sender_id' => $authUser->id,
                 'receiver_id' => $receiver->id,
                 'title' => $title,
@@ -157,9 +165,11 @@ class LeaveController extends Controller
             ]);
             broadcast(new NewNotificationEvent($notifications))->toOthers();
         }
-
     }
 
+    /**
+     * Calculate the effective leave days based on the leave type.
+     */
     private function calculateLeaveDaysRequested($leaveType, $leaveDays)
     {
         if ($leaveType == 'sick_leave') {
@@ -169,6 +179,9 @@ class LeaveController extends Controller
         return $leaveDays;
     }
 
+    /**
+     * Get the remaining leave days for a specific user and leave type.
+     */
     private function getRemainingLeaveDays($userId, $leaveType, $requestedLeaveDays)
     {
         $specificLeaves = ['paternity_leave', 'maternity_leave', 'sick_leave'];
@@ -219,57 +232,66 @@ class LeaveController extends Controller
         }
     }
 
+    /**
+     * Get the number of working days between two dates.
+     */
     public static function getWorkingDays($startDate, $endDate)
     {
         $start = Carbon::parse($startDate);
-        $end = Carbon::parse($endDate);
-    
-        $workingDays = 0;
-    
-        if ($start->isSameDay($end)) {
-            if ($end->gt($start)) {
-                $hoursDifference = $start->diffInHours($end);
+        $end   = Carbon::parse($endDate);
+        $total = 0;
+
+        if ($start->toDateString() === $end->toDateString()) {
+            $startHour = $start->hour;
+            $endHour = $end->hour;
+
+            if ($startHour === 8 && $endHour <= 12) {
+                return 0.5;
+            } elseif ($startHour >= 12 && $endHour >= 17) {
+                return 0.5;
             } else {
-                $hoursDifference = 0;
-            }
-    
-            if ($hoursDifference > 0) {
-                $workingDays = $hoursDifference / 8;
-                $workingDays = round($workingDays, 1);
-            }
-        } else {
-            $holidays = \App\Models\PublicHoliday::where(function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate])
-                    ->orWhere(function ($query) use ($startDate, $endDate) {
-                        $query->where('start_date', '<=', $startDate)
-                              ->where('end_date', '>=', $endDate);
-                    });
-            })->get();
-    
-            $holidayDates = [];
-            foreach ($holidays as $holiday) {
-                $holidayStart = Carbon::parse($holiday->start_date);
-                $holidayEnd = Carbon::parse($holiday->end_date);
-                
-                while ($holidayStart <= $holidayEnd) {
-                    $holidayDates[] = $holidayStart->toDateString();
-                    $holidayStart->addDay();
-                }
-            }
-    
-            while ($start <= $end) {
-                if (!$start->isWeekend() && !in_array($start->toDateString(), $holidayDates)) {
-                    $workingDays++;
-                }
-    
-                $start->addDay();
+                return 1;
             }
         }
-    
-        return $workingDays;
+
+        if (!$start->isWeekend()) {
+            $total += self::getDayFraction($start);
+        }
+
+        if (!$end->isWeekend()) {
+            $total += self::getDayFraction($end);
+        }
+
+        $current = $start->copy()->addDay();
+        while ($current->lt($end)) {
+            if (!$current->isWeekend()) {
+                $total += 1;
+            }
+            $current->addDay();
+        }
+
+        return round($total, 1);
     }
 
+    /**
+     * Calculate the day fraction for a specific date based on its hour.
+     */
+    private static function getDayFraction(Carbon $date)
+    {
+        $hour = $date->hour;
+
+        if ($hour === 8) {
+            return 1;
+        } elseif ($hour === 12 || $hour === 17) {
+            return 0.5;
+        }
+
+        return 1;
+    }
+
+    /**
+     * Generate a PDF for an approved leave request.
+     */
     public function downloadLeavePdf($leaveId)
     {
         $leave = Leave::where('id', $leaveId)

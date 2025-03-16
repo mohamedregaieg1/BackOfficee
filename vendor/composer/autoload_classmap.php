@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Events\\NewNotificationEvent' => $baseDir . '/app/Events/NewNotificationEvent.php',
     'App\\Http\\Controllers\\Admin\\UserController' => $baseDir . '/app/Http/Controllers/Admin/UserController.php',
     'App\\Http\\Controllers\\Authentificate\\AuthController' => $baseDir . '/app/Http/Controllers/Authentificate/AuthController.php',
     'App\\Http\\Controllers\\Authentificate\\PasswordResetController' => $baseDir . '/app/Http/Controllers/Authentificate/PasswordResetController.php',
@@ -14,6 +15,7 @@ return array(
     'App\\Http\\Controllers\\Leave\\FixedLeavesController' => $baseDir . '/app/Http/Controllers/Leave/FixedLeavesController.php',
     'App\\Http\\Controllers\\Leave\\LeaveBalanceController' => $baseDir . '/app/Http/Controllers/Leave/LeaveBalanceController.php',
     'App\\Http\\Controllers\\Leave\\LeaveController' => $baseDir . '/app/Http/Controllers/Leave/LeaveController.php',
+    'App\\Http\\Controllers\\Leave\\PublicHolidayController' => $baseDir . '/app/Http/Controllers/Leave/PublicHolidayController.php',
     'App\\Http\\Controllers\\Leave\\ViewLeaveController' => $baseDir . '/app/Http/Controllers/Leave/ViewLeaveController.php',
     'App\\Http\\Controllers\\NotificationController' => $baseDir . '/app/Http/Controllers/NotificationController.php',
     'App\\Http\\Middleware\\RoleMiddleware' => $baseDir . '/app/Http/Middleware/RoleMiddleware.php',
@@ -22,6 +24,7 @@ return array(
     'App\\Models\\LeavesBalance' => $baseDir . '/app/Models/LeavesBalance.php',
     'App\\Models\\Notification' => $baseDir . '/app/Models/Notification.php',
     'App\\Models\\PasswordResetToken' => $baseDir . '/app/Models/PasswordResetToken.php',
+    'App\\Models\\PublicHoliday' => $baseDir . '/app/Models/PublicHoliday.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',

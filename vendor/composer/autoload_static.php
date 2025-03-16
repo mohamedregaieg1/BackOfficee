@@ -679,6 +679,7 @@ class ComposerStaticInit626b9e7ddd47fb7eff9aaa53cce0c9ad
     );
 
     public static $classMap = array (
+        'App\\Events\\NewNotificationEvent' => __DIR__ . '/../..' . '/app/Events/NewNotificationEvent.php',
         'App\\Http\\Controllers\\Admin\\UserController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/UserController.php',
         'App\\Http\\Controllers\\Authentificate\\AuthController' => __DIR__ . '/../..' . '/app/Http/Controllers/Authentificate/AuthController.php',
         'App\\Http\\Controllers\\Authentificate\\PasswordResetController' => __DIR__ . '/../..' . '/app/Http/Controllers/Authentificate/PasswordResetController.php',
@@ -687,6 +688,7 @@ class ComposerStaticInit626b9e7ddd47fb7eff9aaa53cce0c9ad
         'App\\Http\\Controllers\\Leave\\FixedLeavesController' => __DIR__ . '/../..' . '/app/Http/Controllers/Leave/FixedLeavesController.php',
         'App\\Http\\Controllers\\Leave\\LeaveBalanceController' => __DIR__ . '/../..' . '/app/Http/Controllers/Leave/LeaveBalanceController.php',
         'App\\Http\\Controllers\\Leave\\LeaveController' => __DIR__ . '/../..' . '/app/Http/Controllers/Leave/LeaveController.php',
+        'App\\Http\\Controllers\\Leave\\PublicHolidayController' => __DIR__ . '/../..' . '/app/Http/Controllers/Leave/PublicHolidayController.php',
         'App\\Http\\Controllers\\Leave\\ViewLeaveController' => __DIR__ . '/../..' . '/app/Http/Controllers/Leave/ViewLeaveController.php',
         'App\\Http\\Controllers\\NotificationController' => __DIR__ . '/../..' . '/app/Http/Controllers/NotificationController.php',
         'App\\Http\\Middleware\\RoleMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/RoleMiddleware.php',
@@ -695,6 +697,7 @@ class ComposerStaticInit626b9e7ddd47fb7eff9aaa53cce0c9ad
         'App\\Models\\LeavesBalance' => __DIR__ . '/../..' . '/app/Models/LeavesBalance.php',
         'App\\Models\\Notification' => __DIR__ . '/../..' . '/app/Models/Notification.php',
         'App\\Models\\PasswordResetToken' => __DIR__ . '/../..' . '/app/Models/PasswordResetToken.php',
+        'App\\Models\\PublicHoliday' => __DIR__ . '/../..' . '/app/Models/PublicHoliday.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
