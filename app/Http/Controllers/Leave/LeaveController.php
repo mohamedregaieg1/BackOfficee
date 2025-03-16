@@ -18,9 +18,6 @@ use Dompdf\Options;
 
 class LeaveController extends Controller
 {
-    /**
-     * Calculate the number of working days between two dates.
-     */
     public function calculateLeaveDays(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -36,7 +33,6 @@ class LeaveController extends Controller
 
         $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
         $user = Auth::user();
-
         $remainingDays = $this->getRemainingLeaveDays($user->id, $request->leave_type, $leaveDays);
         $remainingDays = round($remainingDays, 2);
 
@@ -50,9 +46,6 @@ class LeaveController extends Controller
         ], 200);
     }
 
-    /**
-     * Store a new leave request in the database.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -93,10 +86,10 @@ class LeaveController extends Controller
             $leaveEntries[] = Leave::create([
                 'user_id' => auth()->id(),
                 'start_date' => $request->start_date,
-                'end_date' => $midYearDate->toDateString() . ' 23:59:59',
+                'end_date' => $midYearDate->toDateString() . ' 08:00:00',
                 'leave_type' => $request->leave_type,
                 'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
-                'leave_days_requested' => $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 23:59:59'),
+                'leave_days_requested' => $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 08:00:00'),
                 'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 23:59:59')),
                 'attachment_path' => $attachmentPath,
                 'status' => 'on_hold'
@@ -104,11 +97,11 @@ class LeaveController extends Controller
 
             $leaveEntries[] = Leave::create([
                 'user_id' => auth()->id(),
-                'start_date' => $midYearDate->addDay()->toDateString() . ' 00:00:00',
+                'start_date' => $midYearDate->addDay()->toDateString() . ' 08:00:00',
                 'end_date' => $request->end_date,
                 'leave_type' => $request->leave_type,
                 'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
-                'leave_days_requested' => $this->getWorkingDays($midYearDate->toDateString() . ' 00:00:00', $request->end_date),
+                'leave_days_requested' => $this->getWorkingDays($midYearDate->toDateString() . ' 08:00:00', $request->end_date),
                 'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($midYearDate->toDateString() . ' 00:00:00', $request->end_date)),
                 'attachment_path' => $attachmentPath,
                 'status' => 'on_hold'
@@ -127,7 +120,7 @@ class LeaveController extends Controller
             ]);
         }
 
-        $this->sendLeaveNotification(auth()->user(), $request->leave_type);
+        $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null);
 
         return response()->json([
             'message' => 'Leave request stored successfully!',
@@ -135,13 +128,15 @@ class LeaveController extends Controller
         ], 201);
     }
 
-    /**
-     * Send a notification to relevant users about a new leave request.
-     */
-    private function sendLeaveNotification($authUser, $leaveType)
+    private function sendLeaveNotification($authUser, $leaveType, $otherType = null)
     {
         $title = 'New leave request';
-        $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$leaveType}.";
+
+        if ($leaveType === 'other' && $otherType) {
+            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$otherType}.";
+        } else {
+            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$leaveType}.";
+        }
 
         if ($authUser->role === 'employee') {
             $receivers = User::whereIn('role', ['admin', 'hr'])->get();
@@ -167,9 +162,6 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Calculate the effective leave days based on the leave type.
-     */
     private function calculateLeaveDaysRequested($leaveType, $leaveDays)
     {
         if ($leaveType == 'sick_leave') {
@@ -179,9 +171,6 @@ class LeaveController extends Controller
         return $leaveDays;
     }
 
-    /**
-     * Get the remaining leave days for a specific user and leave type.
-     */
     private function getRemainingLeaveDays($userId, $leaveType, $requestedLeaveDays)
     {
         $specificLeaves = ['paternity_leave', 'maternity_leave', 'sick_leave'];
@@ -232,66 +221,114 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Get the number of working days between two dates.
-     */
     public static function getWorkingDays($startDate, $endDate)
     {
         $start = Carbon::parse($startDate);
-        $end   = Carbon::parse($endDate);
-        $total = 0;
+        $end = Carbon::parse($endDate);
 
-        if ($start->toDateString() === $end->toDateString()) {
-            $startHour = $start->hour;
-            $endHour = $end->hour;
+        $holidays = \App\Models\PublicHoliday::where(function($query) use ($start, $end) {
+            $query->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
+                ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
+                ->orWhere(function($query) use ($start, $end) {
+                    $query->where('start_date', '<=', $start->toDateString())
+                          ->where('end_date', '>=', $end->toDateString());
+                });
+        })->get();
 
-            if ($startHour === 8 && $endHour <= 12) {
-                return 0.5;
-            } elseif ($startHour >= 12 && $endHour >= 17) {
-                return 0.5;
-            } else {
-                return 1;
+        $holidayDates = collect();
+        foreach ($holidays as $holiday) {
+            $period = Carbon::parse($holiday->start_date)->daysUntil(Carbon::parse($holiday->end_date)->addDay());
+            foreach ($period as $date) {
+                $holidayDates->push($date->toDateString());
             }
         }
 
-        if (!$start->isWeekend()) {
-            $total += self::getDayFraction($start);
+        if ($start->toDateString() === $end->toDateString()) {
+            if ($start->isWeekend() || $holidayDates->contains($start->toDateString())) {
+                return 0;
+            }
+
+            return self::getSameDayFraction($start);
         }
 
-        if (!$end->isWeekend()) {
-            $total += self::getDayFraction($end);
+        $total = 0;
+
+        if (!$start->isWeekend() && !$holidayDates->contains($start->toDateString())) {
+            $total += self::getStartDayFraction($start);
         }
 
         $current = $start->copy()->addDay();
-        while ($current->lt($end)) {
-            if (!$current->isWeekend()) {
+        while ($current->lt($end->copy()->startOfDay())) {
+            if (!$current->isWeekend() && !$holidayDates->contains($current->toDateString())) {
                 $total += 1;
             }
             $current->addDay();
         }
 
-        return round($total, 1);
+        if (!$end->isWeekend() && !$holidayDates->contains($end->toDateString())) {
+            $total += self::getEndDayFraction($end);
+        }
+
+        return $total;
     }
 
-    /**
-     * Calculate the day fraction for a specific date based on its hour.
-     */
-    private static function getDayFraction(Carbon $date)
+    private static function getSameDayFraction(Carbon $start)
     {
-        $hour = $date->hour;
+        $startHour = $start->hour;
 
-        if ($hour === 8) {
+        if ($startHour === 8) {
             return 1;
-        } elseif ($hour === 12 || $hour === 17) {
+        }
+
+        if ($startHour === 12) {
+            return 0.5;
+        }
+
+        if ($startHour === 17) {
             return 0.5;
         }
 
         return 1;
     }
 
-    /**
-     * Generate a PDF for an approved leave request.
-     */
+    private static function getStartDayFraction(Carbon $start)
+    {
+        $startHour = $start->hour;
+
+        if ($startHour === 8) {
+            return 1;
+        }
+
+        if ($startHour === 12) {
+            return 0.5;
+        }
+
+        if ($startHour === 17) {
+            return 0;
+        }
+
+        return 1;
+    }
+
+    private static function getEndDayFraction(Carbon $end)
+    {
+        $endHour = $end->hour;
+
+        if ($endHour === 17) {
+            return 0.5;
+        }
+
+        if ($endHour === 12) {
+            return 0.5;
+        }
+
+        if ($endHour === 8) {
+            return 1;
+        }
+
+        return 1;
+    }
+
     public function downloadLeavePdf($leaveId)
     {
         $leave = Leave::where('id', $leaveId)

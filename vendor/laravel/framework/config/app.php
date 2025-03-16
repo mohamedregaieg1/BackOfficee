@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
+
 return [
 
     /*
@@ -165,9 +166,11 @@ return [
 
     'providers' => ServiceProvider::defaultProviders()->merge([
         Barryvdh\DomPDF\ServiceProvider::class,
+        
     ])->merge([
         // Application Service Providers...
-        // App\Providers\AppServiceProvider::class,
+        App\Providers\AppServiceProvider::class,
+
     ])->merge([
         // Added Service Providers (Do not remove this line)...
     ])->toArray(),
