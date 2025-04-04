@@ -39,7 +39,7 @@ class PasswordResetController extends Controller
             'created_at' => now(),
         ]);
 
-        $resetLink = 'http://localhost:4200/reset-password?token='.$token;
+        $resetLink = 'http://localhost:4200/#/reset-password?token='.$token;
         $htmlContent = "
     <html>
     <head>

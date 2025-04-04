@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Authentificate\AuthController;
 use App\Http\Controllers\Authentificate\PasswordResetController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\InvoiceAndQuoteController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Leave\ViewLeaveController;
@@ -34,6 +37,13 @@ Route::post('password/reset', [PasswordResetController::class, 'resetPassword'])
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::apiResource('leave-limits', FixedLeavesController::class);
     Route::apiResource('public-holidays', PublicHolidayController::class);
+    Route::get('/by-name', [CompanyController::class, 'showByName']);
+    Route::post('/companies', [CompanyController::class, 'store']);
+    Route::put('/{id}', [CompanyController::class, 'update']);
+    Route::post('invoices/step-one', [InvoiceController::class, 'stepOne']);
+    Route::post('invoices/step-two', [InvoiceController::class, 'stepTwo']);
+    Route::post('invoices/step-three', [InvoiceController::class, 'stepThree']);
+    Route::post('invoices/store', [InvoiceController::class, 'store']);
 });
 
 

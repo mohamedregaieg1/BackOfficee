@@ -55,7 +55,7 @@ class Kernel implements KernelContract
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        
+        \Illuminate\Session\Middleware\StartSession::class,
     ];
 
     /**

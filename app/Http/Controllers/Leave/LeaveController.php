@@ -304,7 +304,7 @@ class LeaveController extends Controller
         }
 
         if ($startHour === 17) {
-            return 0;
+            return 0.5;
         }
 
         return 1;
