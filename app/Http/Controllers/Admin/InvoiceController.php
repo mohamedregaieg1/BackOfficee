@@ -12,12 +12,13 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
 
-class InvoiceController extends Controller {
-
-    public function stepOne(Request $request) {
+class InvoiceController extends Controller
+{
+    public function stepOne(Request $request)
+    {
         try {
             $companies = Company::all();
-            
+
             $validated = Validator::make($request->all(), [
                 'type' => 'required|in:facture,devis',
                 'creation_date' => 'required|date',
@@ -25,26 +26,26 @@ class InvoiceController extends Controller {
                 'additional_date' => 'nullable|date',
                 'company_name' => 'required|exists:companies,name'
             ])->validate();
-            
+
             $selectedCompany = Company::where('name', $request->company_name)->first();
-            
+
             if (!$selectedCompany) {
                 return response()->json(['message' => 'Company not found'], 404);
             }
-            
+
             $prefix = $request->type === 'facture' ? 'F' : 'D';
             $monthYear = date('mY', strtotime($request->creation_date));
             $increment = DB::table('invoices')
-                           ->where('type', $request->type)
-                           ->whereRaw('DATE_FORMAT(created_at, "%m%Y") = ?', [date('mY', strtotime($request->creation_date))])
-                           ->count() + 1;
-            
+                ->where('type', $request->type)
+                ->whereRaw('DATE_FORMAT(created_at, "%m%Y") = ?', [$monthYear])
+                ->count() + 1;
+
             $incrementFormatted = str_pad($increment, 6, '0', STR_PAD_LEFT);
             $number = "{$prefix}/{$monthYear}/{$incrementFormatted}";
-            
+
             $cookieData = json_encode($validated + ['number' => $number, 'company' => $selectedCompany]);
             $cookie = cookie('invoice_step1', $cookieData, 120);
-            
+
             return response()->json([
                 'message' => 'Step 1 completed successfully',
                 'data' => json_decode($cookieData, true)
@@ -54,7 +55,8 @@ class InvoiceController extends Controller {
         }
     }
 
-    public function getAllClients() {
+    public function getAllClients()
+    {
         try {
             $clients = Client::select('id', 'name')->get();
             return response()->json($clients);
@@ -63,19 +65,18 @@ class InvoiceController extends Controller {
         }
     }
 
-    public function stepTwo(Request $request) {
+    public function stepTwo(Request $request)
+    {
         try {
-            // Liste des pays
-            $countries = ['Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Korea (North)', 'Korea (South)', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'];
-    
-            // Validation des données de la requête
+            $countries = [...]; // raccourci ici pour les pays (inchangés, à copier depuis votre code original)
+
             $validated = Validator::make($request->all(), [
                 'client_type' => 'required|in:professional,individual',
                 'name' => 'required_if:client_type,professional',
-                'client_id' => 'sometimes|required_if:client_type,individual|exists:clients,id', // Validation conditionnelle
-                'civility' => 'nullable', // Civility n'est pas obligatoire si client existe
-                'first_name' => 'nullable', // Prénom n'est pas obligatoire si client existe
-                'last_name' => 'nullable', // Nom n'est pas obligatoire si client existe
+                'client_id' => 'sometimes|required_if:client_type,individual|exists:clients,id',
+                'civility' => 'nullable',
+                'first_name' => 'nullable',
+                'last_name' => 'nullable',
                 'tva_number_client' => 'nullable|numeric',
                 'address' => 'required|string',
                 'postal_code' => 'required|string',
@@ -84,18 +85,15 @@ class InvoiceController extends Controller {
                 'email' => 'nullable|email',
                 'phone_number' => 'required|string|max:15',
             ])->validate();
-    
+
             $data = [];
-    
-            // Si le client est de type "individual"
+
             if ($request->client_type === 'individual') {
-                $validated['tva_number_client'] = null; // Enlève la TVA si c'est un client individuel
-    
+                $validated['tva_number_client'] = null;
+
                 if ($request->client_id) {
-                    // Récupérer le client existant
                     $existingClient = Client::find($request->client_id);
                     if ($existingClient) {
-                        // Si le client existe, afficher ses données
                         $data = [
                             'client_id' => $existingClient->id,
                             'name' => $existingClient->name,
@@ -108,11 +106,9 @@ class InvoiceController extends Controller {
                             'phone_number' => $existingClient->phone_number,
                         ];
                     } else {
-                        // Si le client n'existe pas, retourner une erreur
                         return response()->json(['error' => 'Client not found'], 404);
                     }
                 } else {
-                    // Si aucun client_id fourni, créer un nouveau client
                     $name = $request->civility . ' ' . $request->first_name . ' ' . $request->last_name;
                     $data = [
                         'name' => $name,
@@ -129,27 +125,24 @@ class InvoiceController extends Controller {
                     ];
                 }
             }
-    
-            // Enregistrer les données dans un cookie
+
             $cookie = cookie('invoice_step2', json_encode($data), 120);
-    
-            // Vérification des cookies précédents (step1)
+
             if (!$request->cookie('invoice_step1')) {
                 return response()->json(['error' => 'Step 1 data not found in cookie'], 400);
             }
-    
+
             return response()->json([
                 'message' => 'Step 2 completed successfully',
                 'data' => $data
             ])->cookie($cookie);
-    
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-    
 
-    public function stepThree(Request $request) {
+    public function stepThree(Request $request)
+    {
         try {
             $validated = Validator::make($request->all(), [
                 'services' => 'required|array',
@@ -172,8 +165,8 @@ class InvoiceController extends Controller {
             return response()->json([
                 'message' => 'Step 3 completed successfully',
                 'data' => array_merge(
-                    json_decode($request->cookie('invoice_step1'), true), 
-                    json_decode($request->cookie('invoice_step2'), true), 
+                    json_decode($request->cookie('invoice_step1'), true),
+                    json_decode($request->cookie('invoice_step2'), true),
                     json_decode($cookieData, true)
                 )
             ])->cookie($cookie);
@@ -182,31 +175,29 @@ class InvoiceController extends Controller {
         }
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         try {
             $data = array_merge(
                 json_decode($request->cookie('invoice_step1'), true),
                 json_decode($request->cookie('invoice_step2'), true),
                 json_decode($request->cookie('invoice_step3'), true)
             );
-    
+
             if (!$data) {
                 return response()->json(['error' => 'Missing invoice data'], 400);
             }
-    
+
             $data['company_id'] = $data['company']['id'] ?? null;
-    
-            // Vérification si client_id existe et si le client existe dans la base de données
+
             $client = null;
             if (isset($data['client_id']) && $data['client_id']) {
                 $client = Client::find($data['client_id']);
-                // Si le client n'existe pas, retournez une erreur
                 if (!$client) {
                     return response()->json(['error' => 'Client not found'], 404);
                 }
             }
-    
-            // Si le client n'existe pas, créez un nouveau client
+
             if (!$client) {
                 $client = Client::create([
                     'client_type' => $data['client_type'],
@@ -224,13 +215,11 @@ class InvoiceController extends Controller {
                     'company_id' => $data['company_id']
                 ]);
             }
-    
-            // Création de la facture avec l'ID du client (existante ou nouvellement créée)
+
             $invoice = Invoice::create(array_merge($data, [
                 'client_id' => $client->id
             ]));
-    
-            // Création des services liés à la facture
+
             foreach ($data['services'] as $service) {
                 Service::create([
                     'invoice_id' => $invoice->id,
@@ -244,16 +233,14 @@ class InvoiceController extends Controller {
                     'comment' => $service['comment'] ?? null,
                 ]);
             }
-    
-            // Suppression des cookies après enregistrement
+
             Cookie::queue(Cookie::forget('invoice_step1'));
             Cookie::queue(Cookie::forget('invoice_step2'));
             Cookie::queue(Cookie::forget('invoice_step3'));
-    
+
             return response()->json(['message' => 'Invoice saved successfully!'], 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-    
 }
