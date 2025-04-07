@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->double('tva_number')->nullable();
-            $table->text('address');
-            $table->string('postal_code');
+            $table->text('address')->nullable();
+            $table->string('postal_code')->nullable();
             $table->enum('country', ['France', 'Tunisia'])->default('Tunisia');
             $table->string('rib_bank')->nullable();
             $table->string('email')->nullable();
             $table->string('website')->nullable();
-            $table->string('phone_number', 15);
+            $table->string('phone_number', 15)->nullable();
             $table->timestamps();
         });
     }

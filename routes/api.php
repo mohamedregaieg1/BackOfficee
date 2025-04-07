@@ -41,6 +41,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::post('/companies', [CompanyController::class, 'store']);
     Route::put('/{id}', [CompanyController::class, 'update']);
     Route::post('invoices/step-one', [InvoiceController::class, 'stepOne']);
+    Route::get('/clients', [InvoiceController::class, 'getAllClients']);
     Route::post('invoices/step-two', [InvoiceController::class, 'stepTwo']);
     Route::post('invoices/step-three', [InvoiceController::class, 'stepThree']);
     Route::post('invoices/store', [InvoiceController::class, 'store']);

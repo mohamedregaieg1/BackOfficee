@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->enum('client_type', ['professional', 'individual']);
             $table->string('name');
-            $table->double('tva_number')->nullable();
+            $table->double('tva_number_client')->nullable();
             $table->text('address');
             $table->string('postal_code');
             $table->string('rib_bank')->nullable();
