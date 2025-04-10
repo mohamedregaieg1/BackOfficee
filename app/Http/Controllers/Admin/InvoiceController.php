@@ -174,7 +174,7 @@ class InvoiceController extends Controller
             return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-
+    // mateb3th chy fi function store
     public function store(Request $request)
     {
         try {
