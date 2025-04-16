@@ -35,15 +35,12 @@ class CompanyController extends Controller
                 'website' => null,
                 'phone_number' => null
             ]);
-        } catch (ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'errors' => $e->errors(),
-                'message' => 'Validation error occurred.',
-            ], 422);
-        } catch (Exception $e) {
-            return response()->json([
-                'message' => 'An error occurred while retrieving the company.',
-                'error' => $e->getMessage(),
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -67,15 +64,12 @@ class CompanyController extends Controller
                 'message' => 'Company profile created successfully',
                 'data' => $company
             ], 201);
-        } catch (ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'errors' => $e->errors(),
-                'message' => 'Validation error occurred.',
-            ], 422);
-        } catch (Exception $e) {
-            return response()->json([
-                'message' => 'An error occurred while creating the company.',
-                'error' => $e->getMessage(),
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -102,15 +96,12 @@ class CompanyController extends Controller
                 'message' => 'Company profile updated successfully',
                 'data' => $company
             ]);
-        } catch (ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'errors' => $e->errors(),
-                'message' => 'Validation error occurred.',
-            ], 422);
-        } catch (Exception $e) {
-            return response()->json([
-                'message' => 'An error occurred while updating the company.',
-                'error' => $e->getMessage(),
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }

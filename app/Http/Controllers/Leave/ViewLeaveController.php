@@ -107,10 +107,12 @@ class ViewLeaveController extends Controller
             ];
 
             return response()->json($response);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An error occurred while retrieving leave data.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -179,10 +181,12 @@ class ViewLeaveController extends Controller
             ];
 
             return response()->json($response);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An error occurred while retrieving leave data.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -208,10 +212,12 @@ class ViewLeaveController extends Controller
             $leave->save();
 
             return response()->json(['message' => 'Leave updated successfully!']);
-        } catch (Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Error updating leave.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -230,10 +236,12 @@ class ViewLeaveController extends Controller
             $this->sendLeaveStatusNotification($leave);
 
             return response()->json(['message' => 'Leave status updated successfully!']);
-        } catch (Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An error occurred while updating leave status.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -299,10 +307,12 @@ class ViewLeaveController extends Controller
             $leave->save();
 
             return response()->json(['message' => 'Leave updated successfully!']);
-        } catch (Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Error updating leave.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -325,10 +335,12 @@ class ViewLeaveController extends Controller
             $leave->delete();
 
             return response()->json(['message' => 'Leave deleted successfully!']);
-        } catch (Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Error deleting leave.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }

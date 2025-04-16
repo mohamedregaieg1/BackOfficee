@@ -44,10 +44,12 @@ class PublicHolidayController extends Controller
                 'data' => $publicHoliday
             ]);
 
-        } catch (Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Error adding public holiday.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -105,10 +107,12 @@ class PublicHolidayController extends Controller
                 'data' => $publicHoliday
             ]);
 
-        } catch (Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Error updating public holiday.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -121,10 +125,12 @@ class PublicHolidayController extends Controller
 
             return response()->json(['message' => 'Public holiday deleted successfully!']);
 
-        } catch (Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Error deleting public holiday.',
-                'message' => $e->getMessage()
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }

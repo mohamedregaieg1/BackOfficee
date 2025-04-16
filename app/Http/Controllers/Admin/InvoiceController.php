@@ -50,8 +50,13 @@ class InvoiceController extends Controller
                 'message' => 'Step 1 completed successfully',
                 'data' => json_decode($cookieData, true)
             ])->cookie($cookie);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -60,8 +65,13 @@ class InvoiceController extends Controller
         try {
             $clients = Client::select('id', 'name')->get();
             return response()->json($clients);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -88,6 +98,7 @@ class InvoiceController extends Controller
 
             $data = [];
 
+            // === Cas INDIVIDUAL ===
             if ($request->client_type === 'individual') {
                 $validated['tva_number_client'] = null;
 
@@ -113,9 +124,6 @@ class InvoiceController extends Controller
                     $data = [
                         'name' => $name,
                         'client_type' => $request->client_type,
-                        'civility' => $request->civility,
-                        'first_name' => $request->first_name,
-                        'last_name' => $request->last_name,
                         'address' => $request->address,
                         'postal_code' => $request->postal_code,
                         'rib_bank' => $request->rib_bank,
@@ -124,6 +132,21 @@ class InvoiceController extends Controller
                         'phone_number' => $request->phone_number,
                     ];
                 }
+            }
+
+            // === Cas PROFESSIONAL ===
+            if ($request->client_type === 'professional') {
+                $data = [
+                    'name' => $request->name,
+                    'client_type' => $request->client_type,
+                    'tva_number_client' => $request->tva_number_client ?? null,
+                    'address' => $request->address,
+                    'postal_code' => $request->postal_code,
+                    'rib_bank' => $request->rib_bank ?? null,
+                    'country' => $request->country,
+                    'email' => $request->email,
+                    'phone_number' => $request->phone_number,
+                ];
             }
 
             $cookie = cookie('invoice_step2', json_encode($data), 120);
@@ -136,10 +159,16 @@ class InvoiceController extends Controller
                 'message' => 'Step 2 completed successfully',
                 'data' => $data
             ])->cookie($cookie);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
     }
+
 
     public function stepThree(Request $request)
     {
@@ -170,14 +199,22 @@ class InvoiceController extends Controller
                     json_decode($cookieData, true)
                 )
             ])->cookie($cookie);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
     }
     // mateb3th chy fi function store
     public function store(Request $request)
     {
         try {
+            \Log::debug('Step 1 Cookie Data:', json_decode($request->cookie('invoice_step1'), true));
+            \Log::debug('Step 2 Cookie Data:', json_decode($request->cookie('invoice_step2'), true));
+            \Log::debug('Step 3 Cookie Data:', json_decode($request->cookie('invoice_step3'), true));
             $data = array_merge(
                 json_decode($request->cookie('invoice_step1'), true),
                 json_decode($request->cookie('invoice_step2'), true),
@@ -186,6 +223,9 @@ class InvoiceController extends Controller
 
             if (!$data) {
                 return response()->json(['error' => 'Missing invoice data'], 400);
+            }
+            if (empty($data['client_type']) || empty($data['name']) || empty($data['address'])) {
+                return response()->json(['error' => 'Client data is missing'], 400);
             }
 
             $data['company_id'] = $data['company']['id'] ?? null;
@@ -239,8 +279,13 @@ class InvoiceController extends Controller
             Cookie::queue(Cookie::forget('invoice_step3'));
 
             return response()->json(['message' => 'Invoice saved successfully!'], 201);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
     }
 }

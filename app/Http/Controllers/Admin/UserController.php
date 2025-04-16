@@ -90,9 +90,8 @@ class UserController extends Controller
                 'job_description.max' => 'The job description must not exceed 20 characters.',
             ]);
 
-            // Déterminer le chemin de l'avatar par défaut
             $avatarFileName = $validated['gender'] === 'female' ? 'avatarfemale.png' : 'avatarmale.png';
-            $avatarPath = asset('/dist/img/' . $avatarFileName); // L'URL publique ne peut pas être nulle
+            $avatarPath = asset('/dist/img/' . $avatarFileName);
             
             User::create([
                 'first_name' => $validated['first_name'],
