@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->enum('company', ['adequate', 'procan'])->default('procan');
-            $table->enum('role', ['admin', 'employee', 'hr','accountat'])->default('employee');
+            $table->enum('role', ['admin', 'employee', 'hr','accountant'])->default('employee');
             $table->string('job_description');
             $table->date('start_date');
             $table->double('leave_balance', 8, 2)->default(0);

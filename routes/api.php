@@ -72,7 +72,6 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::post('leave/calculate', [LeaveController::class, 'calculateLeaveDays']);
     Route::post('leave/store', [LeaveController::class, 'store']);
     Route::get('/leave/{id}/download', [LeaveController::class, 'downloadLeavePdf']);
-    Route::get('/user/sidebar', [ProfileController::class, 'showsidebar']);
 
     Route::get('/employee/leaves', [ViewLeaveController::class, 'showLeavesForEmployee']);
     Route::post('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
@@ -85,6 +84,7 @@ Route::middleware(['auth:api', 'role:employee,hr,admin'])->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
+    Route::get('/user/sidebar', [ProfileController::class, 'showsidebar']);
     Route::get('/user/profile', [ProfileController::class, 'show']);
     Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);

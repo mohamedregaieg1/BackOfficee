@@ -71,7 +71,7 @@ class UserController extends Controller
                 'phone' => 'nullable|digits:8',
                 'company' => 'required|in:adequate,procan',
                 'start_date' => 'required|date',
-                'role' => 'required|in:admin,employee,hr,accountat',
+                'role' => 'required|in:employee,hr,accountant',
                 'job_description' => 'required|string|max:20',
             ], [
                 'first_name.required' => 'The first name is required.',
@@ -132,7 +132,7 @@ class UserController extends Controller
             $validated = $request->validate([
                 'job_description' => 'required|string|max:15',
                 'company' => 'required|in:adequate,procan',
-                'role' => 'required|in:admin,employee,hr,accountat',
+                'role' => 'required|in:employee,hr,accountant',
                 'email' => 'required|email|unique:users,email,' . $id,
                 'phone' => 'nullable|digits:8',
             ], [

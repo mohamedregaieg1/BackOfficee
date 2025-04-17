@@ -15,13 +15,13 @@ return new class extends Migration
             $table->integer('max_days')->default(0);
             $table->timestamps();
         });
-        
+
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->enum('leave_type', ['paternity_leave', 'maternity_leave', 'sick_leave', 'vacation', 'travel_leave', 'other']); 
+            $table->enum('leave_type', ['paternity_leave', 'maternity_leave', 'sick_leave','personal_leave']);
             $table->string('other_type')->nullable();
             $table->double('leave_days_requested');
             $table->double('effective_leave_days')->default(0);
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->enum('status', ['approved', 'rejected', 'on_hold'])->default('on_hold');
             $table->timestamps();
         });
-        
+
         Schema::create('leaves_balances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
