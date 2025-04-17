@@ -33,7 +33,7 @@ Route::group([
 Route::post('password/email', [PasswordResetController::class, 'sendResetLink']);
 Route::post('password/reset', [PasswordResetController::class, 'resetPassword']);
 
-//route for admin 
+//route for admin
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::apiResource('leave-limits', FixedLeavesController::class);
     Route::apiResource('public-holidays', PublicHolidayController::class);
@@ -61,7 +61,7 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeavesForAdmin']);
     Route::put('/leave/{leaveId}/update', [ViewLeaveController::class, 'updateLeaveForAdmin']);
-  
+
 
 
 });
@@ -73,9 +73,7 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::post('leave/store', [LeaveController::class, 'store']);
     Route::get('/leave/{id}/download', [LeaveController::class, 'downloadLeavePdf']);
     Route::get('/user/sidebar', [ProfileController::class, 'showsidebar']);
-    Route::get('/user/profile', [ProfileController::class, 'show']);
-    Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
-    Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
+
     Route::get('/employee/leaves', [ViewLeaveController::class, 'showLeavesForEmployee']);
     Route::post('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
     Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
@@ -87,5 +85,8 @@ Route::middleware(['auth:api', 'role:employee,hr,admin'])->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
+    Route::get('/user/profile', [ProfileController::class, 'show']);
+    Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
+    Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
 
 });

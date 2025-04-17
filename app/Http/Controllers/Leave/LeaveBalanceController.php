@@ -56,12 +56,12 @@ class LeaveBalanceController extends Controller
         try {
             $user = User::where('id', $id)->firstOrFail();
             $validated = $request->validate([
-                'leave_day_limit' => 'required|numeric|min:0',
+                'leave_day_limit' => 'required|numeric|min:0.25',
                 'description' => 'nullable|string|max:255',
             ], [
                 'leave_day_limit.required' => 'The leave day limit is required.',
                 'leave_day_limit.numeric' => 'The leave day limit must be a valid number.',
-                'leave_day_limit.min' => 'The leave day limit must be at least 0.',
+                'leave_day_limit.min' => 'The leave day limit must be at least 0.25.',
                 'description.max' => 'The description may not be greater than 255 characters.',
             ]);
             $leave = LeavesBalance::create([
@@ -90,6 +90,8 @@ class LeaveBalanceController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(8);
 
+        $totalLeaveDayLimit = $user->leaveBalances()->sum('leave_day_limit');
+
         return response()->json([
             'data' => $leaves->items(),
             'meta' => [
@@ -101,26 +103,28 @@ class LeaveBalanceController extends Controller
             'user' => [
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
-            ]
+            ],
+            'total_leave_day_limit' => $totalLeaveDayLimit,
         ]);
     }
+
 
     public function destroy($id)
     {
         try {
             $leave = LeavesBalance::where('id', $id)->lockForUpdate()->firstOrFail();
-    
+
             $leave->delete();
-    
+
             return response()->json([
                 'message' => 'Leave balance deleted successfully!'
             ], 200);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while deleting the leave balance.'
             ], 500);
         }
     }
-    
+
 }

@@ -24,6 +24,19 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        if ($user->role === 'admin') {
+            // Admin info
+            return response()->json([
+                'avatar_path' => asset($user->avatar_path),
+                'full_name' => "{$user->first_name} {$user->last_name}",
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'company' => $user->company,
+            ]);
+        }
+
+        // Employee info
         return response()->json([
             'avatar_path' => asset($user->avatar_path),
             'first_name' => $user->first_name,
@@ -37,10 +50,11 @@ class ProfileController extends Controller
             'start_date' => $user->start_date->format('Y-m-d'),
         ]);
     }
+
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        
+
         try {
             $validated = $request->validate([
                 'email' => 'required|email|unique:users,email,' . $user->id,
@@ -73,7 +87,7 @@ class ProfileController extends Controller
     public function updateAvatar(Request $request)
     {
         $user = Auth::user();
-        
+
         try {
             $validated = $request->validate([
                 'avatar_path' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',

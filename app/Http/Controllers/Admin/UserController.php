@@ -15,7 +15,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = trim($request->input('search'));
-        $query = User::where('role', '!=', 'admin');    
+        $query = User::where('role', '!=', 'admin');
         if (!empty($search)) {
             if (str_contains($search, ' ')) {
                 [$firstName, $lastName] = explode(' ', $search, 2);
@@ -28,11 +28,11 @@ class UserController extends Controller
                 });
             }
         }
-    
+
         $users = $query->select('id', 'first_name', 'last_name', 'email', 'phone','company', 'role', 'start_date', 'avatar_path','job_description')
                        ->orderBy('first_name', 'asc')
                        ->paginate(6);
-    
+
         return response()->json([
             'data' => $users->makeHidden('avatar_path')->map(function ($user) {
                 return [
@@ -56,7 +56,7 @@ class UserController extends Controller
             ],
         ]);
     }
-    
+
 
     public function store(Request $request)
     {
@@ -68,9 +68,10 @@ class UserController extends Controller
                 'username' => 'required|string|unique:users,username',
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:6',
+                'phone' => 'nullable|digits:8',
                 'company' => 'required|in:adequate,procan',
                 'start_date' => 'required|date',
-                'role' => 'required|in:employee,hr',
+                'role' => 'required|in:admin,employee,hr,accountat',
                 'job_description' => 'required|string|max:20',
             ], [
                 'first_name.required' => 'The first name is required.',
@@ -83,6 +84,7 @@ class UserController extends Controller
                 'email.unique' => 'This email is already registered.',
                 'password.required' => 'The password is required.',
                 'password.min' => 'The password must be at least 6 characters.',
+                'phone.digits' => 'The phone number must be exactly 8 digits.',
                 'company.required' => 'The company is required.',
                 'start_date.required' => 'The start date is required.',
                 'role.required' => 'The role is required.',
@@ -92,7 +94,7 @@ class UserController extends Controller
 
             $avatarFileName = $validated['gender'] === 'female' ? 'avatarfemale.png' : 'avatarmale.png';
             $avatarPath = asset('/dist/img/' . $avatarFileName);
-            
+
             User::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
@@ -101,6 +103,7 @@ class UserController extends Controller
                 'username' => $validated['username'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
+                'phone' => $validated['phone'] ?? null,
                 'company' => $validated['company'],
                 'start_date' => $validated['start_date'],
                 'role' => $validated['role'],
@@ -120,7 +123,7 @@ class UserController extends Controller
             ], 500);
         }
     }
- 
+
     public function update(Request $request, $id)
     {
         try {
@@ -129,18 +132,26 @@ class UserController extends Controller
             $validated = $request->validate([
                 'job_description' => 'required|string|max:15',
                 'company' => 'required|in:adequate,procan',
-                'role' => 'required|in:employee,hr',
+                'role' => 'required|in:admin,employee,hr,accountat',
+                'email' => 'required|email|unique:users,email,' . $id,
+                'phone' => 'nullable|digits:8',
             ], [
                 'job_description.required' => 'The job description is required.',
                 'job_description.max' => 'The job description must not exceed 20 characters.',
                 'company.required' => 'The company is required.',
                 'role.required' => 'The role is required.',
-                ]);
+                'email.required' => 'The email is required.',
+                'email.email' => 'The email must be a valid email address.',
+                'email.unique' => 'This email is already in use.',
+                'phone.digits' => 'The phone number must be exactly 8 digits.',
+            ]);
 
             $user->update([
                 'job_description' => $validated['job_description'],
                 'company' => $validated['company'],
                 'role' => $validated['role'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
             ]);
 
             return response()->json([

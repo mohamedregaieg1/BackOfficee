@@ -28,13 +28,13 @@ class ViewLeaveController extends Controller
 
             $year = $request->input('year');
             $typeLeave = $request->input('type_leave');
-
+            $status = $request->input('status', ['approved', 'rejected', 'on_hold']);
             $minYear = Carbon::parse($user->start_date)->year;
             $maxYear = Carbon::now()->year + 1;
             $availableYears = range($minYear, $maxYear);
 
             $totalLeaveDaysQuery = Leave::where('user_id', $userId)
-                ->where('status', 'approved');
+                ->whereIn('status', $status);
 
             if ($year) {
                 $totalLeaveDaysQuery->whereYear('start_date', $year);
@@ -46,7 +46,9 @@ class ViewLeaveController extends Controller
 
             $totalLeaveDays = $totalLeaveDaysQuery->sum('effective_leave_days');
 
+            // Requête pour récupérer les leaves avec filtres
             $leavesQuery = Leave::where('user_id', $userId)
+                ->whereIn('status', $status) // Filtre sur les statuts
                 ->select(
                     'id',
                     'start_date',
@@ -90,14 +92,19 @@ class ViewLeaveController extends Controller
 
                 return $leaveData;
             });
+            $totalRequestedLeaveDays = $leaves->sum('leave_days_requested');
+            $totalEffectiveLeaveDays = $leaves->sum('effective_leave_days');
 
             $response = [
                 'available_years' => $availableYears,
                 'total_leave_days' => $totalLeaveDays,
+                'total_requested_leave_days' => $totalRequestedLeaveDays,
+                'total_effective_leave_days' => $totalEffectiveLeaveDays,
                 'data' => $data,
                 'meta' => [
                     'selected_year' => $year,
                     'selected_type_leave' => $typeLeave,
+                    'selected_statuses' => $status,
                     'current_page' => $leaves->currentPage(),
                     'per_page' => $leaves->perPage(),
                     'total_pages' => $leaves->lastPage(),
@@ -107,6 +114,7 @@ class ViewLeaveController extends Controller
             ];
 
             return response()->json($response);
+
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
@@ -116,6 +124,7 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
+
 
     public function showLeavesForEmployee(Request $request)
     {
@@ -195,20 +204,20 @@ class ViewLeaveController extends Controller
     {
         try {
             $validated = $request->validate([
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
-                'leave_type' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
-                'other_type' => 'nullable|required_if:leave_type,other|string|max:255',
+                'leave_type' => 'required|in:sick_leave',
                 'leave_days_requested' => 'required|numeric|min:1',
                 'effective_leave_days' => 'nullable|numeric|min:0',
             ]);
 
             $leave = Leave::findOrFail($leaveId);
-            $leave->start_date = $validated['start_date'];
-            $leave->end_date = $validated['end_date'];
-            $leave->leave_type = $validated['leave_type'];
-            $leave->other_type = $validated['other_type'] ?? null;
+
+            if ($leave->leave_type !== 'sick_leave') {
+                return response()->json(['error' => 'This leave cannot be updated, it is not a sick leave.'], 400);
+            }
+
             $leave->leave_days_requested = $validated['leave_days_requested'];
+            $leave->effective_leave_days = $validated['effective_leave_days'] ?? $leave->effective_leave_days;
+
             $leave->save();
 
             return response()->json(['message' => 'Leave updated successfully!']);
@@ -222,6 +231,7 @@ class ViewLeaveController extends Controller
         }
     }
 
+
     public function updateStatus(Request $request, $leaveId)
     {
         try {
@@ -230,6 +240,11 @@ class ViewLeaveController extends Controller
             ]);
 
             $leave = Leave::findOrFail($leaveId);
+            
+            if (in_array($leave->status, ['approved', 'rejected'])) {
+                return response()->json(['error' => 'This leave status cannot be modified as it is already approved or rejected.'], 400);
+            }
+
             $leave->status = $validated['status'];
             $leave->save();
 
@@ -245,6 +260,7 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
+
 
     protected function sendLeaveStatusNotification(Leave $leave)
     {
@@ -317,7 +333,7 @@ class ViewLeaveController extends Controller
         }
     }
 
-    
+
 
     public function deleteLeave($leaveId)
     {
