@@ -132,6 +132,8 @@ class ViewLeaveController extends Controller
             $authUser = Auth::user();
             $userId = $authUser->id;
             $year = $request->input('year');
+            $statusFilter = $request->input('status', ['approved', 'on_hold']);     
+            $leaveTypeFilter = $request->input('leave_type');
             $minYear = Carbon::parse($authUser->start_date)->year;
             $maxYear = Carbon::now()->year + 1;
             $availableYears = range($minYear, $maxYear);
@@ -151,6 +153,18 @@ class ViewLeaveController extends Controller
 
             if ($year) {
                 $leavesQuery->whereYear('start_date', $year);
+            }
+
+            if (!empty($statusFilter) && is_array($statusFilter)) {
+                $leavesQuery->whereIn('status', $statusFilter);
+            }
+
+            if (!empty($leaveTypeFilter)) {
+                if (is_array($leaveTypeFilter)) {
+                    $leavesQuery->whereIn('leave_type', $leaveTypeFilter);
+                } else {
+                    $leavesQuery->where('leave_type', $leaveTypeFilter);
+                }
             }
 
             $leaves = $leavesQuery->orderBy('created_at', 'desc')
@@ -200,6 +214,7 @@ class ViewLeaveController extends Controller
         }
     }
 
+
     public function updateLeaveForAdmin(Request $request, $leaveId)
     {
         try {
@@ -240,7 +255,7 @@ class ViewLeaveController extends Controller
             ]);
 
             $leave = Leave::findOrFail($leaveId);
-            
+
             if (in_array($leave->status, ['approved', 'rejected'])) {
                 return response()->json(['error' => 'This leave status cannot be modified as it is already approved or rejected.'], 400);
             }

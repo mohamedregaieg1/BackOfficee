@@ -31,8 +31,8 @@ class LeaveController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date_format:Y-m-d H:i:s',
             'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
-            'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave',
-            'other_type' => 'required_if:leave_type,other',
+            'leave_type' => 'required|in:sick_leave,personal_leave',
+            'other_type' => 'required_if:leave_type,personal_leave',
         ]);
     }
 
@@ -102,7 +102,7 @@ class LeaveController extends Controller
             'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
             'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave',
             'leave_days' => 'required|regex:/^\d+(\.\d{1})?$/',
-            'other_type' => 'required_if:leave_type,other|string|max:255',
+            'other_type' => 'required_if:leave_type,personal_leave|string|max:255',
             'attachment' => 'required_if:leave_type,sick_leave,maternity_leave,paternity_leave|file',
         ]);
 

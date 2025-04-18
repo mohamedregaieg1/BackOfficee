@@ -36,9 +36,9 @@ class PublicHolidayController extends Controller
                 'end_date' => $request->end_date,
                 'number_of_days' => $numberOfDays,
             ]);
-        
+
             $this->updateLeavesForNewHoliday($publicHoliday);
-        
+
             return response()->json([
                 'message' => 'Public holiday added successfully!',
                 'data' => $publicHoliday
@@ -100,7 +100,7 @@ class PublicHolidayController extends Controller
                 'end_date' => $request->end_date,
                 'number_of_days' => $numberOfDays ,
             ]);
-        
+
             $this->updateLeavesForNewHoliday($publicHoliday);
             return response()->json([
                 'message' => 'Public holiday updated successfully!',
@@ -117,21 +117,4 @@ class PublicHolidayController extends Controller
         }
     }
 
-    public function destroy($id)
-    {
-        try {
-            $holiday = PublicHoliday::findOrFail($id);
-            $holiday->delete();
-
-            return response()->json(['message' => 'Public holiday deleted successfully!']);
-
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'An unexpected error occurred.',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
-    }
 }
