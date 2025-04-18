@@ -15,6 +15,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Illuminate\Support\Facades\Mail;
+
 
 class LeaveController extends Controller
 {
@@ -65,7 +67,7 @@ class LeaveController extends Controller
         }
 
         $leaveDays = $fixedLeave->max_days;
-        $end = $start->copy()->addDays($leaveDays - 1)->setTime(8, 0, 0); // finit à 17h
+        $end = $start->copy()->addDays($leaveDays - 1)->setTime(8, 0, 0);
 
         $remainingDays = $this->getRemainingLeaveDays($user->id, $leaveType, $leaveDays);
 
@@ -430,4 +432,148 @@ class LeaveController extends Controller
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="leave_request_'.$leave->id.'.pdf"');
     }
+
+    public function notifyHROnRejectedLeave(Leave $leave, Request $request)
+    {
+        $authUser = Auth::user();
+        $hrs = User::where('role', 'hr')
+            ->when($authUser->role === 'hr', function ($query) use ($authUser) {
+                return $query->where('id', '!=', $authUser->id);
+            })
+            ->pluck('email');
+
+        $rejectionMessage = $request->input('message');
+        $subject = 'Demande de congé refusée';
+
+        $startDateFormatted = \Carbon\Carbon::parse($leave->start_date)->format('Y/m/d');
+        $endDateFormatted = \Carbon\Carbon::parse($leave->end_date)->format('Y/m/d');
+
+        $htmlContent = "
+        <html>
+        <head>
+            <style>
+                body {
+                    font-family: 'Arial', sans-serif;
+                    background-color: #f4f6f9;
+                    margin: 0;
+                    padding: 0;
+                }
+                .email-container {
+                    max-width: 600px;
+                    margin: 40px auto;
+                    background: #ffffff;
+                    padding: 30px;
+                    border-radius: 8px;
+                    border: 1px solid #e0e0e0;
+                    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+                    text-align: left;
+                    font-size: 16px;
+                }
+                .logo-container {
+                    text-align: center;
+                    margin-bottom: 30px;
+                }
+                .logo {
+                    font-size: 32px;
+                    font-weight: bold;
+                    color: #007BFF;
+                }
+                h2 {
+                    color: #e74c3c;
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin-bottom: 25px;
+                }
+                p {
+                    color: #555;
+                    font-size: 16px;
+                    line-height: 1.6;
+                    margin: 10px 0;
+                }
+                .footer {
+                    margin-top: 35px;
+                    font-size: 14px;
+                    color: #888;
+                    border-top: 1px solid #e0e0e0;
+                    padding-top: 15px;
+                    text-align: center;
+                    font-style: italic;
+                }
+                .info-block {
+                    background: #f9f9f9;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin-top: 20px;
+                    border-left: 5px solid #007BFF;
+                    font-size: 15px;
+                }
+                .info-block strong {
+                    font-size: 16px;
+                    color: #333;
+                }
+                .email-header {
+                    background-color: #007BFF;
+                    color: white;
+                    padding: 15px;
+                    border-radius: 8px 8px 0 0;
+                    text-align: center;
+                    font-size: 20px;
+                    font-weight: bold;
+                }
+                .email-header span {
+                    color:rgb(255, 255, 255);
+                }
+                .email-body {
+                    margin-top: 20px;
+                    padding: 15px;
+                    background-color: #ffffff;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                }
+                .email-body p {
+                    margin: 5px 0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='email-container'>
+                <div class='email-header'>
+                    <span>PROCAN</span> RH NOTIFICATION
+                </div>
+                <div class='email-body'>
+                    <h2><center>Demande de congé refusée</center></h2>
+
+                    <p><strong>Employé :</strong> {$authUser->first_name} {$authUser->last_name}</p>
+                    <p><strong>Email :</strong> {$authUser->email}</p>
+                    <p><strong>Type de congé :</strong> {$leave->leave_type}</p>
+                    <p><strong>Période :</strong> du <strong>{$startDateFormatted}</strong> au <strong>{$endDateFormatted}</strong></p>
+
+                    <div class='info-block'>
+                        <strong>Message de l'utilisateur :</strong>
+                        <br>
+                        <em>{$rejectionMessage}</em>
+                    </div>
+
+                </div>
+
+                <p class='footer'>Ce message a été généré automatiquement. Merci de ne pas y répondre directement.<br>PROCAN RH System</p>
+            </div>
+        </body>
+        </html>
+        ";
+
+        foreach ($hrs as $hrEmail) {
+            Mail::send([], [], function ($message) use ($hrEmail, $authUser, $subject, $htmlContent) {
+                $message->to($hrEmail)
+                        ->from($authUser->email, "{$authUser->first_name} {$authUser->last_name}")
+                        ->subject($subject)
+                        ->html($htmlContent);
+            });
+        }
+
+        return response()->json(['message' => 'Notification envoyée aux RH.'], 200);
+    }
+
+
+
 }
