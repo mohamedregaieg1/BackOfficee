@@ -45,6 +45,8 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::post('invoices/step-two', [InvoiceController::class, 'stepTwo']);
     Route::post('invoices/step-three', [InvoiceController::class, 'stepThree']);
     Route::post('invoices/store', [InvoiceController::class, 'store']);
+    Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
+
 });
 
 

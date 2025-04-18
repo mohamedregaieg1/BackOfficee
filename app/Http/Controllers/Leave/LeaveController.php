@@ -54,7 +54,7 @@ class LeaveController extends Controller
 
             if ($alreadyTaken) {
                 return response()->json([
-                ' message' => "You have already taken a $leaveType either this year or during the previous calendar year. You cannot request it again."
+                'message' => "already taken"
                 ], 422);
             }
 
@@ -227,6 +227,16 @@ class LeaveController extends Controller
 
         return $leaveDays;
     }
+
+    public function show($id)
+    {
+        $leave = Leave::findOrFail($id);
+
+        return response()->json([
+            'leave' => $leave
+        ]);
+    }
+
 
     private function getRemainingLeaveDays($userId, $leaveType, $requestedLeaveDays)
     {

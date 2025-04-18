@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Leave;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
+use App\Models\Leave;
 use App\Models\LeavesBalance;
+use App\Models\FixedLeaves;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
@@ -33,13 +35,26 @@ class LeaveBalanceController extends Controller
                     ->orderBy('first_name', 'asc')
                     ->paginate(6);
 
+        $sickLeaveMax = FixedLeaves::where('leave_type', 'sick_leave')->value('max_days');
+
         return response()->json([
-            'data' => $users->makeHidden('avatar_path')->map(function ($user) {
+            'data' => $users->makeHidden('avatar_path')->map(function ($user) use ($sickLeaveMax) {
+                $personalLeaveUsed = Leave::where('user_id', $user->id)
+                    ->where('leave_type', 'personal_leave')
+                    ->sum('effective_leave_days');
+
+                $personalLeaveBalance = LeavesBalance::where('user_id', $user->id)->sum('leave_day_limit');
+                $sickLeaveUsed = Leave::where('user_id', $user->id)
+                    ->where('leave_type', 'sick_leave')
+                    ->sum('effective_leave_days');
+
                 return [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'avatar_path' => $user->avatar_path,
+                    'personal_leave_remaining' => round($personalLeaveBalance - $personalLeaveUsed, 2),
+                    'sick_leave_remaining' => round($sickLeaveMax - $sickLeaveUsed, 2),
                 ];
             }),
             'meta' => [
@@ -50,6 +65,7 @@ class LeaveBalanceController extends Controller
             ],
         ]);
     }
+
 
     public function store(Request $request, $id)
     {
