@@ -45,7 +45,8 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::post('invoices/step-two', [InvoiceController::class, 'stepTwo']);
     Route::post('invoices/step-three', [InvoiceController::class, 'stepThree']);
     Route::post('invoices/store', [InvoiceController::class, 'store']);
-    Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
+    Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
+
 
 });
 
@@ -60,9 +61,10 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::post('/leave-balances/{userId}', [LeaveBalanceController::class, 'store']);
     Route::get('/leave-balances/{userId}', [LeaveBalanceController::class, 'show']);
     Route::delete('/leave-balances/{id}', [LeaveBalanceController::class, 'destroy']);
-    Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeavesForAdmin']);
     Route::put('/leave/{leaveId}/update', [ViewLeaveController::class, 'updateLeaveForAdmin']);
+    Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
+
 
 
 

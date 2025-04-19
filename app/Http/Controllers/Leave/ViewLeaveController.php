@@ -28,7 +28,7 @@ class ViewLeaveController extends Controller
 
             $year = $request->input('year');
             $typeLeave = $request->input('type_leave');
-            $status = $request->input('status', ['approved', 'rejected', 'on_hold']);
+            $status = (array) $request->input('status', ['approved', 'rejected', 'on_hold']);
             $minYear = Carbon::parse($user->start_date)->year;
             $maxYear = Carbon::now()->year + 1;
             $availableYears = range($minYear, $maxYear);
@@ -85,7 +85,7 @@ class ViewLeaveController extends Controller
                     'attachment_path' => $leave->attachment_path ? asset($leave->attachment_path) : null,
                 ];
 
-                if ($leave->leave_type === 'other') {
+                if ($leave->leave_type === 'personal_leave') {
                     $leaveData['other_type'] = $leave->other_type;
                     unset($leaveData['leave_type']);
                 }
@@ -132,7 +132,7 @@ class ViewLeaveController extends Controller
             $authUser = Auth::user();
             $userId = $authUser->id;
             $year = $request->input('year');
-            $statusFilter = $request->input('status', ['approved', 'on_hold']);     
+            $statusFilter = $request->input('status', ['approved', 'on_hold']);
             $leaveTypeFilter = $request->input('leave_type');
             $minYear = Carbon::parse($authUser->start_date)->year;
             $maxYear = Carbon::now()->year + 1;
@@ -183,7 +183,7 @@ class ViewLeaveController extends Controller
                     'attachment_path' => $leave->attachment_path ? asset($leave->attachment_path) : null,
                 ];
 
-                if ($leave->leave_type === 'other') {
+                if ($leave->leave_type === 'personal_leave') {
                     $leaveData['other_type'] = $leave->other_type;
                     unset($leaveData['leave_type']);
                 }
