@@ -12,7 +12,7 @@ class PublicHolidayController extends Controller
 {
     public function index()
     {
-        $holidays = PublicHoliday::orderBy('start_date', 'asc')->paginate(10);
+        $holidays = PublicHoliday::orderBy('start_date', 'asc')->paginate(7);
 
         return response()->json([
             'data' => $holidays->items(),
