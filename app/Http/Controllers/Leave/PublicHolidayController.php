@@ -12,9 +12,17 @@ class PublicHolidayController extends Controller
 {
     public function index()
     {
-        $holidays = PublicHoliday::orderBy('start_date', 'asc')->get();
+        $holidays = PublicHoliday::orderBy('start_date', 'asc')->paginate(10);
 
-        return response()->json($holidays);
+        return response()->json([
+            'data' => $holidays->items(),
+            'meta' => [
+                'current_page' => $holidays->currentPage(),
+                'per_page' => $holidays->perPage(),
+                'total_pages' => $holidays->lastPage(),
+                'total_holidays' => $holidays->total(),
+            ],
+        ]);
     }
 
     public function store(Request $request)
@@ -62,7 +70,7 @@ class PublicHolidayController extends Controller
                 ->orWhereBetween('end_date', [$publicHoliday->start_date, $publicHoliday->end_date])
                 ->orWhere(function ($query) use ($publicHoliday) {
                     $query->where('start_date', '<=', $publicHoliday->start_date)
-                            ->where('end_date', '>=', $publicHoliday->end_date);
+                        ->where('end_date', '>=', $publicHoliday->end_date);
                 });
         })->get();
 
@@ -98,7 +106,7 @@ class PublicHolidayController extends Controller
                 'name' => $request->name,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
-                'number_of_days' => $numberOfDays ,
+                'number_of_days' => $numberOfDays,
             ]);
 
             $this->updateLeavesForNewHoliday($publicHoliday);

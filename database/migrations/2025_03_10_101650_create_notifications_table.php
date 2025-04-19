@@ -17,13 +17,14 @@ return new class extends Migration
             $table->unsignedBigInteger('receiver_id');
             $table->string('title');
             $table->text('message');
+            $table->unsignedBigInteger('leave_id')->nullable();
             $table->boolean('is_read')->default(false);
             $table->timestamps();
             $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('receiver_id')->references('id')->on('users')->onDelete('cascade');
         });
-        
-        
+
+
     }
 
     /**

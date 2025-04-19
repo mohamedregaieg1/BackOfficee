@@ -21,79 +21,78 @@ use Illuminate\Support\Facades\Mail;
 class LeaveController extends Controller
 {
     public function calculateLeaveDays(Request $request)
-{
-    $leaveType = $request->leave_type;
+    {
+        $leaveType = $request->leave_type;
 
-    if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
-        $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date_format:Y-m-d H:i:s',
-            'leave_type' => 'required|in:paternity_leave,maternity_leave',
-        ]);
-    } else {
-        $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date_format:Y-m-d H:i:s',
-            'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
-            'leave_type' => 'required|in:sick_leave,personal_leave',
-            'other_type' => 'required_if:leave_type,personal_leave',
-        ]);
-    }
+        if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
+            $validator = Validator::make($request->all(), [
+                'start_date' => 'required|date_format:Y-m-d H:i:s',
+                'leave_type' => 'required|in:paternity_leave,maternity_leave',
+            ]);
+        } else {
+            $validator = Validator::make($request->all(), [
+                'start_date' => 'required|date_format:Y-m-d H:i:s',
+                'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
+                'leave_type' => 'required|in:sick_leave,personal_leave',
+                'other_type' => 'required_if:leave_type,personal_leave',
+            ]);
+        }
 
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-    $user = Auth::user();
-    $start = Carbon::parse($request->start_date);
+        $user = Auth::user();
+        $start = Carbon::parse($request->start_date);
 
-    if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
-        $oneYearAgo = $start->copy()->subYear();
+        if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
+            $oneYearAgo = $start->copy()->subYear();
 
-        $alreadyTaken = Leave::where('user_id', $user->id)
-            ->where('leave_type', $leaveType)
-            ->whereBetween('start_date', [$oneYearAgo, $start])
-            ->whereIn('status', ['on_hold', 'approved'])
-            ->exists();
+            $alreadyTaken = Leave::where('user_id', $user->id)
+                ->where('leave_type', $leaveType)
+                ->whereBetween('start_date', [$oneYearAgo, $start])
+                ->whereIn('status', ['on_hold', 'approved'])
+                ->exists();
 
             if ($alreadyTaken) {
                 return response()->json([
-                'message' => "already taken"
+                    'message' => "already taken"
                 ], 422);
             }
 
-        $fixedLeave = FixedLeaves::where('leave_type', $leaveType)->first();
+            $fixedLeave = FixedLeaves::where('leave_type', $leaveType)->first();
 
-        if (!$fixedLeave) {
-            return response()->json(['message' => 'Fixed leave not found.'], 404);
+            if (!$fixedLeave) {
+                return response()->json(['message' => 'Fixed leave not found.'], 404);
+            }
+
+            $leaveDays = $fixedLeave->max_days;
+            $end = $start->copy()->addDays($leaveDays - 1)->setTime(8, 0, 0);
+
+            $remainingDays = $this->getRemainingLeaveDays($user->id, $leaveType, $leaveDays);
+
+            return response()->json([
+                'start_date' => $start->toDateTimeString(),
+                'end_date' => $end->toDateTimeString(),
+                'leave_days' => $leaveDays,
+                'leave_type' => $leaveType,
+                'other_type' => null,
+                'remaining_days' => round($remainingDays, 2)
+            ], 200);
         }
 
-        $leaveDays = $fixedLeave->max_days;
-        $end = $start->copy()->addDays($leaveDays - 1)->setTime(8, 0, 0);
-
+        $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
         $remainingDays = $this->getRemainingLeaveDays($user->id, $leaveType, $leaveDays);
 
         return response()->json([
-            'start_date' => $start->toDateTimeString(),
-            'end_date' => $end->toDateTimeString(),
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
             'leave_days' => $leaveDays,
             'leave_type' => $leaveType,
-            'other_type' => null,
+            'other_type' => $leaveType === 'personal_leave' ? $request->other_type : null,
             'remaining_days' => round($remainingDays, 2)
         ], 200);
     }
-
-    // 🟡 Autres types de congés
-    $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
-    $remainingDays = $this->getRemainingLeaveDays($user->id, $leaveType, $leaveDays);
-
-    return response()->json([
-        'start_date' => $request->start_date,
-        'end_date' => $request->end_date,
-        'leave_days' => $leaveDays,
-        'leave_type' => $leaveType,
-        'other_type' => $leaveType === 'personal_leave' ? $request->other_type : null,
-        'remaining_days' => round($remainingDays, 2)
-    ], 200);
-}
 
 
 
@@ -116,8 +115,8 @@ class LeaveController extends Controller
         if (
             in_array($request->leave_type, ['sick_leave', 'maternity_leave', 'paternity_leave'])
             && $request->hasFile('attachment')
-        ){
-                    $file = $request->file('attachment');
+        ) {
+            $file = $request->file('attachment');
             $path = $file->store('attachments', 'public');
             $filename = basename($path);
             $attachmentPath = env('STORAGE') . '/attachments/' . $filename;
@@ -126,10 +125,12 @@ class LeaveController extends Controller
         if (in_array($request->leave_type, ['maternity_leave', 'paternity_leave'])) {
             $start = Carbon::parse($request->start_date);
             $end = Carbon::parse($request->end_date);
-            $leaveDays = $start->diffInDays($end) + 1; // Include both start and end dates
+            $leaveDays = $start->diffInDays($end) + 1;
         } else {
             $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
-        }        $leaveDaysRequested = $this->calculateLeaveDaysRequested($request->leave_type, $leaveDays);
+        }
+
+        $leaveDaysRequested = $this->calculateLeaveDaysRequested($request->leave_type, $leaveDays);
         $effectiveLeaveDays = $leaveDaysRequested;
 
         if ($request->leave_type == 'sick_leave') {
@@ -179,7 +180,7 @@ class LeaveController extends Controller
             ]);
         }
 
-        $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null);
+        $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'personal_leave' ? $request->other_type : null, $leaveEntries);
 
         return response()->json([
             'message' => 'Leave request stored successfully!',
@@ -187,11 +188,11 @@ class LeaveController extends Controller
         ], 201);
     }
 
-    private function sendLeaveNotification($authUser, $leaveType, $otherType = null)
+    private function sendLeaveNotification($authUser, $leaveType, $otherType = null, $leaveEntries)
     {
         $title = 'New leave request';
 
-        if ($leaveType === 'other' && $otherType) {
+        if ($leaveType === 'personal_leave' && $otherType) {
             $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$otherType}.";
         } else {
             $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$leaveType}.";
@@ -203,21 +204,24 @@ class LeaveController extends Controller
             $receivers = User::where('role', 'admin')
                 ->orWhere(function ($query) use ($authUser) {
                     $query->where('role', 'hr')
-                          ->where('id', '!=', $authUser->id);
+                        ->where('id', '!=', $authUser->id);
                 })
                 ->get();
         } else {
             $receivers = collect();
         }
 
-        foreach ($receivers as $receiver) {
-            $notifications = Notification::create([
-                'sender_id' => $authUser->id,
-                'receiver_id' => $receiver->id,
-                'title' => $title,
-                'message' => $message,
-            ]);
-            broadcast(new NewNotificationEvent($notifications))->toOthers();
+        foreach ($leaveEntries as $leaveEntry) {
+            foreach ($receivers as $receiver) {
+                $notification = Notification::create([
+                    'sender_id' => $authUser->id,
+                    'receiver_id' => $receiver->id,
+                    'title' => $title,
+                    'message' => $message,
+                    'leave_id' => $leaveEntry->id,
+                ]);
+                broadcast(new NewNotificationEvent($notification))->toOthers();
+            }
         }
     }
 
@@ -295,12 +299,12 @@ class LeaveController extends Controller
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
 
-        $holidays = \App\Models\PublicHoliday::where(function($query) use ($start, $end) {
+        $holidays = \App\Models\PublicHoliday::where(function ($query) use ($start, $end) {
             $query->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
                 ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
-                ->orWhere(function($query) use ($start, $end) {
+                ->orWhere(function ($query) use ($start, $end) {
                     $query->where('start_date', '<=', $start->toDateString())
-                          ->where('end_date', '>=', $end->toDateString());
+                        ->where('end_date', '>=', $end->toDateString());
                 });
         })->get();
 
@@ -430,7 +434,7 @@ class LeaveController extends Controller
 
         return response($pdf->output(), 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="leave_request_'.$leave->id.'.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="leave_request_' . $leave->id . '.pdf"');
     }
 
     public function notifyHROnRejectedLeave(Leave $leave, Request $request)
@@ -565,9 +569,9 @@ class LeaveController extends Controller
         foreach ($hrs as $hrEmail) {
             Mail::send([], [], function ($message) use ($hrEmail, $authUser, $subject, $htmlContent) {
                 $message->to($hrEmail)
-                        ->from($authUser->email, "{$authUser->first_name} {$authUser->last_name}")
-                        ->subject($subject)
-                        ->html($htmlContent);
+                    ->from($authUser->email, "{$authUser->first_name} {$authUser->last_name}")
+                    ->subject($subject)
+                    ->html($htmlContent);
             });
         }
 

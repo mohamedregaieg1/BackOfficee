@@ -306,33 +306,30 @@ class ViewLeaveController extends Controller
             }
 
             $validated = $request->validate([
-                'leave_type' => 'required|in:vacation,travel_leave,paternity_leave,maternity_leave,sick_leave,other',
-                'other_type' => 'nullable|required_if:leave_type,other|string|max:255',
-                'attachment' => 'nullable|file|mimes:pdf,jpg,png|max:2048|required_if:leave_type,sick_leave'
+                'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave',
+                'other_type' => 'required_if:leave_type,personal_leave|string|max:255',
+                'attachment' => 'required_if:leave_type,sick_leave,maternity_leave,paternity_leave|file|mimes:pdf,jpg,jpeg,png|max:2048',
             ], [
-                'other_type.required_if' => 'The "Other leave_type" field is required if the leave type is "other".',
-                'attachment.required_if' => 'An attachment is required for sick leave.'
+                'other_type.required_if' => 'The "Other leave type" field is required when leave type is "personal_leave".',
+                'attachment.required_if' => 'An attachment is required for this type of leave.',
             ]);
 
-            if ($request->has('leave_type')) {
-                $leave->other_type = $validated['leave_type'] === 'other' ? $validated['other_type'] : null;
-            }
+            $leave->leave_type = $validated['leave_type'];
 
-            if ($request->has('other_type') && $validated['leave_type'] === 'other') {
+            if ($validated['leave_type'] === 'personal_leave') {
                 $leave->other_type = $validated['other_type'];
+            } else {
+                $leave->other_type = null;
             }
 
-            if ($validated['leave_type'] === 'sick_leave') {
-                if ($request->hasFile('attachment')) {
-                    if ($leave->attachment_path) {
-                        Storage::disk('public')->delete(str_replace(env('STORAGE').'/attachments/', '', $leave->attachment_path));
-                    }
-
-                    $file = $request->file('attachment');
-                    $path = $file->store('attachments', 'public');
-                    $filename = basename($path);
-                    $leave->attachment_path = env('STORAGE').'/attachments/'.$filename;
+            if (in_array($validated['leave_type'], ['sick_leave', 'maternity_leave', 'paternity_leave']) && $request->hasFile('attachment')) {
+                if ($leave->attachment_path) {
+                    Storage::disk('public')->delete(str_replace(env('STORAGE') . '/attachments/', '', $leave->attachment_path));
                 }
+
+                $file = $request->file('attachment');
+                $path = $file->store('attachments', 'public');
+                $leave->attachment_path = env('STORAGE') . '/attachments/' . basename($path);
             }
 
             $leave->save();
@@ -347,7 +344,6 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
-
 
 
     public function deleteLeave($leaveId)
