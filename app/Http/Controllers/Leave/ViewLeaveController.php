@@ -86,9 +86,7 @@ class ViewLeaveController extends Controller
                 ];
 
                 if ($leave->leave_type === 'personal_leave') {
-                    $leaveData['other_type'] = $leave->other_type;
-                    unset($leaveData['leave_type']);
-                }
+                    $leaveData['other_type'] = $leave->other_type;                }
 
                 return $leaveData;
             });
@@ -185,7 +183,6 @@ class ViewLeaveController extends Controller
 
                 if ($leave->leave_type === 'personal_leave') {
                     $leaveData['other_type'] = $leave->other_type;
-                    unset($leaveData['leave_type']);
                 }
 
                 return $leaveData;
@@ -313,6 +310,31 @@ class ViewLeaveController extends Controller
                 'other_type.required_if' => 'The "Other leave type" field is required when leave type is "personal_leave".',
                 'attachment.required_if' => 'An attachment is required for this type of leave.',
             ]);
+
+            if (in_array($validated['leave_type'], ['maternity_leave', 'paternity_leave'])) {
+                $startDate = Carbon::parse($leave->start_date);
+                $oneYearAgo = $startDate->copy()->subYear();
+                $currentYearStart = $startDate->copy()->startOfYear();
+                $currentYearEnd = $startDate->copy()->endOfYear();
+
+                $existingLeaveInOneYear = Leave::where('user_id', $authUser->id)
+                    ->where('leave_type', $validated['leave_type'])
+                    ->whereBetween('start_date', [$oneYearAgo, $startDate])
+                    ->whereIn('status', ['on_hold', 'approved'])
+                    ->where('id', '!=', $leaveId)
+                    ->exists();
+
+                $existingLeaveInCurrentYear = Leave::where('user_id', $authUser->id)
+                    ->where('leave_type', $validated['leave_type'])
+                    ->whereBetween('start_date', [$currentYearStart, $currentYearEnd])
+                    ->whereIn('status', ['on_hold', 'approved'])
+                    ->where('id', '!=', $leaveId)
+                    ->exists();
+
+                if ($existingLeaveInOneYear || $existingLeaveInCurrentYear) {
+                    return response()->json(['error' => 'Already taken this type of leave within the last year or in the current year.'], 403);
+                }
+            }
 
             $leave->leave_type = $validated['leave_type'];
 

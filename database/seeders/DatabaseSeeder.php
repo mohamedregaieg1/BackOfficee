@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
         $this->call(FixedLeavesSeeder::class);
         $this->call(LeavesBalanceSeeder::class);
         $this->call(CompaniesTableSeeder::class);
+        $this->call(LeavesTableSeeder::class);
+
 
 
     }
