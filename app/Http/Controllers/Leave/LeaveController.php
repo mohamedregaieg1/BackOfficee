@@ -437,22 +437,30 @@ class LeaveController extends Controller
             ->header('Content-Disposition', 'attachment; filename="leave_request_' . $leave->id . '.pdf"');
     }
 
-    public function notifyHROnRejectedLeave(Leave $leave, Request $request)
+    public function notifyHROnRejectedLeave(Request $request)
     {
-        $authUser = Auth::user();
-        $hrs = User::where('role', 'hr')
-            ->when($authUser->role === 'hr', function ($query) use ($authUser) {
-                return $query->where('id', '!=', $authUser->id);
-            })
-            ->pluck('email');
+        try {
+            $validated = $request->validate([
+                'start_date' => 'required|date_format:Y-m-d H:i:s',
+                'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
+                'leave_type' => 'required|in:paternity_leave,maternity_leave',
+                'message' => 'nullable|string',
+            ]);
 
-        $rejectionMessage = $request->input('message');
-        $subject = 'Demande de congé refusée';
+            $authUser = Auth::user();
 
-        $startDateFormatted = \Carbon\Carbon::parse($leave->start_date)->format('Y/m/d');
-        $endDateFormatted = \Carbon\Carbon::parse($leave->end_date)->format('Y/m/d');
+            $hrs = User::where('role', 'hr')
+                ->when($authUser->role === 'hr', function ($query) use ($authUser) {
+                    return $query->where('id', '!=', $authUser->id);
+                })
+                ->pluck('email');
 
-        $htmlContent = "
+            $rejectionMessage = $request->input('message', 'Aucun message fourni');
+
+            $startDateFormatted = \Carbon\Carbon::parse($validated['start_date'])->format('Y/m/d');
+            $endDateFormatted = \Carbon\Carbon::parse($validated['end_date'])->format('Y/m/d');
+
+            $htmlContent = "
         <html>
         <head>
             <style>
@@ -539,43 +547,52 @@ class LeaveController extends Controller
                 }
             </style>
         </head>
-        <body>
-            <div class='email-container'>
-                <div class='email-header'>
-                    <span>PROCAN</span> RH NOTIFICATION
-                </div>
-                <div class='email-body'>
-                    <h2><center>Demande de congé refusée</center></h2>
-
-                    <p><strong>Employé :</strong> {$authUser->first_name} {$authUser->last_name}</p>
-                    <p><strong>Email :</strong> {$authUser->email}</p>
-                    <p><strong>Type de congé :</strong> {$leave->leave_type}</p>
-                    <p><strong>Période :</strong> du <strong>{$startDateFormatted}</strong> au <strong>{$endDateFormatted}</strong></p>
-
-                    <div class='info-block'>
-                        <strong>Message de l'utilisateur :</strong>
-                        <br>
-                        <em>{$rejectionMessage}</em>
-                    </div>
-
-                </div>
-
-                <p class='footer'>Ce message a été généré automatiquement. Merci de ne pas y répondre directement.<br>PROCAN RH System</p>
+       <body>
+        <div class='email-container'>
+            <div class='email-header'>
+                <span>PROCAN</span> HR NOTIFICATION
             </div>
-        </body>
+            <div class='email-body'>
+                <h2><center>Leave Request Rejected</center></h2>
+
+                <p><strong>Employee:</strong> {$authUser->first_name} {$authUser->last_name}</p>
+                <p><strong>Email:</strong> {$authUser->email}</p>
+                <p><strong>Type of Leave:</strong> {$validated['leave_type']}</p>
+                <p><strong>Period:</strong> from <strong>{$startDateFormatted}</strong> to <strong>{$endDateFormatted}</strong></p>
+
+                <div class='info-block'>
+                    <strong>User's Message:</strong>
+                    <br>
+                    <em>{$rejectionMessage}</em>
+                </div>
+
+            </div>
+
+            <p class='footer'>This message was automatically generated. Please do not reply directly.<br>PROCAN HR System</p>
+        </div>
+    </body>
         </html>
         ";
 
-        foreach ($hrs as $hrEmail) {
-            Mail::send([], [], function ($message) use ($hrEmail, $authUser, $subject, $htmlContent) {
-                $message->to($hrEmail)
-                    ->from($authUser->email, "{$authUser->first_name} {$authUser->last_name}")
-                    ->subject($subject)
-                    ->html($htmlContent);
-            });
-        }
+            foreach ($hrs as $hrEmail) {
+                Mail::send([], [], function ($message) use ($hrEmail, $authUser, $htmlContent) {
+                    $message->to($hrEmail)
+                        ->from($authUser->email, "{$authUser->first_name} {$authUser->last_name}")
+                        ->subject('Demande de congé refusée')
+                        ->html($htmlContent);
+                });
+            }
 
-        return response()->json(['message' => 'Notification envoyée aux RH.'], 200);
+            return response()->json(['message' => 'Notification envoyée aux RH.'], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 

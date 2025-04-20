@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
         $this->call(LeavesBalanceSeeder::class);
         $this->call(CompaniesTableSeeder::class);
         $this->call(LeavesTableSeeder::class);
+        $this->call(ClientsTableSeeder::class);
+
+
 
 
 

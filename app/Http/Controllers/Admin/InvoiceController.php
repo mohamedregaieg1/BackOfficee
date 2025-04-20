@@ -60,11 +60,21 @@ class InvoiceController extends Controller
         }
     }
 
-    public function getAllClients()
+    public function getAllClients(Request $request)
     {
         try {
-            $clients = Client::select('id', 'name')->get();
-            return response()->json($clients);
+            if ($request->has('name')) {
+                $client = Client::where('name', $request->name)->first();
+
+                if (!$client) {
+                    return response()->json([
+                        'error' => 'Client not found.',
+                    ], 404);
+                }
+
+                return response()->json($client);
+            }
+
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {

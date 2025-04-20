@@ -76,7 +76,7 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::post('leave/calculate', [LeaveController::class, 'calculateLeaveDays']);
     Route::post('leave/store', [LeaveController::class, 'store']);
     Route::get('/leave/{id}/download', [LeaveController::class, 'downloadLeavePdf']);
-    Route::post('/leaves/{leave}/notify-rejection', [LeaveController::class, 'notifyHROnRejectedLeave']);
+    Route::post('/leaves/notify-rejection', [LeaveController::class, 'notifyHROnRejectedLeave']);
     Route::get('/employee/leaves', [ViewLeaveController::class, 'showLeavesForEmployee']);
     Route::post('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
     Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
