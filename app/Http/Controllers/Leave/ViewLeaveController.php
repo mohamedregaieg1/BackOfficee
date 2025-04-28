@@ -46,9 +46,8 @@ class ViewLeaveController extends Controller
 
             $totalLeaveDays = $totalLeaveDaysQuery->sum('effective_leave_days');
 
-            // Requête pour récupérer les leaves avec filtres
             $leavesQuery = Leave::where('user_id', $userId)
-                ->whereIn('status', $status) // Filtre sur les statuts
+                ->whereIn('status', $status)
                 ->select(
                     'id',
                     'start_date',
@@ -86,7 +85,8 @@ class ViewLeaveController extends Controller
                 ];
 
                 if ($leave->leave_type === 'other') {
-                    $leaveData['other_type'] = $leave->other_type;                }
+                    $leaveData['other_type'] = $leave->other_type;
+                }
 
                 return $leaveData;
             });
@@ -125,126 +125,116 @@ class ViewLeaveController extends Controller
 
 
     public function showLeavesForEmployee(Request $request)
-{
-    try {
-        $authUser = Auth::user();
-        $userId = $authUser->id;
-        $year = $request->input('year');
+    {
+        try {
+            $authUser = Auth::user();
+            $userId = $authUser->id;
+            $year = $request->input('year');
 
-        // Gestion des filtres de statut
-        $statusParam = $request->input('status');
-        $statusFilter = [];
+            $statusParam = $request->input('status');
+            $statusFilter = [];
 
-        if (is_array($statusParam)) {
-            $statusFilter = $statusParam;
-        } elseif (is_string($statusParam)) {
-            $statusFilter = [$statusParam];
-        } elseif (is_null($statusParam)) {
-            $statusFilter = ['approved', 'rejected', 'on_hold'];
-        }
-
-        // Filtrage par type de congé
-        $leaveTypeFilter = $request->input('leave_type');
-
-        // Calcul des années disponibles
-        $minYear = Carbon::parse($authUser->start_date)->year;
-        $maxYear = Carbon::now()->year + 1;
-        $availableYears = range($minYear, $maxYear);
-
-        // Construction de la requête principale
-        $leavesQuery = Leave::where('user_id', $userId)
-            ->select(
-                'id',
-                'start_date',
-                'end_date',
-                'leave_type',
-                'other_type',
-                'leave_days_requested',
-                'effective_leave_days',
-                'attachment_path',
-                'status'
-            );
-
-        // Filtrer par année si spécifié
-        if ($year) {
-            $leavesQuery->whereYear('start_date', $year);
-        }
-
-        // Appliquer les filtres de statut
-        if (!empty($statusFilter)) {
-            $leavesQuery->whereIn('status', $statusFilter);
-        }
-
-        // Appliquer les filtres de type de congé
-        if (!empty($leaveTypeFilter)) {
-            if (is_array($leaveTypeFilter)) {
-                $leavesQuery->whereIn('leave_type', $leaveTypeFilter);
-            } else {
-                $leavesQuery->where('leave_type', $leaveTypeFilter);
-            }
-        }
-
-        // Pagination des résultats
-        $leaves = $leavesQuery->orderBy('created_at', 'desc')
-            ->paginate(6)
-            ->appends($request->query());
-
-        // Mapper les données pour la réponse
-        $data = $leaves->map(function ($leave) {
-            $leaveData = [
-                'id' => $leave->id,
-                'start_date' => $leave->start_date,
-                'end_date' => $leave->end_date,
-                'leave_type' => $leave->leave_type,
-                'status' => $leave->status,
-                'leave_days_requested' => $leave->leave_days_requested,
-                'effective_leave_days' => $leave->effective_leave_days,
-                'attachment_path' => $leave->attachment_path ? asset($leave->attachment_path) : null,
-            ];
-
-            if ($leave->leave_type === 'personal_leave') {
-                $leaveData['other_type'] = $leave->other_type;
+            if (is_array($statusParam)) {
+                $statusFilter = $statusParam;
+            } elseif (is_string($statusParam)) {
+                $statusFilter = [$statusParam];
+            } elseif (is_null($statusParam)) {
+                $statusFilter = ['approved', 'rejected', 'on_hold'];
             }
 
-            return $leaveData;
-        });
+            $leaveTypeFilter = $request->input('leave_type');
 
-        // Calcul des statistiques pour l'année sélectionnée
-        $stats = [];
-        if ($year) {
-            $stats['total_effective_days'] = Leave::where('user_id', $userId)
-                ->whereYear('start_date', $year)
-                ->sum('effective_leave_days');
+            $minYear = Carbon::parse($authUser->start_date)->year;
+            $maxYear = Carbon::now()->year + 1;
+            $availableYears = range($minYear, $maxYear);
 
-            $stats['status_counts'] = Leave::where('user_id', $userId)
-                ->whereYear('start_date', $year)
-                ->selectRaw('status, COUNT(*) as count')
-                ->groupBy('status')
-                ->pluck('count', 'status')
-                ->all();
+            $leavesQuery = Leave::where('user_id', $userId)
+                ->select(
+                    'id',
+                    'start_date',
+                    'end_date',
+                    'leave_type',
+                    'other_type',
+                    'leave_days_requested',
+                    'effective_leave_days',
+                    'attachment_path',
+                    'status'
+                );
+
+            if ($year) {
+                $leavesQuery->whereYear('start_date', $year);
+            }
+
+            if (!empty($statusFilter)) {
+                $leavesQuery->whereIn('status', $statusFilter);
+            }
+
+            if (!empty($leaveTypeFilter)) {
+                if (is_array($leaveTypeFilter)) {
+                    $leavesQuery->whereIn('leave_type', $leaveTypeFilter);
+                } else {
+                    $leavesQuery->where('leave_type', $leaveTypeFilter);
+                }
+            }
+
+            $leaves = $leavesQuery->orderBy('created_at', 'desc')
+                ->paginate(6)
+                ->appends($request->query());
+
+            $data = $leaves->map(function ($leave) {
+                $leaveData = [
+                    'id' => $leave->id,
+                    'start_date' => $leave->start_date,
+                    'end_date' => $leave->end_date,
+                    'leave_type' => $leave->leave_type,
+                    'status' => $leave->status,
+                    'leave_days_requested' => $leave->leave_days_requested,
+                    'effective_leave_days' => $leave->effective_leave_days,
+                    'attachment_path' => $leave->attachment_path ? asset($leave->attachment_path) : null,
+                ];
+
+                if ($leave->leave_type === 'personal_leave') {
+                    $leaveData['other_type'] = $leave->other_type;
+                }
+
+                return $leaveData;
+            });
+
+            $stats = [];
+            if ($year) {
+                $stats['total_effective_days'] = Leave::where('user_id', $userId)
+                    ->whereYear('start_date', $year)
+                    ->sum('effective_leave_days');
+
+                $stats['status_counts'] = Leave::where('user_id', $userId)
+                    ->whereYear('start_date', $year)
+                    ->selectRaw('status, COUNT(*) as count')
+                    ->groupBy('status')
+                    ->pluck('count', 'status')
+                    ->all();
+            }
+
+            return response()->json([
+                'available_years' => $availableYears,
+                'data' => $data,
+                'meta' => [
+                    'selected_year' => $year,
+                    'current_page' => $leaves->currentPage(),
+                    'per_page' => $leaves->perPage(),
+                    'total_pages' => $leaves->lastPage(),
+                    'total_leaves' => $leaves->total(),
+                ],
+                'stats' => $stats,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json($ve->errors(), 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'available_years' => $availableYears,
-            'data' => $data,
-            'meta' => [
-                'selected_year' => $year,
-                'current_page' => $leaves->currentPage(),
-                'per_page' => $leaves->perPage(),
-                'total_pages' => $leaves->lastPage(),
-                'total_leaves' => $leaves->total(),
-            ],
-            'stats' => $stats,
-        ]);
-    } catch (\Illuminate\Validation\ValidationException $ve) {
-        return response()->json($ve->errors(), 422);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'An unexpected error occurred.',
-            'details' => $e->getMessage(),
-        ], 500);
     }
-}
 
 
 
@@ -310,23 +300,23 @@ class ViewLeaveController extends Controller
     }
 
     protected function sendLeaveStatusNotification(Leave $leave)
-{
-    $receiver = $leave->user;
-    $sender = Auth::user();
-    $statusText = $leave->status === 'approved' ? 'approved' : 'rejected';
-    $title = "Update on your leave request";
-    $message = "{$sender->first_name} {$sender->last_name} has {$statusText} your leave request for {$leave->leave_type}.";
+    {
+        $receiver = $leave->user;
+        $sender = Auth::user();
+        $statusText = $leave->status === 'approved' ? 'approved' : 'rejected';
+        $title = "Update on your leave request";
+        $message = "{$sender->first_name} {$sender->last_name} has {$statusText} your leave request for {$leave->leave_type}.";
 
-    $notification = Notification::create([
-        'sender_id' => $sender->id,
-        'receiver_id' => $receiver->id,
-        'leave_id' => $leave->id, // Ajout du champ leave_id
-        'title' => $title,
-        'message' => $message,
-    ]);
+        $notification = Notification::create([
+            'sender_id' => $sender->id,
+            'receiver_id' => $receiver->id,
+            'leave_id' => $leave->id,
+            'title' => $title,
+            'message' => $message,
+        ]);
 
-    broadcast(new NewNotificationEvent($notification))->toOthers();
-}
+        broadcast(new NewNotificationEvent($notification))->toOthers();
+    }
 
     public function updateLeave(Request $request, $leaveId)
     {
@@ -390,7 +380,6 @@ class ViewLeaveController extends Controller
                 $leave->attachment_path = env('STORAGE') . '/attachments/' . basename($path);
             }
 
-            // Recalculer les jours effectifs selon la logique métier
             if ($validated['leave_type'] === 'sick_leave') {
                 $requestedDays = $leave->leave_days_requested;
 

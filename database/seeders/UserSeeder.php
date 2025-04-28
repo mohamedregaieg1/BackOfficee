@@ -23,6 +23,8 @@ class UserSeeder extends Seeder
             'job_description' => 'Administrator',
             'start_date' => now(),
             'leave_balance' => 0,
+            'avatar_path'=>'http://127.0.0.1:8000/dist/img/avatarmale.png',
+
         ]);
 
         // Création des 7 autres utilisateurs (Employee et HR)

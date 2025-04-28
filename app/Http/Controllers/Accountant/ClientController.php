@@ -29,8 +29,7 @@ class ClientController extends Controller
             ],
         ]);
     }
-
-    // Ajouter un nouveau client
+    // Itha individual metb3tch tva w ken professional eb3th tva 
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -48,7 +47,6 @@ class ClientController extends Controller
             'phone_number' => 'required|string|max:15',
         ]);
 
-        // Construction des données à enregistrer
         $clientData = [
             'client_type' => $validated['client_type'],
             'address' => $validated['address'],
@@ -62,8 +60,8 @@ class ClientController extends Controller
         if ($validated['client_type'] === 'individual') {
             $fullName = trim(($validated['civility'] ?? '') . ' ' . ($validated['first_name'] ?? '') . ' ' . ($validated['last_name'] ?? ''));
             $clientData['name'] = $fullName;
-            $clientData['tva_number_client'] = null; // Pas de TVA pour individu
-        } else { // professional
+            $clientData['tva_number_client'] = null;
+        } else {
             $clientData['name'] = $validated['name'];
             $clientData['tva_number_client'] = $validated['tva_number_client'] ?? null;
         }
@@ -73,7 +71,6 @@ class ClientController extends Controller
         return response()->json(['message' => 'Client created successfully.', 'client' => $client], 201);
     }
 
-    // Modifier un client existant
     public function update(Request $request, $id)
     {
         $client = Client::findOrFail($id);
@@ -94,7 +91,6 @@ class ClientController extends Controller
         return response()->json(['message' => 'Client updated successfully.', 'client' => $client]);
     }
 
-    // Supprimer un client
     public function destroy($id)
     {
         $client = Client::findOrFail($id);

@@ -39,9 +39,9 @@ class FixedLeavesController extends Controller
             ]);
 
             return response()->json(['message' => 'Specific leave added successfully.'], 201);
-        }  catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json(['error' => 'Unexpected error: ' . $e->getMessage()], 500);
         }
     }
@@ -57,7 +57,7 @@ class FixedLeavesController extends Controller
             $leaveLimit->update(['max_days' => $request->max_days]);
 
             return response()->json(['message' => 'Leave updated successfully.'], 200);
-        }  catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to update leave: ' . $e->getMessage()], 500);
@@ -71,7 +71,7 @@ class FixedLeavesController extends Controller
             $leaveLimit->delete();
 
             return response()->json(['message' => 'Leave deleted successfully.'], 200);
-        }  catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to delete leave.'], 500);

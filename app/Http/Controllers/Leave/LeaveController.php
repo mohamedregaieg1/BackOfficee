@@ -188,22 +188,16 @@ class LeaveController extends Controller
 
     private function sendLeaveNotification($authUser, $leaveType, $otherType = null, $leaveEntries)
     {
-        // Titre de la notification
         $title = 'New leave request';
-
-        // Message personnalisé en fonction du type de congé
         if ($leaveType === 'other' && $otherType) {
             $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$otherType}.";
         } else {
             $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$leaveType}.";
         }
 
-        // Déterminer les destinataires en fonction du rôle de l'utilisateur authentifié
         if ($authUser->role === 'employee') {
-            // Employé : envoyer aux administrateurs et HR
             $receivers = User::whereIn('role', ['admin', 'hr'])->get();
         } elseif ($authUser->role === 'hr') {
-            // HR : envoyer aux administrateurs et autres HR (sauf l'utilisateur authentifié)
             $receivers = User::where(function ($query) use ($authUser) {
                 $query->where('role', 'admin')
                     ->orWhere(function ($query) use ($authUser) {
@@ -212,11 +206,9 @@ class LeaveController extends Controller
                     });
             })->get();
         } else {
-            // Aucun destinataire pour les autres rôles
             $receivers = collect();
         }
 
-        // Créer et envoyer les notifications pour chaque entrée de congé
         foreach ($leaveEntries as $leaveEntry) {
             foreach ($receivers as $receiver) {
                 $notification = Notification::create([
@@ -226,8 +218,6 @@ class LeaveController extends Controller
                     'message' => $message,
                     'leave_id' => $leaveEntry->id,
                 ]);
-
-                // Diffuser la notification en temps réel
                 broadcast(new NewNotificationEvent($notification))->toOthers();
             }
         }
@@ -403,11 +393,8 @@ class LeaveController extends Controller
 
     public static function getWorkingDays($startDate, $endDate)
     {
-        // Parse les dates de début et de fin
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
-
-        // Récupérer les jours fériés dans la plage de dates
         $holidays = \App\Models\PublicHoliday::where(function ($query) use ($start, $end) {
             $query->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
                 ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
@@ -416,57 +403,44 @@ class LeaveController extends Controller
                         ->where('end_date', '>=', $end->toDateString());
                 });
         })->get();
-        Log::info('Jours fériés récupérés depuis la base de données : ', $holidays->toArray());
-        // Collecter toutes les dates de jours fériés
         $holidayDates = collect();
         foreach ($holidays as $holiday) {
             $startDate = Carbon::parse($holiday->start_date);
             $endDate = Carbon::parse($holiday->end_date);
-
-            // Générer une plage de dates entre start_date et end_date (inclus)
-            $period = $startDate->daysUntil($endDate); // Ne PAS utiliser addDay() ici
+            $period = $startDate->daysUntil($endDate);
             foreach ($period as $date) {
                 $holidayDates->push($date->toDateString());
             }
         }
 
-        // Afficher les dates de jours fériés collectées pour débogage
-        Log::info('Dates de jours fériés collectées : ', $holidayDates->toArray());
-
-        // Initialiser le compteur de jours ouvrables
         $total = 0;
 
-        // Gérer le cas où la date de début et de fin sont identiques
         if ($start->toDateString() === $end->toDateString()) {
             if ($start->isWeekend() || $holidayDates->contains($start->toDateString())) {
-                return 0; // Exclure les week-ends et les jours fériés
+                return 0;
             }
-            return self::getSameDayFraction($start); // Calculer la fraction pour une seule journée
+            return self::getSameDayFraction($start);
         }
 
-        // Calculer la fraction pour le premier jour (jour de début)
         if (!$start->isWeekend() && !$holidayDates->contains($start->toDateString())) {
             $total += self::getStartDayFraction($start);
         }
 
-        // Boucle pour calculer les jours ouvrables entre le jour de début et le jour de fin
-        $current = $start->copy()->addDay(); // Commencer le lendemain du jour de début
+        $current = $start->copy()->addDay();
         while ($current->lt($end->copy()->startOfDay())) {
             if (!$current->isWeekend() && !$holidayDates->contains($current->toDateString())) {
-                $total += 1; // Ajouter un jour complet s'il n'est ni un week-end ni un jour férié
+                $total += 1;
             }
             $current->addDay();
         }
 
-        // Calculer la fraction pour le dernier jour (jour de fin)
         if (!$end->isWeekend() && !$holidayDates->contains($end->toDateString())) {
             $total += self::getEndDayFraction($end);
         }
 
-        // Log du total des jours ouvrables calculés
         Log::info('Total des jours ouvrables calculés : ', ['total' => $total]);
 
-        return $total; // Retourner le total des jours ouvrables
+        return $total;
     }
 
     private static function getSameDayFraction(Carbon $start)
@@ -567,7 +541,6 @@ class LeaveController extends Controller
         try {
             $validated = $request->validate([
                 'start_date' => 'required|date_format:Y-m-d H:i:s',
-                'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
                 'leave_type' => 'required|in:paternity_leave,maternity_leave',
                 'message' => 'nullable|string',
             ]);
@@ -582,8 +555,17 @@ class LeaveController extends Controller
 
             $rejectionMessage = $request->input('message', 'Aucun message fourni');
 
-            $startDateFormatted = \Carbon\Carbon::parse($validated['start_date'])->format('Y/m/d');
-            $endDateFormatted = \Carbon\Carbon::parse($validated['end_date'])->format('Y/m/d');
+            $fixedLeave = FixedLeaves::where('leave_type', $validated['leave_type'])->first();
+
+            if (!$fixedLeave) {
+                return response()->json(['error' => 'Fixed leave type not found.'], 404);
+            }
+
+            $startDate = Carbon::parse($validated['start_date']);
+            $endDate = $startDate->copy()->addDays($fixedLeave->max_days - 1)->setTime(8, 0, 0);
+
+            $startDateFormatted = $startDate->format('Y/m/d');
+            $endDateFormatted = $endDate->format('Y/m/d');
 
             $htmlContent = "
              <html>
@@ -728,5 +710,6 @@ class LeaveController extends Controller
             ], 500);
         }
     }
+
 
 }

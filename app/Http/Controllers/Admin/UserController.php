@@ -24,14 +24,14 @@ class UserController extends Controller
             } else {
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'LIKE', "%$search%")
-                      ->orWhere('last_name', 'LIKE', "%$search%");
+                        ->orWhere('last_name', 'LIKE', "%$search%");
                 });
             }
         }
 
-        $users = $query->select('id', 'first_name', 'last_name', 'email', 'phone','company', 'role', 'start_date', 'avatar_path','job_description')
-                       ->orderBy('first_name', 'asc')
-                       ->paginate(6);
+        $users = $query->select('id', 'first_name', 'last_name', 'email', 'phone', 'company', 'role', 'start_date', 'avatar_path', 'job_description')
+            ->orderBy('first_name', 'asc')
+            ->paginate(6);
 
         return response()->json([
             'data' => $users->makeHidden('avatar_path')->map(function ($user) {

@@ -40,13 +40,13 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/by-name', [CompanyController::class, 'showByName']);
     Route::post('/companies', [CompanyController::class, 'store']);
     Route::put('/{id}', [CompanyController::class, 'update']);
+    Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::post('invoices/step-one', [InvoiceController::class, 'stepOne']);
     Route::get('/clients', [InvoiceController::class, 'getAllClients']);
     Route::get('/clients/{id}', [InvoiceController::class, 'getClientById']);
     Route::post('invoices/step-two', [InvoiceController::class, 'stepTwo']);
     Route::post('invoices/step-three', [InvoiceController::class, 'stepThree']);
     Route::post('invoices/store', [InvoiceController::class, 'store']);
-    Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
 
 
@@ -89,11 +89,11 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
 
 //route for accountant :
 
-Route::prefix('accountant')->group(function () {
-    Route::get('clients', [ClientController::class, 'index']);
-    Route::post('clients/add', [ClientController::class, 'store']);
-    Route::put('clients/{id}', [ClientController::class, 'update']);
-    Route::delete('clients/{id}', [ClientController::class, 'destroy']);
+    Route::middleware(['auth:api', 'role:accountant'])->group(function () {
+    Route::get('/clients', [ClientController::class, 'index']);
+    Route::post('/clients/add', [ClientController::class, 'store']);
+    Route::put('/clients/{id}', [ClientController::class, 'update']);
+    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 });
 
 Route::middleware(['auth:api', 'role:employee,hr,admin'])->group(function () {
