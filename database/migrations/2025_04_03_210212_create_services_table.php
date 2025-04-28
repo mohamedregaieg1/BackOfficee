@@ -14,7 +14,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->float('quantity');
-            $table->enum('unit', ['hours', 'days']);
+            $table->string('unit')->nullable();
             $table->float('price_ht');
             $table->float('tva');
             $table->float('total_ht');

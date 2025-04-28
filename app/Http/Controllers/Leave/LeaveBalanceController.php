@@ -10,61 +10,74 @@ use App\Models\FixedLeaves;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
+
 
 class LeaveBalanceController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = trim($request->input('search'));
-        $query = User::where('role', '!=', 'admin');
+public function index(Request $request)
+{
+    // Récupérer la recherche (si elle existe)
+    $search = trim($request->input('search'));
+    $query = User::where('role', '!=', 'admin');
 
-        if (!empty($search)) {
-            if (str_contains($search, ' ')) {
-                [$firstName, $lastName] = explode(' ', $search, 2);
-                $query->where('first_name', 'LIKE', "%$firstName%")
-                    ->where('last_name', 'LIKE', "%$lastName%");
-            } else {
-                $query->where(function ($q) use ($search) {
-                    $q->where('first_name', 'LIKE', "%$search%")
-                    ->orWhere('last_name', 'LIKE', "%$search%");
-                });
-            }
+    // Filtrer les utilisateurs en fonction de la recherche
+    if (!empty($search)) {
+        if (str_contains($search, ' ')) {
+            [$firstName, $lastName] = explode(' ', $search, 2);
+            $query->where('first_name', 'LIKE', "%$firstName%")
+                  ->where('last_name', 'LIKE', "%$lastName%");
+        } else {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%$search%")
+                  ->orWhere('last_name', 'LIKE', "%$search%");
+            });
         }
-
-        $users = $query->select('id', 'first_name', 'last_name', 'avatar_path')
-                    ->orderBy('first_name', 'asc')
-                    ->paginate(6);
-
-        $sickLeaveMax = FixedLeaves::where('leave_type', 'sick_leave')->value('max_days');
-
-        return response()->json([
-            'data' => $users->makeHidden('avatar_path')->map(function ($user) use ($sickLeaveMax) {
-                $personalLeaveUsed = Leave::where('user_id', $user->id)
-                    ->where('leave_type', 'personal_leave')
-                    ->sum('effective_leave_days');
-
-                $personalLeaveBalance = LeavesBalance::where('user_id', $user->id)->sum('leave_day_limit');
-                $sickLeaveUsed = Leave::where('user_id', $user->id)
-                    ->where('leave_type', 'sick_leave')
-                    ->sum('effective_leave_days');
-
-                return [
-                    'id' => $user->id,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'avatar_path' => $user->avatar_path,
-                    'personal_leave_remaining' => round($personalLeaveBalance - $personalLeaveUsed, 2),
-                    'sick_leave_remaining' => round($sickLeaveMax - $sickLeaveUsed, 2),
-                ];
-            }),
-            'meta' => [
-                'current_page' => $users->currentPage(),
-                'per_page' => $users->perPage(),
-                'total_pages' => $users->lastPage(),
-                'total_employees' => $users->total(),
-            ],
-        ]);
     }
+
+    // Paginer les résultats
+    $users = $query->select('id', 'first_name', 'last_name', 'avatar_path')
+                   ->orderBy('first_name', 'asc')
+                   ->paginate(6);
+
+    // Récupérer le nombre maximum de jours pour les congés maladie
+    $sickLeaveMax = FixedLeaves::where('leave_type', 'sick_leave')->value('max_days');
+
+    // Retourner les données au format JSON
+    return response()->json([
+        'data' => $users->makeHidden('avatar_path')->map(function ($user) use ($sickLeaveMax) {
+            // Calculer le solde restant pour les congés personnels (y compris "other")
+            $personalLeaveUsed = Leave::where('user_id', $user->id)
+                ->whereIn('leave_type', ['personal_leave', 'other'])
+                ->sum('effective_leave_days');
+
+            $personalLeaveBalance = LeavesBalance::where('user_id', $user->id)->sum('leave_day_limit');
+            $personalLeaveRemaining = round($personalLeaveBalance - $personalLeaveUsed, 2);
+
+            // Calculer la somme des jours effectifs pour les congés maladie dans l'année courante
+            $currentYear = Carbon::now()->year;
+            $sickLeaveEffectiveDays = Leave::where('user_id', $user->id)
+                ->where('leave_type', 'sick_leave')
+                ->whereYear('start_date', $currentYear)
+                ->sum('leave_days_requested');
+
+            return [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'avatar_path' => $user->avatar_path,
+                'personal_leave_remaining' => $personalLeaveRemaining,
+                'sick_leave_effective_days_current_year' => round($sickLeaveEffectiveDays, 2),
+            ];
+        }),
+        'meta' => [
+            'current_page' => $users->currentPage(),
+            'per_page' => $users->perPage(),
+            'total_pages' => $users->lastPage(),
+            'total_employees' => $users->total(),
+        ],
+    ]);
+}
 
 
     public function store(Request $request, $id)

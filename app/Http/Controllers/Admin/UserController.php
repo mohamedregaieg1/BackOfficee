@@ -72,7 +72,7 @@ class UserController extends Controller
                 'company' => 'required|in:adequate,procan',
                 'start_date' => 'required|date',
                 'role' => 'required|in:employee,hr,accountant',
-                'job_description' => 'required|string|max:20',
+                'job_description' => 'required|string|max:30',
             ], [
                 'first_name.required' => 'The first name is required.',
                 'last_name.required' => 'The last name is required.',
@@ -89,7 +89,7 @@ class UserController extends Controller
                 'start_date.required' => 'The start date is required.',
                 'role.required' => 'The role is required.',
                 'job_description.required' => 'The job description is required.',
-                'job_description.max' => 'The job description must not exceed 20 characters.',
+                'job_description.max' => 'The job description must not exceed 30 characters.',
             ]);
 
             $avatarFileName = $validated['gender'] === 'female' ? 'avatarfemale.png' : 'avatarmale.png';

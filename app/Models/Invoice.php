@@ -15,7 +15,11 @@ class Invoice extends Model {
         'additional_date_type',
         'additional_date',
         'company_id',
-        'client_id'
+        'client_id',
+        'payment_mode',
+        'amount_paid',
+        'due_date',
+        'payment_status'
     ];
 
     // Relations

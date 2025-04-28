@@ -11,80 +11,132 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
-
+use Dompdf\Dompdf;
+use Dompdf\Options;
 class InvoiceController extends Controller
 {
     public function stepOne(Request $request)
-    {
-        try {
-            $companies = Company::all();
+{
+    try {
+        // Récupération des entreprises disponibles
+        $companies = Company::all();
 
-            $validated = Validator::make($request->all(), [
-                'type' => 'required|in:facture,devis',
-                'creation_date' => 'required|date',
-                'additional_date_type' => 'nullable|in:Date of sale,Expiry date,Withdrawal date until',
-                'additional_date' => 'nullable|date',
-                'company_name' => 'required|exists:companies,name'
-            ])->validate();
+        // Validation des données reçues dans la requête
+        $validated = Validator::make($request->all(), [
+            'type' => 'required|in:facture,devis',
+            'creation_date' => 'required|date',
+            'additional_date_type' => 'nullable|in:Date of sale,Expiry date,Withdrawal date until',
+            'additional_date' => 'nullable|date',
+            'company_name' => 'required|exists:companies,name',
+            'number' => 'required|string|unique:invoices,number', // Numéro saisi par l'utilisateur
+        ])->validate();
 
-            $selectedCompany = Company::where('name', $request->company_name)->first();
+        // Vérification de l'existence de l'entreprise sélectionnée
+        $selectedCompany = Company::where('name', $request->company_name)->first();
 
-            if (!$selectedCompany) {
-                return response()->json(['message' => 'Company not found'], 404);
+        if (!$selectedCompany) {
+            return response()->json(['message' => 'Company not found'], 404);
+        }
+
+        // Calcul de l'incrémentation pour l'année en cours
+        $year = date('Y', strtotime($request->creation_date)); // Année actuelle
+        $increment = DB::table('invoices')
+            ->where('type', $request->type)
+            ->whereRaw('DATE_FORMAT(created_at, "%Y") = ?', [$year]) // Filtrage par année seulement
+            ->count() + 1;
+
+        // Formatage de l'incrémentation avec une longueur fixe de 5 caractères
+        $incrementFormatted = str_pad($increment, 5, '0', STR_PAD_LEFT);
+
+        // Création du numéro final : {number}/{incr}
+        $finalNumber = "{$request->number}/{$incrementFormatted}";
+
+        // Ajout du numéro final aux données validées
+        $validated['number'] = $finalNumber;
+
+        // Création des données à stocker dans le cookie
+        $cookieData = json_encode($validated + ['company' => $selectedCompany]);
+
+        // Création du cookie avec les données validées
+        $cookie = cookie('invoice_step1', $cookieData, 120);
+
+        // Réponse JSON avec les données validées
+        return response()->json([
+            'message' => 'Step 1 completed successfully',
+            'data' => json_decode($cookieData, true)
+        ])->cookie($cookie);
+    } catch (\Illuminate\Validation\ValidationException $ve) {
+        // Gestion des erreurs de validation
+        return response()->json($ve->errors(), 422);
+    } catch (\Exception $e) {
+        // Gestion des autres exceptions
+        return response()->json([
+            'error' => 'An unexpected error occurred.',
+            'details' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+public function getAllClients(Request $request)
+{
+    try {
+        // Vérifier si le paramètre 'name' est fourni
+        if ($request->has('name')) {
+            // Recherche d'un client spécifique par son nom
+            $client = Client::where('name', $request->name)->first();
+
+            if (!$client) {
+                return response()->json([
+                    'error' => 'Client not found.',
+                ], 404);
             }
 
-            $prefix = $request->type === 'facture' ? 'F' : 'D';
-            $monthYear = date('mY', strtotime($request->creation_date));
-            $increment = DB::table('invoices')
-                ->where('type', $request->type)
-                ->whereRaw('DATE_FORMAT(created_at, "%m%Y") = ?', [$monthYear])
-                ->count() + 1;
-
-            $incrementFormatted = str_pad($increment, 6, '0', STR_PAD_LEFT);
-            $number = "{$prefix}/{$monthYear}/{$incrementFormatted}";
-
-            $cookieData = json_encode($validated + ['number' => $number, 'company' => $selectedCompany]);
-            $cookie = cookie('invoice_step1', $cookieData, 120);
-
+            // Retourner les détails du client trouvé
             return response()->json([
-                'message' => 'Step 1 completed successfully',
-                'data' => json_decode($cookieData, true)
-            ])->cookie($cookie);
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'An unexpected error occurred.',
-                'details' => $e->getMessage(),
-            ], 500);
+                'id' => $client->id,
+                'name' => $client->name,
+            ]);
+        } else {
+            // Récupérer tous les clients avec leurs id et name
+            $clients = Client::select('id', 'name')->get();
+
+            // Retourner la liste des clients
+            return response()->json($clients);
         }
+    } catch (\Illuminate\Validation\ValidationException $ve) {
+        // Gestion des erreurs de validation
+        return response()->json($ve->errors(), 422);
+    } catch (\Exception $e) {
+        // Gestion des autres exceptions
+        return response()->json([
+            'error' => 'An unexpected error occurred.',
+            'details' => $e->getMessage(),
+        ], 500);
     }
+}
 
-    public function getAllClients(Request $request)
-    {
-        try {
-            if ($request->has('name')) {
-                $client = Client::where('name', $request->name)->first();
+public function getClientById($id)
+{
+    try {
+        // Validation directe de l'id passé en paramètre de route
+        $client = Client::find($id);
 
-                if (!$client) {
-                    return response()->json([
-                        'error' => 'Client not found.',
-                    ], 404);
-                }
-
-                return response()->json($client);
-            }
-
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
-        } catch (\Exception $e) {
+        if (!$client) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
-                'details' => $e->getMessage(),
-            ], 500);
+                'error' => 'Client not found.',
+            ], 404);
         }
-    }
 
+        // Retourner toutes les informations du client
+        return response()->json($client);
+    } catch (\Exception $e) {
+        // Gestion des autres exceptions
+        return response()->json([
+            'error' => 'An unexpected error occurred.',
+            'details' => $e->getMessage(),
+        ], 500);
+    }
+}
     public function stepTwo(Request $request)
     {
         try {
@@ -196,6 +248,11 @@ class InvoiceController extends Controller
                 'TTotal_HT' => 'required|numeric',
                 'TTotal_TVA' => 'required|numeric',
                 'TTotal_TTC' => 'required|numeric',
+                'payment_mode' => 'nullable|in:bank transfer,credit card,cash,paypal,cheque,other',
+                'due_date' => 'nullable|string',
+                'payment_status' => 'nullable|in:paid,partially paid',
+                'amount_paid' => 'nullable|numeric',
+
             ])->validate();
 
             $cookieData = json_encode($validated);
@@ -298,4 +355,72 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
+
+    public function downloadPdf($invoiceId)
+{
+    try {
+        // Récupérer l'invoice avec les relations nécessaires
+        $invoice = Invoice::with(['client', 'services', 'company'])->findOrFail($invoiceId);
+        $totalPriceHT = $invoice->services->sum('price_ht'); // Somme des prix HT
+        $totalPriceTTC = $invoice->services->sum('total_ttc'); // Somme des prix TTC
+
+
+        // Déterminer le chemin du logo en fonction de l'entreprise liée à la facture
+        $company = $invoice->company; // Récupérer l'entreprise associée à la facture
+        $companyLogoPath = ($company && $company->name === 'Procan')
+            ? public_path('dist/img/logo-procan.webp')
+            : public_path('dist/img/logo-Adequate.webp');
+        // Encoder le logo en base64 pour l'intégrer dans le PDF
+        if (file_exists($companyLogoPath)) {
+            $companyLogoBase64 = base64_encode(file_get_contents($companyLogoPath));
+        } else {
+            $companyLogoBase64 = null; // Gérer le cas où le fichier n'existe pas
+        }
+
+        // Passer les données à la vue
+        $data = [
+            'invoice' => $invoice,
+            'client' => $invoice->client,
+            'services' => $invoice->services,
+            'company'=>$invoice->company,
+            'totalPriceHT' => $totalPriceHT, // Ajouter le total des prix HT
+            'totalPriceTTC' => $totalPriceTTC, // Ajouter le total des prix TTC
+            'companyLogoBase64' => $companyLogoBase64, // Ajouter le logo encodé
+        ];
+
+        // Configuration des options de Dompdf
+        $options = new Options();
+        $options->set('isRemoteEnabled', true); // Activer le chargement de ressources externes
+        $options->set('defaultFont', 'Arial'); // Définir une police par défaut
+
+        // Créer une instance de Dompdf
+        $dompdf = new Dompdf($options);
+
+        // Charger la vue Blade et passer les données
+        $html = view('pdf.invoice', $data)->render();
+
+        // Charger le contenu HTML dans Dompdf
+        $dompdf->loadHtml($html);
+
+        // Configurer les dimensions et marges
+        $dompdf->setPaper('A4', 'portrait');
+
+        // Rendre le PDF
+        $dompdf->render();
+
+        // Retourner le PDF au format de téléchargement
+        return response($dompdf->output())
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="devis_' . $invoice->number . '.pdf"');
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'error' => 'Devis non trouvé.',
+        ], 404);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Une erreur inattendue s\'est produite.',
+            'details' => $e->getMessage(),
+        ], 500);
+    }
+}
 }

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->enum('leave_type', ['paternity_leave', 'maternity_leave', 'sick_leave','personal_leave']);
+            $table->enum('leave_type', ['paternity_leave', 'maternity_leave', 'sick_leave','personal_leave','other']);
             $table->string('other_type')->nullable();
             $table->double('leave_days_requested');
             $table->double('effective_leave_days')->default(0);

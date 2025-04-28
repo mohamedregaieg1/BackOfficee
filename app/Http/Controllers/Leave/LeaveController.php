@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 
 class LeaveController extends Controller
@@ -33,8 +34,8 @@ class LeaveController extends Controller
             $validator = Validator::make($request->all(), [
                 'start_date' => 'required|date_format:Y-m-d H:i:s',
                 'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
-                'leave_type' => 'required|in:sick_leave,personal_leave',
-                'other_type' => 'required_if:leave_type,personal_leave',
+                'leave_type' => 'required|in:sick_leave,personal_leave,other',
+                'other_type' => 'required_if:leave_type,other',
             ]);
         }
 
@@ -89,7 +90,7 @@ class LeaveController extends Controller
             'end_date' => $request->end_date,
             'leave_days' => $leaveDays,
             'leave_type' => $leaveType,
-            'other_type' => $leaveType === 'personal_leave' ? $request->other_type : null,
+            'other_type' => $leaveType === 'other' ? $request->other_type : null,
             'remaining_days' => round($remainingDays, 2)
         ], 200);
     }
@@ -101,9 +102,9 @@ class LeaveController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'required|date_format:Y-m-d H:i:s',
             'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
-            'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave',
+            'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave,other',
             'leave_days' => 'required|regex:/^\d+(\.\d{1})?$/',
-            'other_type' => 'required_if:leave_type,personal_leave|string|max:255',
+            'other_type' => 'required_if:leave_type,other|string|max:255',
             'attachment' => 'required_if:leave_type,sick_leave,maternity_leave,paternity_leave|file',
         ]);
 
@@ -133,9 +134,6 @@ class LeaveController extends Controller
         $leaveDaysRequested = $this->calculateLeaveDaysRequested($request->leave_type, $leaveDays);
         $effectiveLeaveDays = $leaveDaysRequested;
 
-        if ($request->leave_type == 'sick_leave') {
-            $effectiveLeaveDays = max(0, $leaveDaysRequested - 2);
-        }
 
         $start = Carbon::parse($request->start_date);
         $end = Carbon::parse($request->end_date);
@@ -148,7 +146,7 @@ class LeaveController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $midYearDate->toDateString() . ' 08:00:00',
                 'leave_type' => $request->leave_type,
-                'other_type' => $request->leave_type == 'personal_leave' ? $request->other_type : null,
+                'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
                 'leave_days_requested' => $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 08:00:00'),
                 'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 23:59:59')),
                 'attachment_path' => $attachmentPath,
@@ -160,7 +158,7 @@ class LeaveController extends Controller
                 'start_date' => $midYearDate->addDay()->toDateString() . ' 08:00:00',
                 'end_date' => $request->end_date,
                 'leave_type' => $request->leave_type,
-                'other_type' => $request->leave_type == 'personal_leave' ? $request->other_type : null,
+                'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
                 'leave_days_requested' => $this->getWorkingDays($midYearDate->toDateString() . ' 08:00:00', $request->end_date),
                 'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($midYearDate->toDateString() . ' 00:00:00', $request->end_date)),
                 'attachment_path' => $attachmentPath,
@@ -172,8 +170,8 @@ class LeaveController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'leave_type' => $request->leave_type,
-                'other_type' => $request->leave_type == 'personal_leave' ? $request->other_type : null,
-                'leave_days_requested' => $leaveDaysRequested,
+                'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
+                'leave_days_requested' => $leaveDays,
                 'effective_leave_days' => $effectiveLeaveDays,
                 'attachment_path' => $attachmentPath,
                 'status' => 'on_hold'
@@ -181,7 +179,7 @@ class LeaveController extends Controller
         }
 
         $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'personal_leave' ? $request->other_type : null, $leaveEntries);
-
+        $this->notifyAdminOnLeaveRequest(auth()->user(), $request->leave_type, $request->leave_type === 'personal_leave' ? $request->other_type : null, $leaveEntries);
         return response()->json([
             'message' => 'Leave request stored successfully!',
             'leave' => $leaveEntries,
@@ -190,27 +188,35 @@ class LeaveController extends Controller
 
     private function sendLeaveNotification($authUser, $leaveType, $otherType = null, $leaveEntries)
     {
+        // Titre de la notification
         $title = 'New leave request';
 
-        if ($leaveType === 'personal_leave' && $otherType) {
-            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$otherType}.";
+        // Message personnalisé en fonction du type de congé
+        if ($leaveType === 'other' && $otherType) {
+            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$otherType}.";
         } else {
-            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave {$leaveType}.";
+            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$leaveType}.";
         }
 
+        // Déterminer les destinataires en fonction du rôle de l'utilisateur authentifié
         if ($authUser->role === 'employee') {
+            // Employé : envoyer aux administrateurs et HR
             $receivers = User::whereIn('role', ['admin', 'hr'])->get();
         } elseif ($authUser->role === 'hr') {
-            $receivers = User::where('role', 'admin')
-                ->orWhere(function ($query) use ($authUser) {
-                    $query->where('role', 'hr')
-                        ->where('id', '!=', $authUser->id);
-                })
-                ->get();
+            // HR : envoyer aux administrateurs et autres HR (sauf l'utilisateur authentifié)
+            $receivers = User::where(function ($query) use ($authUser) {
+                $query->where('role', 'admin')
+                    ->orWhere(function ($query) use ($authUser) {
+                        $query->where('role', 'hr')
+                            ->where('id', '!=', $authUser->id);
+                    });
+            })->get();
         } else {
+            // Aucun destinataire pour les autres rôles
             $receivers = collect();
         }
 
+        // Créer et envoyer les notifications pour chaque entrée de congé
         foreach ($leaveEntries as $leaveEntry) {
             foreach ($receivers as $receiver) {
                 $notification = Notification::create([
@@ -220,7 +226,108 @@ class LeaveController extends Controller
                     'message' => $message,
                     'leave_id' => $leaveEntry->id,
                 ]);
+
+                // Diffuser la notification en temps réel
                 broadcast(new NewNotificationEvent($notification))->toOthers();
+            }
+        }
+    }
+
+
+    public function notifyAdminOnLeaveRequest($authUser, $leaveType, $otherType, $leaveEntries)
+    {
+        $admins = User::whereIn('role', ['admin', 'hr'])
+            ->when($authUser->role === 'hr', function ($query) use ($authUser) {
+                return $query->where('id', '!=', $authUser->id);
+            })
+            ->pluck('email');
+
+        foreach ($leaveEntries as $leaveEntry) {
+            $startDateFormatted = \Carbon\Carbon::parse($leaveEntry->start_date)->format('Y/m/d');
+            $endDateFormatted = \Carbon\Carbon::parse($leaveEntry->end_date)->format('Y/m/d');
+
+            $leaveLabel = $leaveType === 'other' && $otherType ? $otherType : $leaveType;
+
+            $htmlContent = "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; line-height: 1.6; }
+                .email-border {
+                    max-width: 650px; margin: 40px auto; border: 2px solid #000000; border-radius: 12px; overflow: hidden;
+                    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+                }
+                .email-container {
+                    max-width: 600px; margin: 0 auto; background: #ffffff;
+                    padding: 30px; border-radius: 12px;
+                    font-size: 16px; color: #333333;
+                }
+                .email-header {
+                    background-color: #1e40af; color: white;
+                    padding: 20px; border-radius: 12px 12px 0 0;
+                    text-align: center; font-size: 24px; font-weight: bold;
+                    letter-spacing: 1px;
+                }
+                h2 { color: #2c3e50; text-align: center; margin-bottom: 20px; font-size: 20px; }
+                p { color: #555; font-size: 16px; margin: 10px 0; }
+                .highlight { color: #1e40af; font-weight: bold; }
+                .button {
+                    display: inline-block; background: transparent; color: #007BFF;
+                    padding: 12px 28px; border: 2px solid #007BFF; border-radius: 8px;
+                    text-decoration: none; font-weight: bold; font-size: 16px; transition: all 0.3s ease;
+                    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                .button:hover {
+                    background: #007BFF; color: #fff; transform: translateY(-2px);
+                    box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+                }
+                .footer {
+                    margin-top: 30px; font-size: 13px; color: #888;
+                    text-align: center; border-top: 1px solid #ddd; padding-top: 15px;
+                }
+                .info-section {
+                    background-color: #f8f9fa; padding: 15px; border-radius: 8px;
+                    margin-top: 20px; font-size: 15px; color: #444;
+                }
+                .icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; }
+            </style>
+        </head>
+        <body>
+            <div class='email-border'>
+                <div class='email-container'>
+                    <div class='email-header'>PROCAN | Leave Request Notification</div>
+                    <h2>New Leave Request Submitted</h2>
+                    <p>Dear Admin/HR Team,</p>
+                    <p>A new leave request has been submitted by an employee. Please review the details below:</p>
+
+                    <div class='info-section'>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/user.png' class='icon' /> <strong>Employee Name:</strong> {$authUser->first_name} {$authUser->last_name}</p>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/email.png' class='icon' /> <strong>Email:</strong> {$authUser->email}</p>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/calendar.png' class='icon' /> <strong>Type of Leave:</strong> {$leaveLabel}</p>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/time-span.png' class='icon' /> <strong>Period:</strong> from <span class='highlight'>{$startDateFormatted}</span> to <span class='highlight'>{$endDateFormatted}</span></p>
+                    </div>
+
+                    <p>To review and approve this request, please click the button below:</p>
+                    <a href='http://localhost:4200/#/login' class='button'>Review Leave Request</a>
+
+                    <p class='footer'>
+                        This is an automated message. Please do not reply directly to this email.<br>
+                        For any inquiries, contact the HR department at <a href='mailto:info@procan-group.com'>info@procan-group.com</a>.<br>
+                        PROCAN HR System © " . date('Y') . "
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+
+            foreach ($admins as $adminEmail) {
+                Mail::send([], [], function ($message) use ($adminEmail, $authUser, $htmlContent) {
+                    $message->to($adminEmail)
+                        ->from('noreply@procan.com', 'PROCAN HR System')
+                        ->subject('New Leave Request Notification')
+                        ->html($htmlContent);
+                });
             }
         }
     }
@@ -296,9 +403,11 @@ class LeaveController extends Controller
 
     public static function getWorkingDays($startDate, $endDate)
     {
+        // Parse les dates de début et de fin
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
 
+        // Récupérer les jours fériés dans la plage de dates
         $holidays = \App\Models\PublicHoliday::where(function ($query) use ($start, $end) {
             $query->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
                 ->orWhereBetween('end_date', [$start->toDateString(), $end->toDateString()])
@@ -307,42 +416,57 @@ class LeaveController extends Controller
                         ->where('end_date', '>=', $end->toDateString());
                 });
         })->get();
-
+        Log::info('Jours fériés récupérés depuis la base de données : ', $holidays->toArray());
+        // Collecter toutes les dates de jours fériés
         $holidayDates = collect();
         foreach ($holidays as $holiday) {
-            $period = Carbon::parse($holiday->start_date)->daysUntil(Carbon::parse($holiday->end_date)->addDay());
+            $startDate = Carbon::parse($holiday->start_date);
+            $endDate = Carbon::parse($holiday->end_date);
+
+            // Générer une plage de dates entre start_date et end_date (inclus)
+            $period = $startDate->daysUntil($endDate); // Ne PAS utiliser addDay() ici
             foreach ($period as $date) {
                 $holidayDates->push($date->toDateString());
             }
         }
 
-        if ($start->toDateString() === $end->toDateString()) {
-            if ($start->isWeekend() || $holidayDates->contains($start->toDateString())) {
-                return 0;
-            }
+        // Afficher les dates de jours fériés collectées pour débogage
+        Log::info('Dates de jours fériés collectées : ', $holidayDates->toArray());
 
-            return self::getSameDayFraction($start);
-        }
-
+        // Initialiser le compteur de jours ouvrables
         $total = 0;
 
+        // Gérer le cas où la date de début et de fin sont identiques
+        if ($start->toDateString() === $end->toDateString()) {
+            if ($start->isWeekend() || $holidayDates->contains($start->toDateString())) {
+                return 0; // Exclure les week-ends et les jours fériés
+            }
+            return self::getSameDayFraction($start); // Calculer la fraction pour une seule journée
+        }
+
+        // Calculer la fraction pour le premier jour (jour de début)
         if (!$start->isWeekend() && !$holidayDates->contains($start->toDateString())) {
             $total += self::getStartDayFraction($start);
         }
 
-        $current = $start->copy()->addDay();
+        // Boucle pour calculer les jours ouvrables entre le jour de début et le jour de fin
+        $current = $start->copy()->addDay(); // Commencer le lendemain du jour de début
         while ($current->lt($end->copy()->startOfDay())) {
             if (!$current->isWeekend() && !$holidayDates->contains($current->toDateString())) {
-                $total += 1;
+                $total += 1; // Ajouter un jour complet s'il n'est ni un week-end ni un jour férié
             }
             $current->addDay();
         }
 
+        // Calculer la fraction pour le dernier jour (jour de fin)
         if (!$end->isWeekend() && !$holidayDates->contains($end->toDateString())) {
             $total += self::getEndDayFraction($end);
         }
 
-        return $total;
+        // Log du total des jours ouvrables calculés
+        Log::info('Total des jours ouvrables calculés : ', ['total' => $total]);
+
+        return $total; // Retourner le total des jours ouvrables
     }
 
     private static function getSameDayFraction(Carbon $start)
@@ -437,6 +561,7 @@ class LeaveController extends Controller
             ->header('Content-Disposition', 'attachment; filename="leave_request_' . $leave->id . '.pdf"');
     }
 
+
     public function notifyHROnRejectedLeave(Request $request)
     {
         try {
@@ -461,117 +586,126 @@ class LeaveController extends Controller
             $endDateFormatted = \Carbon\Carbon::parse($validated['end_date'])->format('Y/m/d');
 
             $htmlContent = "
-        <html>
-        <head>
-            <style>
-                body {
-                    font-family: 'Arial', sans-serif;
-                    background-color: #f4f6f9;
-                    margin: 0;
-                    padding: 0;
-                }
-                .email-container {
-                    max-width: 600px;
-                    margin: 40px auto;
-                    background: #ffffff;
-                    padding: 30px;
-                    border-radius: 8px;
-                    border: 1px solid #e0e0e0;
-                    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
-                    text-align: left;
-                    font-size: 16px;
-                }
-                .logo-container {
-                    text-align: center;
-                    margin-bottom: 30px;
-                }
-                .logo {
-                    font-size: 32px;
-                    font-weight: bold;
-                    color: #007BFF;
-                }
-                h2 {
-                    color: #e74c3c;
-                    font-size: 24px;
-                    font-weight: bold;
-                    margin-bottom: 25px;
-                }
-                p {
-                    color: #555;
-                    font-size: 16px;
-                    line-height: 1.6;
-                    margin: 10px 0;
-                }
-                .footer {
-                    margin-top: 35px;
-                    font-size: 14px;
-                    color: #888;
-                    border-top: 1px solid #e0e0e0;
-                    padding-top: 15px;
-                    text-align: center;
-                    font-style: italic;
-                }
-                .info-block {
-                    background: #f9f9f9;
-                    padding: 20px;
-                    border-radius: 8px;
-                    margin-top: 20px;
-                    border-left: 5px solid #007BFF;
-                    font-size: 15px;
-                }
-                .info-block strong {
-                    font-size: 16px;
-                    color: #333;
-                }
+             <html>
+            <head>
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        background-color: #f4f6f9;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .email-container {
+                        max-width: 650px; margin: 40px auto;
+                        margin: 40px auto;
+                        background: #ffffff;
+                        padding: 30px;
+                        border-radius: 12px;
+                        border: 2px solid #000000;
+                        overflow: hidden;
+                        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+                        text-align: left;
+                        font-size: 16px;
+                    }
+                    .email-border {
+                     border: 2px solid #000000;
+                     border-radius: 12px;
+                     overflow: hidden;
+                     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+                    }
+                    .logo-container {
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }
+                    .logo {
+                        font-size: 32px;
+                        font-weight: bold;
+                        color: #007BFF;
+                    }
+                    h2 {
+                        color: #e74c3c;
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 25px;
+                    }
+                    p {
+                        color: #555;
+                        font-size: 16px;
+                        line-height: 1.6;
+                        margin: 10px 0;
+                    }
+                    .footer {
+                        margin-top: 30px; font-size: 13px; color: #888;
+                        text-align: center; border-top: 1px solid #ddd; padding-top: 15px;
+                    }
+                    .info-block {
+                        background: #f9f9f9;
+                        padding: 20px;
+                        border-radius: 8px;
+                        margin-top: 20px;
+                        border-left: 5px solid #007BFF;
+                        font-size: 15px;
+                    }
+                    .info-block strong {
+                        font-size: 16px;
+                        color: #333;
+                    }
                 .email-header {
-                    background-color: #007BFF;
-                    color: white;
-                    padding: 15px;
-                    border-radius: 8px 8px 0 0;
-                    text-align: center;
-                    font-size: 20px;
-                    font-weight: bold;
+                    background-color: #1e40af; color: white;
+                    padding: 20px; border-radius: 12px 12px 0 0;
+                    text-align: center; font-size: 24px; font-weight: bold;
+                    letter-spacing: 1px;
                 }
-                .email-header span {
-                    color:rgb(255, 255, 255);
-                }
-                .email-body {
-                    margin-top: 20px;
-                    padding: 15px;
-                    background-color: #ffffff;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                }
-                .email-body p {
-                    margin: 5px 0;
-                }
-            </style>
-        </head>
-       <body>
-        <div class='email-container'>
-            <div class='email-header'>
-                <span>PROCAN</span> HR NOTIFICATION
-            </div>
-            <div class='email-body'>
-                <h2><center>Leave Request Rejected</center></h2>
+                    .email-header span {
+                        color:rgb(255, 255, 255);
+                    }
+                    .email-body {
+                        margin-top: 20px;
+                        padding: 15px;
+                        background-color: #ffffff;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                    }
+                    .email-body p {
+                        margin: 5px 0;
+                    }
+                    .icon {
+                        width: 20px;
+                        height: 20px;
+                        vertical-align: middle;
+                        margin-right: 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class='email-container'>
+                    <div class='email-header'>
+                        <span>PROCAN</span> HR NOTIFICATION
+                    </div>
+                    <div class='email-body'>
+                        <h2><center>Leave Request Rejected</center></h2>
 
-                <p><strong>Employee:</strong> {$authUser->first_name} {$authUser->last_name}</p>
-                <p><strong>Email:</strong> {$authUser->email}</p>
-                <p><strong>Type of Leave:</strong> {$validated['leave_type']}</p>
-                <p><strong>Period:</strong> from <strong>{$startDateFormatted}</strong> to <strong>{$endDateFormatted}</strong></p>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/user.png' class='icon' /> <strong>Employee:</strong> {$authUser->first_name} {$authUser->last_name}</p>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/email.png' class='icon' /> <strong>Email:</strong> {$authUser->email}</p>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/calendar.png' class='icon' /> <strong>Type of Leave:</strong> {$validated['leave_type']}</p>
+                        <p><img src='https://img.icons8.com/ios-glyphs/30/time-span.png' class='icon' /> <strong>Period:</strong> from <strong>{$startDateFormatted}</strong> to <strong>{$endDateFormatted}</strong></p>
 
-                <div class='info-block'>
-                    <strong>User's Message:</strong>
-                    <br>
-                    <em>{$rejectionMessage}</em>
+                        <div class='info-block'>
+                            <strong>User's Message:</strong>
+                            <br>
+                            <em>{$rejectionMessage}</em>
+                        </div>
+
+                    </div>
+
+                    <p class='footer'>
+                        This is an automated message. Please do not reply directly to this email.<br>
+                        For any inquiries, contact the HR department at <a href='mailto:info@procan-group.com'>info@procan-group.com</a>.<br>
+                        PROCAN HR System © " . date('Y') . "
+                    </p>
                 </div>
-
-            </div>
-
-            <p class='footer'>This message was automatically generated. Please do not reply directly.<br>PROCAN HR System</p>
-        </div>
-    </body>
-        </html>
+            </body>
+            </html>
         ";
 
             foreach ($hrs as $hrEmail) {
@@ -594,7 +728,5 @@ class LeaveController extends Controller
             ], 500);
         }
     }
-
-
 
 }

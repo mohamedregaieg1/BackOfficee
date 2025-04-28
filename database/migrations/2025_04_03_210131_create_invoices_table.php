@@ -17,7 +17,23 @@ return new class extends Migration {
             $table->foreignId('company_id')->constrained('companies')->default(1);
             $table->unsignedBigInteger('client_id');
             $table->foreign('client_id')->references('id')->on('clients');
+            $table->enum('payment_mode', [
+                'bank transfer',
+                'credit card',
+                'cash',
+                'paypal',
+                'cheque',
+                'other'
+            ])->nullable();
+
+            $table->string('due_date')->nullable();
+            $table->enum('payment_status', [
+                'paid',
+                'partially paid'
+            ])->default('paid');
+            $table->double('amount_paid')->nullable();
             $table->timestamps();
+
         });
     }
 

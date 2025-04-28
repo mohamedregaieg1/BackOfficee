@@ -6,7 +6,6 @@ use App\Http\Controllers\Authentificate\AuthController;
 use App\Http\Controllers\Authentificate\PasswordResetController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CompanyController;
-use App\Http\Controllers\Admin\InvoiceAndQuoteController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
@@ -14,6 +13,7 @@ use App\Http\Controllers\Leave\ViewLeaveController;
 use App\Http\Controllers\Leave\FixedLeavesController;
 use App\Http\Controllers\Leave\PublicHolidayController;
 use App\Http\Controllers\Employee\ProfileController;
+use App\Http\Controllers\Accountant\ClientController;
 use App\Http\Controllers\NotificationController;
 
 
@@ -42,10 +42,12 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::put('/{id}', [CompanyController::class, 'update']);
     Route::post('invoices/step-one', [InvoiceController::class, 'stepOne']);
     Route::get('/clients', [InvoiceController::class, 'getAllClients']);
+    Route::get('/clients/{id}', [InvoiceController::class, 'getClientById']);
     Route::post('invoices/step-two', [InvoiceController::class, 'stepTwo']);
     Route::post('invoices/step-three', [InvoiceController::class, 'stepThree']);
     Route::post('invoices/store', [InvoiceController::class, 'store']);
     Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
+    Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
 
 
 });
@@ -83,6 +85,17 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
 
 
 });
+
+
+//route for accountant :
+
+Route::prefix('accountant')->group(function () {
+    Route::get('clients', [ClientController::class, 'index']);
+    Route::post('clients/add', [ClientController::class, 'store']);
+    Route::put('clients/{id}', [ClientController::class, 'update']);
+    Route::delete('clients/{id}', [ClientController::class, 'destroy']);
+});
+
 Route::middleware(['auth:api', 'role:employee,hr,admin'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
