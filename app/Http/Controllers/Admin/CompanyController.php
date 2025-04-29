@@ -20,7 +20,19 @@ class CompanyController extends Controller
             $company = Company::where('name', $validated['name'])->first();
 
             if ($company) {
-                return response()->json($company);
+                return response()->json([
+                    'id' => $company->id,
+                    'name' => $company->name,
+                    'tva_number' => $company->tva_number,
+                    'address' => $company->address,
+                    'postal_code' => $company->postal_code,
+                    'country' => $company->country,
+                    'rib_bank' => $company->rib_bank,
+                    'email' => $company->email,
+                    'website' => $company->website,
+                    'phone_number' => $company->phone_number,
+                    'image_path' => $company->image_path,
+                ]);
             }
 
             return response()->json([
@@ -33,7 +45,8 @@ class CompanyController extends Controller
                 'rib_bank' => null,
                 'email' => null,
                 'website' => null,
-                'phone_number' => null
+                'phone_number' => null,
+                'image_path' => null,
             ]);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
@@ -49,6 +62,7 @@ class CompanyController extends Controller
     {
         try {
             $validated = $request->validate([
+                'name' => 'required|string|in:Procan,Adequate',
                 'tva_number' => 'nullable|numeric',
                 'address' => 'required|string',
                 'postal_code' => 'required|string',
@@ -57,6 +71,12 @@ class CompanyController extends Controller
                 'website' => 'nullable|url',
                 'phone_number' => 'required|string|max:15'
             ]);
+
+            $logoFileName = $validated['name'] === 'Procan' ? 'logo-procan.webp' : 'logo-Adequate.webp';
+
+            $logoUrl = url('/dist/img/' . $logoFileName);
+
+            $validated['image_path'] = $logoUrl;
 
             $company = Company::create($validated);
 

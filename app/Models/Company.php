@@ -17,6 +17,10 @@ class Company extends Model
         'rib_bank',
         'email',
         'website',
-        'phone_number'
+        'phone_number',
+        'image_path'
     ];
+
+    
+
 }

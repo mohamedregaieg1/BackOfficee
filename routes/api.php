@@ -90,7 +90,7 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
 //route for accountant :
 
     Route::middleware(['auth:api', 'role:accountant'])->group(function () {
-    Route::get('/clients/index', [ClientController::class, 'index']);
+    Route::get('/show/clients', [ClientController::class, 'index']);
     Route::post('/clients/add', [ClientController::class, 'store']);
     Route::put('/clients/{id}', [ClientController::class, 'update']);
     Route::delete('/clients/{id}', [ClientController::class, 'destroy']);

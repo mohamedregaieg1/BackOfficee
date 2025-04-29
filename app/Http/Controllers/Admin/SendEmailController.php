@@ -18,29 +18,23 @@ class SendEmailController extends Controller
                 return response()->json(['error' => 'Client not found for this invoice'], 404);
             }
 
-            $companyLogoPath = ($invoice->company && $invoice->company->company_name === 'Procan')
-                ? public_path('dist/img/logo-procan.webp')
-                : public_path('dist/img/logo-Adequate.webp');
+            $companyLogoUrl = ($invoice->company && $invoice->company->company_name === 'Procan')
+                ? secure_asset('dist/img/logo-procan.webp')
+                : secure_asset('dist/img/logo-Adequate.webp');
 
-            $companyLogoBase64 = null;
-            if (file_exists($companyLogoPath)) {
-                $companyLogoBase64 = base64_encode(file_get_contents($companyLogoPath));
-            } else {
-                \Log::error("Le fichier logo n'existe pas : " . $companyLogoPath);
-                return response()->json(['error' => 'Logo file not found'], 404);
-            }
+            $companyLogoPath = public_path(str_replace(url('/'), '', $companyLogoUrl));
 
             $totalPriceHT = $invoice->services->sum('price_ht');
             $totalPriceTTC = $invoice->services->sum('total_ttc');
 
-            $invoiceContent = view('pdf.invoice', [
+            $invoiceContent = view('emails.invoice-email', [
                 'invoice' => $invoice,
                 'client' => $invoice->client,
                 'company' => $invoice->company,
                 'services' => $invoice->services,
                 'totalPriceHT' => $totalPriceHT,
                 'totalPriceTTC' => $totalPriceTTC,
-                'companyLogoBase64' => $companyLogoBase64,
+                'companyLogoUrl' => $companyLogoUrl,
             ])->render();
 
             $htmlContent = view('emails.email-template', [
@@ -50,7 +44,7 @@ class SendEmailController extends Controller
                 'company' => $invoice->company,
                 'totalPriceHT' => $totalPriceHT,
                 'totalPriceTTC' => $totalPriceTTC,
-                'companyLogoBase64' => $companyLogoBase64,
+                'companyLogoUrl' => $companyLogoUrl,
             ])->render();
 
             Mail::to($invoice->client->email)->send(new InvoiceMail($htmlContent));

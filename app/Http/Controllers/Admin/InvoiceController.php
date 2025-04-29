@@ -106,7 +106,25 @@ class InvoiceController extends Controller
                     'error' => 'Client not found.',
                 ], 404);
             }
-            return response()->json($client);
+
+            $nameParts = explode(' ', $client->name, 3);
+
+            $civility = $nameParts[0] ?? null;
+            $firstName = $nameParts[1] ?? null;
+            $lastName = $nameParts[2] ?? null;
+            $response = [
+                'id' => $client->id,
+                'civility' => $civility,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+            ];
+
+            foreach ($client->getAttributes() as $key => $value) {
+                if (!in_array($key, ['id', 'name'])) {
+                    $response[$key] = $value;
+                }
+            }
+            return response()->json($response);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An unexpected error occurred.',
@@ -325,7 +343,7 @@ class InvoiceController extends Controller
             return response()->json([
                 'message' => 'Invoice saved successfully!',
                 'invoice_id' => $invoice->id
-    ], 201);
+            ], 201);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
@@ -340,27 +358,33 @@ class InvoiceController extends Controller
     {
         try {
             $invoice = Invoice::with(['client', 'services', 'company'])->findOrFail($invoiceId);
+
             $totalPriceHT = $invoice->services->sum('price_ht');
             $totalPriceTTC = $invoice->services->sum('total_ttc');
+
             $company = $invoice->company;
+
             $companyLogoPath = ($company && $company->name === 'Procan')
                 ? public_path('dist/img/logo-procan.webp')
                 : public_path('dist/img/logo-Adequate.webp');
+
+            $companyLogoBase64 = null;
             if (file_exists($companyLogoPath)) {
                 $companyLogoBase64 = base64_encode(file_get_contents($companyLogoPath));
             } else {
-                $companyLogoBase64 = null;
+                \Log::error("Le fichier logo n'existe pas : " . $companyLogoPath);
             }
 
             $data = [
                 'invoice' => $invoice,
                 'client' => $invoice->client,
                 'services' => $invoice->services,
-                'company' => $invoice->company,
+                'company' => $company,
                 'totalPriceHT' => $totalPriceHT,
                 'totalPriceTTC' => $totalPriceTTC,
                 'companyLogoBase64' => $companyLogoBase64,
             ];
+
             $options = new Options();
             $options->set('isRemoteEnabled', true);
             $options->set('defaultFont', 'Arial');
@@ -370,9 +394,7 @@ class InvoiceController extends Controller
             $html = view('pdf.invoice', $data)->render();
 
             $dompdf->loadHtml($html);
-
             $dompdf->setPaper('A4', 'portrait');
-
             $dompdf->render();
 
             return response($dompdf->output())

@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->enum('name', ['Adequate', 'Procan'])->default('Procan');
+            $table->string('image_path')->nullable();
             $table->double('tva_number')->nullable();
             $table->text('address')->nullable();
             $table->string('postal_code')->nullable();

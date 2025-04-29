@@ -37,7 +37,7 @@ class User extends Authenticatable implements JWTSubject
         'job_description',
         'start_date',
         'leave_balance',
-        
+
     ];
 
     protected $casts = [
@@ -92,7 +92,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Leave²::class);
     }
-    public function leaveBalances() 
+    public function leaveBalances()
     {
         return $this->hasMany(LeavesBalance::class);
     }
@@ -106,5 +106,6 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Notification::class, 'receiver_id');
     }
 
+    
 
 }
