@@ -322,7 +322,10 @@ class InvoiceController extends Controller
             Cookie::queue(Cookie::forget('invoice_step2'));
             Cookie::queue(Cookie::forget('invoice_step3'));
 
-            return response()->json(['message' => 'Invoice saved successfully!'], 201);
+            return response()->json([
+                'message' => 'Invoice saved successfully!',
+                'invoice_id' => $invoice->id
+    ], 201);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {

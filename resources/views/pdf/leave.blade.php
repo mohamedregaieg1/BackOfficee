@@ -120,7 +120,12 @@
         <li><label>Name:</label> <input type="text" value="{{ $leave->user->first_name }} {{ $leave->user->last_name }}"
                 readonly></li>
         <li><label>Company:</label> <input type="text" value="{{ $leave->user->company }}" readonly></li>
-        <li><label>Phone Number:</label> <input type="text" value="{{ $leave->user->phone }}" readonly></li>
+        @if($leave->user->phone)
+            <li>
+                <label>Phone Number:</label>
+                <input type="text" value="{{ $leave->user->phone }}" readonly>
+            </li>
+        @endif
         <li><label>Email:</label> <input type="text" value="{{ $leave->user->email }}" readonly></li>
     </ul>
 

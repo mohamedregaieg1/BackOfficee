@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
         $this->call(LeavesTableSeeder::class);
         $this->call(ClientsTableSeeder::class);
         $this->call(PublicHolidaysSeeder::class);
+        $this->call(InvoiceSeeder::class);
+        $this->call(ServiceSeeder::class);
+
 
 
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Authentificate\PasswordResetController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\SendEmailController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Leave\ViewLeaveController;
@@ -25,7 +26,7 @@ Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
 ], function ($router) {
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->name('login');;
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('me', [AuthController::class, 'me']);
@@ -47,8 +48,7 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::post('invoices/step-two', [InvoiceController::class, 'stepTwo']);
     Route::post('invoices/step-three', [InvoiceController::class, 'stepThree']);
     Route::post('invoices/store', [InvoiceController::class, 'store']);
-    Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
-
+    Route::get('/invoices/{id}/send-email', [SendEmailController::class, 'sendEmail']);
 
 });
 
@@ -90,12 +90,16 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
 //route for accountant :
 
     Route::middleware(['auth:api', 'role:accountant'])->group(function () {
-    Route::get('/clients', [ClientController::class, 'index']);
+    Route::get('/clients/index', [ClientController::class, 'index']);
     Route::post('/clients/add', [ClientController::class, 'store']);
     Route::put('/clients/{id}', [ClientController::class, 'update']);
     Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 });
 
+Route::middleware(['auth:api', 'role:accountant,admin'])->group(function () {
+    Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
+
+});
 Route::middleware(['auth:api', 'role:employee,hr,admin'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
