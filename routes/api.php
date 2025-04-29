@@ -100,7 +100,7 @@ Route::middleware(['auth:api', 'role:accountant,admin'])->group(function () {
     Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
 
 });
-Route::middleware(['auth:api', 'role:employee,hr,admin'])->group(function () {
+Route::middleware(['auth:api', 'role:employee,hr,admin,accountant'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
