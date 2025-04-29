@@ -12,12 +12,13 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $query = Client::query();
-
         if ($request->has('name') && $request->name != '') {
             $query->where('name', 'LIKE', '%' . $request->name . '%');
         }
 
-        $clients = $query->paginate(6);
+        $query->orderBy('created_at', 'desc');
+
+        $clients = $query->paginate(10);
 
         return response()->json([
             'data' => $clients->items(),
@@ -29,7 +30,7 @@ class ClientController extends Controller
             ],
         ]);
     }
-    // Itha individual metb3tch tva w ken professional eb3th tva 
+    // Itha individual metb3tch tva w ken professional eb3th tva
     public function store(Request $request)
     {
         $validated = $request->validate([
