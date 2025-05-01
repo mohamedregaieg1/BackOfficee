@@ -18,8 +18,12 @@ class Invoice extends Model {
         'client_id',
         'payment_mode',
         'amount_paid',
+        'unpaid_amount',
         'due_date',
-        'payment_status'
+        'payment_status',
+        'total_ttc',
+        'total_tva',
+        'total_ht'
     ];
 
     // Relations

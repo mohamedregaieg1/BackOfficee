@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['facture', 'devis']);
+            $table->enum('type', ['facture', 'devis','factur_aprés']);
             $table->date('creation_date');
             $table->string('number')->unique();
             $table->enum('additional_date_type', ['Date of sale', 'Expiry date', 'Withdrawal date until'])->nullable();
@@ -30,11 +30,17 @@ return new class extends Migration {
             $table->string('due_date')->nullable();
             $table->enum('payment_status', [
                 'paid',
-                'partially paid'
-            ])->default('paid');
+                'partially paid',
+                'unpaid',
+                'created'
+            ])->default('created');
             $table->double('amount_paid')->nullable();
-            $table->timestamps();
+            $table->double('unpaid_amount')->nullable();
+            $table->double('total_ttc')->nullable();
+            $table->double('total_tva')->nullable();
+            $table->double('total_ht')->nullable();
 
+            $table->timestamps();
         });
     }
 

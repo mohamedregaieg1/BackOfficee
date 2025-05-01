@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Illuminate\Support\Facades\Log;
+
 class InvoiceController extends Controller
 {
     public function stepOne(Request $request)
@@ -245,21 +247,29 @@ class InvoiceController extends Controller
                 'TTotal_TTC' => 'required|numeric',
                 'payment_mode' => 'nullable|in:bank transfer,credit card,cash,paypal,cheque,other',
                 'due_date' => 'nullable|string',
-                'payment_status' => 'nullable|in:paid,partially paid',
+                'payment_status' => 'nullable|in:paid,partially paid,unpaid,created',
                 'amount_paid' => 'nullable|numeric',
-
             ])->validate();
 
+            $unpaidAmount = null;
+            if ($request->payment_status === 'partially paid') {
+                $unpaidAmount = $request->TTotal_TTC - ($request->amount_paid ?? 0);
+                $validated['unpaid_amount'] = $unpaidAmount;
+            }
+
+            // Enregistrer les données dans un cookie
             $cookieData = json_encode($validated);
             $cookie = cookie('invoice_step3', $cookieData, 120);
 
+            $mergedData = array_merge(
+                json_decode($request->cookie('invoice_step1'), true) ?? [],
+                json_decode($request->cookie('invoice_step2'), true) ?? [],
+                json_decode($cookieData, true) ?? []
+            );
+
             return response()->json([
                 'message' => 'Step 3 completed successfully',
-                'data' => array_merge(
-                    json_decode($request->cookie('invoice_step1'), true),
-                    json_decode($request->cookie('invoice_step2'), true),
-                    json_decode($cookieData, true)
-                )
+                'data' => $mergedData
             ])->cookie($cookie);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
@@ -277,6 +287,7 @@ class InvoiceController extends Controller
             \Log::debug('Step 1 Cookie Data:', json_decode($request->cookie('invoice_step1'), true));
             \Log::debug('Step 2 Cookie Data:', json_decode($request->cookie('invoice_step2'), true));
             \Log::debug('Step 3 Cookie Data:', json_decode($request->cookie('invoice_step3'), true));
+
             $data = array_merge(
                 json_decode($request->cookie('invoice_step1'), true),
                 json_decode($request->cookie('invoice_step2'), true),
@@ -286,6 +297,7 @@ class InvoiceController extends Controller
             if (!$data) {
                 return response()->json(['error' => 'Missing invoice data'], 400);
             }
+
             if (empty($data['client_type']) || empty($data['name']) || empty($data['address'])) {
                 return response()->json(['error' => 'Client data is missing'], 400);
             }
@@ -317,9 +329,16 @@ class InvoiceController extends Controller
                     'company_id' => $data['company_id']
                 ]);
             }
-
+            $unpaidAmount = null;
+            if ($data['payment_status'] === 'partially paid') {
+                $unpaidAmount = $data['TTotal_TTC'] - ($data['amount_paid'] ?? 0);
+            }
             $invoice = Invoice::create(array_merge($data, [
-                'client_id' => $client->id
+                'client_id' => $client->id,
+                'total_ht' => $data['TTotal_HT'],
+                'total_tva' => $data['TTotal_TVA'],
+                'total_ttc' => $data['TTotal_TTC'],
+                'unpaid_amount' => $unpaidAmount,
             ]));
 
             foreach ($data['services'] as $service) {
@@ -359,8 +378,6 @@ class InvoiceController extends Controller
         try {
             $invoice = Invoice::with(['client', 'services', 'company'])->findOrFail($invoiceId);
 
-            $totalPriceHT = $invoice->services->sum('price_ht');
-            $totalPriceTTC = $invoice->services->sum('total_ttc');
 
             $company = $invoice->company;
 
@@ -380,8 +397,6 @@ class InvoiceController extends Controller
                 'client' => $invoice->client,
                 'services' => $invoice->services,
                 'company' => $company,
-                'totalPriceHT' => $totalPriceHT,
-                'totalPriceTTC' => $totalPriceTTC,
                 'companyLogoBase64' => $companyLogoBase64,
             ];
 

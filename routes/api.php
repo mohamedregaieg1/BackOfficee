@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\SendEmailController;
+use App\Http\Controllers\Admin\HistoriqueInvoiceController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Leave\ViewLeaveController;
@@ -98,6 +99,10 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
 
 Route::middleware(['auth:api', 'role:accountant,admin'])->group(function () {
     Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
+    Route::get('/show/invoices', [HistoriqueInvoiceController::class, 'index']);
+    Route::get('/invoices/{id}/services', [HistoriqueInvoiceController::class, 'getServicesByInvoice']);
+
+
 
 });
 Route::middleware(['auth:api', 'role:employee,hr,admin,accountant'])->group(function () {

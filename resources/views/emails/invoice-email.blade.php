@@ -233,7 +233,7 @@
                     <tr>
                         <td>{{ $service->name }}<br><small>{{ $service->comment }}</small></td>
                         <td>{{ $service->quantity }}</td>
-                        <td>{{ $service->price_ht }}</td>
+                        <td>{{ $service->total_ht }}</td>
                         <td>{{ $service->tva }}</td>
                         <td>{{ $service->total_ttc }}</td>
                     </tr>
@@ -245,11 +245,15 @@
             <table style="float: right;">
                 <tr>
                     <td><strong>Price HT :</strong></td>
-                    <td>{{ $totalPriceHT }} </td>
+                    <td>{{ $invoice->total_ht }} </td>
+                </tr>
+                <tr>
+                    <td><strong>Price TVA :</strong></td>
+                    <td>{{ $invoice->total_tva }} </td>
                 </tr>
                 <tr class="total-final">
                     <td><strong>TOTAL :</strong></td>
-                    <td>{{ $totalPriceTTC }} </td>
+                    <td>{{ $invoice->total_ttc }} </td>
                 </tr>
             </table>
         </div>
