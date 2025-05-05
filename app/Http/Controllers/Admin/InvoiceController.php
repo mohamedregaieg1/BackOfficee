@@ -21,15 +21,21 @@ class InvoiceController extends Controller
     {
         try {
             $companies = Company::all();
-
             $validated = Validator::make($request->all(), [
                 'type' => 'required|in:facture,devis',
                 'creation_date' => 'required|date',
-                'additional_date_type' => 'nullable|in:Date of sale,Expiry date,Withdrawal date until',
+                'additional_date_type' => 'nullable|in:Date of sale,Expiry date,Withdrawal date until', // ajouté conditionnellement
                 'additional_date' => 'nullable|date',
                 'company_name' => 'required|exists:companies,name',
-                'number' => 'required|string|unique:invoices,number',
-            ])->validate();
+                'number' => ['required', 'string', 'unique:invoices,number', 'regex:/^(F-|D-)[0-9]{6}$/', 'size:8'], // validation personnalisée
+            ], [
+                'additional_date_type.required_if' => 'Le champ additional_date_type est requis si additional_date est présent.',
+                'number.regex' => 'Le numéro de facture doit commencer par "F-" ou "D-" et avoir une longueur de 8 caractères.',
+            ]);
+
+            if ($validated->fails()) {
+                return response()->json($validated->errors(), 422);
+            }
 
             $selectedCompany = Company::where('name', $request->company_name)->first();
 
@@ -44,13 +50,9 @@ class InvoiceController extends Controller
                 ->count() + 1;
 
             $incrementFormatted = str_pad($increment, 5, '0', STR_PAD_LEFT);
-
             $finalNumber = "{$request->number}/{$incrementFormatted}";
-
-            $validated['number'] = $finalNumber;
-
-            $cookieData = json_encode($validated + ['company' => $selectedCompany]);
-
+            $validated->merge(['number' => $finalNumber]);
+            $cookieData = json_encode($validated->validated() + ['company' => $selectedCompany]);
             $cookie = cookie('invoice_step1', $cookieData, 120);
 
             return response()->json([
@@ -66,6 +68,7 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
+
 
     public function getAllClients(Request $request)
     {
@@ -105,35 +108,44 @@ class InvoiceController extends Controller
 
             if (!$client) {
                 return response()->json([
-                    'error' => 'Client not found.',
+                    'success' => false,
+                    'message' => 'Client introuvable.',
                 ], 404);
             }
 
-            $nameParts = explode(' ', $client->name, 3);
-
-            $civility = $nameParts[0] ?? null;
-            $firstName = $nameParts[1] ?? null;
-            $lastName = $nameParts[2] ?? null;
             $response = [
                 'id' => $client->id,
-                'civility' => $civility,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
             ];
+
+            if ($client->client_type === 'individual') {
+                $nameParts = explode(' ', $client->name, 3);
+                $response['civility'] = $nameParts[0] ?? null;
+                $response['first_name'] = $nameParts[1] ?? null;
+                $response['last_name'] = $nameParts[2] ?? null;
+            } else {
+                $response['name'] = $client->name;
+            }
 
             foreach ($client->getAttributes() as $key => $value) {
                 if (!in_array($key, ['id', 'name'])) {
                     $response[$key] = $value;
                 }
             }
-            return response()->json($response);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Client récupéré avec succès.',
+                'data' => $response
+            ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'Une erreur inattendue s’est produite.',
                 'details' => $e->getMessage(),
             ], 500);
         }
     }
+
     public function stepTwo(Request $request)
     {
         try {
@@ -247,7 +259,7 @@ class InvoiceController extends Controller
                 'TTotal_TTC' => 'required|numeric',
                 'payment_mode' => 'nullable|in:bank transfer,credit card,cash,paypal,cheque,other',
                 'due_date' => 'nullable|string',
-                'payment_status' => 'nullable|in:paid,partially paid,unpaid,created',
+                'payment_status' => 'nullable|in:paid,partially paid,unpaid',
                 'amount_paid' => 'nullable|numeric',
             ])->validate();
 

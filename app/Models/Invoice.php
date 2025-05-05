@@ -38,5 +38,18 @@ class Invoice extends Model {
     public function services() {
         return $this->hasMany(Service::class);
     }
+    public function historiqueShipments()
+    {
+        return $this->hasMany(HistoriqueShipment::class, 'invoice_id');
+    }
+    public function relatedInvoices()
+{
+    return $this->hasMany(Invoice::class, 'original_invoice_id');
+}
+public function originalInvoice()
+{
+    return $this->belongsTo(Invoice::class, 'original_invoice_id');
+}
+
 }
 

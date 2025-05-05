@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Notification;
 use Exception;
 use App\Events\NewNotificationEvent;
+use Illuminate\Support\Facades\Mail;
 
 class ViewLeaveController extends Controller
 {
@@ -287,6 +288,8 @@ class ViewLeaveController extends Controller
             $leave->save();
 
             $this->sendLeaveStatusNotification($leave);
+            $this->sendEmailToSender($leave);
+
 
             return response()->json(['message' => 'Leave status updated successfully!']);
         } catch (\Illuminate\Validation\ValidationException $ve) {
@@ -298,6 +301,7 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
+
 
     protected function sendLeaveStatusNotification(Leave $leave)
     {
@@ -318,6 +322,104 @@ class ViewLeaveController extends Controller
         broadcast(new NewNotificationEvent($notification))->toOthers();
     }
 
+    protected function sendEmailToSender($leave)
+{
+    $notification = Notification::where('leave_id', $leave->id)->first();
+
+    if (!$notification) {
+        return;
+    }
+
+    $sender = $notification->sender;
+
+    if (!$sender || !$sender->email) {
+        return;
+    }
+
+    $startDateFormatted = \Carbon\Carbon::parse($leave->start_date)->format('Y/m/d');
+    $endDateFormatted = \Carbon\Carbon::parse($leave->end_date)->format('Y/m/d');
+
+    $leaveTypeLabel = $leave->leave_type === 'other' && $leave->other_type ? $leave->other_type : $leave->leave_type;
+
+    $htmlContent = "
+    <html>
+    <head>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 0; line-height: 1.6; }
+            .email-border {
+                max-width: 650px; margin: 40px auto; border: 2px solid #000000; border-radius: 12px; overflow: hidden;
+                box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+            }
+            .email-container {
+                max-width: 600px; margin: 0 auto; background: #ffffff;
+                padding: 30px; border-radius: 12px;
+                font-size: 16px; color: #333333;
+            }
+            .email-header {
+                background-color: #1e40af; color: white;
+                padding: 20px; border-radius: 12px 12px 0 0;
+                text-align: center; font-size: 24px; font-weight: bold;
+                letter-spacing: 1px;
+            }
+            h2 { color: #2c3e50; text-align: center; margin-bottom: 20px; font-size: 20px; }
+            p { color: #555; font-size: 16px; margin: 10px 0; }
+            .highlight { color: #1e40af; font-weight: bold; }
+            .button {
+                display: inline-block; background: transparent; color: #007BFF;
+                padding: 12px 28px; border: 2px solid #007BFF; border-radius: 8px;
+                text-decoration: none; font-weight: bold; font-size: 16px; transition: all 0.3s ease;
+                box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .button:hover {
+                background: #007BFF; color: #fff; transform: translateY(-2px);
+                box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+            }
+            .footer {
+                margin-top: 30px; font-size: 13px; color: #888;
+                text-align: center; border-top: 1px solid #ddd; padding-top: 15px;
+            }
+            .info-section {
+                background-color: #f8f9fa; padding: 15px; border-radius: 8px;
+                margin-top: 20px; font-size: 15px; color: #444;
+            }
+            .icon { width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; }
+        </style>
+    </head>
+    <body>
+        <div class='email-border'>
+            <div class='email-container'>
+                <div class='email-header'>PROCAN | Leave Status Update</div>
+                <h2>Your Leave Request Has Been {$leave->status}</h2>
+                <p>Dear {$sender->first_name} {$sender->last_name},</p>
+                <p>Your leave request has been reviewed and the status has been updated to <strong>{$leave->status}</strong>.</p>
+
+                <div class='info-section'>
+                    <p><img src='https://img.icons8.com/ios-glyphs/30/user.png' class='icon' /> <strong>Employee Name:</strong> {$sender->first_name} {$sender->last_name}</p>
+                    <p><img src='https://img.icons8.com/ios-glyphs/30/calendar.png' class='icon' /> <strong>Type of Leave:</strong> {$leaveTypeLabel}</p>
+                    <p><img src='https://img.icons8.com/ios-glyphs/30/time-span.png' class='icon' /> <strong>Period:</strong> from <span class='highlight'>{$startDateFormatted}</span> to <span class='highlight'>{$endDateFormatted}</span></p>
+                    <p><img src='https://img.icons8.com/ios-glyphs/30/counter.png' class='icon' /> <strong>Number of Days:</strong> {$leave->effective_leave_days}</p>
+                </div>
+
+                <p>If you have any questions or need further clarification, please contact the HR department.</p>
+
+                <p class='footer'>
+                    This is an automated message. Please do not reply directly to this email.<br>
+                    For any inquiries, contact the HR department at <a href='mailto:info@procan-group.com'>info@procan-group.com</a>.<br>
+                    PROCAN HR System © " . date('Y') . "
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    ";
+
+    Mail::send([], [], function ($message) use ($sender, $htmlContent) {
+        $message->to($sender->email)
+            ->from('noreply@procan.com', 'PROCAN HR System')
+            ->subject('Leave Status Update')
+            ->html($htmlContent);
+    });
+}
     public function updateLeave(Request $request, $leaveId)
     {
         try {

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\SendEmailController;
 use App\Http\Controllers\Admin\HistoriqueInvoiceController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Leave\ViewLeaveController;
@@ -42,7 +43,6 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::get('/by-name', [CompanyController::class, 'showByName']);
     Route::post('/companies', [CompanyController::class, 'store']);
     Route::put('/{id}', [CompanyController::class, 'update']);
-    Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::post('invoices/step-one', [InvoiceController::class, 'stepOne']);
     Route::get('/clients', [InvoiceController::class, 'getAllClients']);
     Route::get('/clients/{id}', [InvoiceController::class, 'getClientById']);
@@ -64,11 +64,15 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::post('/leave-balances/{userId}', [LeaveBalanceController::class, 'store']);
     Route::get('/leave-balances/{userId}', [LeaveBalanceController::class, 'show']);
     Route::delete('/leave-balances/{id}', [LeaveBalanceController::class, 'destroy']);
+    Route::patch('/admin/leaves/{leaveId}/status', [ViewLeaveController::class, 'updateStatus']);
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeavesForAdmin']);
     Route::put('/leave/{leaveId}/update', [ViewLeaveController::class, 'updateLeaveForAdmin']);
     Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
-
-
+    //home:
+    Route::get('/dashboard/leave-type-distribution', [DashboardController::class, 'leaveTypeDistribution']);
+    Route::get('/dashboard/leave-status-distribution', [DashboardController::class, 'leaveStatusDistribution']);
+    Route::get('/dashboard/approved-leaves-by-employee', [DashboardController::class, 'approvedLeavesByEmployee']);
+    Route::get('/dashboard/compare-leaves-by-year', [DashboardController::class, 'compareApprovedLeavesByYear']);
 
 
 });
@@ -101,6 +105,8 @@ Route::middleware(['auth:api', 'role:accountant,admin'])->group(function () {
     Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
     Route::get('/show/invoices', [HistoriqueInvoiceController::class, 'index']);
     Route::get('/invoices/{id}/services', [HistoriqueInvoiceController::class, 'getServicesByInvoice']);
+    Route::put('/invoices/update/{id}', [HistoriqueInvoiceController::class, 'update'])->name('invoices.update');
+    Route::put('/services/{id}', [HistoriqueInvoiceController::class, 'updateService'])->name('service.update');
 
 
 

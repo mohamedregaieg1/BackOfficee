@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['facture', 'devis','factur_aprés']);
+            $table->enum('type', ['facture', 'devis','facture_avoir']);
             $table->date('creation_date');
             $table->string('number')->unique();
             $table->enum('additional_date_type', ['Date of sale', 'Expiry date', 'Withdrawal date until'])->nullable();
@@ -31,15 +31,15 @@ return new class extends Migration {
             $table->enum('payment_status', [
                 'paid',
                 'partially paid',
-                'unpaid',
-                'created'
-            ])->default('created');
+                'unpaid'
+            ])->default('paid');
             $table->double('amount_paid')->nullable();
             $table->double('unpaid_amount')->nullable();
             $table->double('total_ttc')->nullable();
             $table->double('total_tva')->nullable();
             $table->double('total_ht')->nullable();
-
+            $table->unsignedBigInteger('original_invoice_id')->nullable(); // Peut être nul si c'est une facture originale
+        $table->foreign('original_invoice_id')->references('id')->on('invoices')->onDelete('cascade');
             $table->timestamps();
         });
     }
