@@ -12201,3 +12201,5 @@ Did you mean one of these?
 #40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('C:\\\\Users\\\\MSI\\\\On...')
 #41 {main}
 "} 
+[2025-05-06 14:58:40] local.INFO: Total des jours ouvrables calculés :  {"total":1.5} 
+[2025-05-06 15:00:10] local.INFO: Total des jours ouvrables calculés :  {"total":1.5} 

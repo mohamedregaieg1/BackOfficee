@@ -21,13 +21,14 @@ class InvoiceController extends Controller
     {
         try {
             $companies = Company::all();
+
             $validated = Validator::make($request->all(), [
                 'type' => 'required|in:facture,devis',
                 'creation_date' => 'required|date',
-                'additional_date_type' => 'nullable|in:Date of sale,Expiry date,Withdrawal date until', // ajouté conditionnellement
+                'additional_date_type' => 'nullable|in:Date of sale,Expiry date,Withdrawal date until',
                 'additional_date' => 'nullable|date',
                 'company_name' => 'required|exists:companies,name',
-                'number' => ['required', 'string', 'unique:invoices,number', 'regex:/^(F-|D-)[0-9]{6}$/', 'size:8'], // validation personnalisée
+                'number' => ['required', 'string', 'unique:invoices,number', 'regex:/^(F-|D-)[0-9]{6}$/', 'size:8'],
             ], [
                 'additional_date_type.required_if' => 'Le champ additional_date_type est requis si additional_date est présent.',
                 'number.regex' => 'Le numéro de facture doit commencer par "F-" ou "D-" et avoir une longueur de 8 caractères.',
@@ -51,14 +52,19 @@ class InvoiceController extends Controller
 
             $incrementFormatted = str_pad($increment, 5, '0', STR_PAD_LEFT);
             $finalNumber = "{$request->number}/{$incrementFormatted}";
-            $validated->merge(['number' => $finalNumber]);
-            $cookieData = json_encode($validated->validated() + ['company' => $selectedCompany]);
+
+            // ✅ Correction ici
+            $data = $validated->validated();
+            $data['number'] = $finalNumber;
+
+            $cookieData = json_encode($data + ['company' => $selectedCompany]);
             $cookie = cookie('invoice_step1', $cookieData, 120);
 
             return response()->json([
                 'message' => 'Step 1 completed successfully',
                 'data' => json_decode($cookieData, true)
             ])->cookie($cookie);
+
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
@@ -68,6 +74,7 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
+
 
 
     public function getAllClients(Request $request)
