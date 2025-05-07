@@ -135,20 +135,21 @@ class HomeEmployeeController extends Controller
                 ->map(function ($leave) {
                     return [
                         'title' => ucfirst(str_replace('_', ' ', $leave->leave_type)),
-                        'start' => \Carbon\Carbon::parse($leave->start_date)->format('Y/m/d'),
-                        'end' => \Carbon\Carbon::parse($leave->end_date)->format('Y/m/d'),
+                        'start' => \Carbon\Carbon::parse($leave->start_date)->format('Y-m-d'),
+                        'end' => \Carbon\Carbon::parse($leave->end_date)->format('Y-m-d'),
                         'color' => $this->getLeaveTypeColor($leave->leave_type),
                     ];
                 });
 
+            // Récupérer les jours fériés
             $publicHolidays = PublicHoliday::whereYear('start_date', $currentYear)
                 ->get(['name', 'start_date', 'end_date'])
                 ->map(function ($holiday) {
                     return [
                         'title' => $holiday->name,
-                        'start' => \Carbon\Carbon::parse($holiday->start_date)->format('Y/m/d'),
-                        'end' => \Carbon\Carbon::parse($holiday->end_date)->format('Y/m/d'),
-                        'color' => '#FF5733',
+                        'start' => \Carbon\Carbon::parse($holiday->start_date)->format('Y-m-d'),
+                        'end' => \Carbon\Carbon::parse($holiday->end_date)->format('Y-m-d'),
+                        'color' => '#FF5733',  // Une couleur spécifique pour les jours fériés
                     ];
                 });
 
@@ -167,6 +168,7 @@ class HomeEmployeeController extends Controller
             ], 500);
         }
     }
+
 
 
     // Fonction pour déterminer la couleur du type de congé

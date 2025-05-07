@@ -43,6 +43,7 @@ class LeaveBalanceController extends Controller
             'data' => $users->makeHidden('avatar_path')->map(function ($user) use ($sickLeaveMax) {
                 $personalLeaveUsed = Leave::where('user_id', $user->id)
                     ->whereIn('leave_type', ['personal_leave', 'other'])
+                    ->where('status', 'approved')
                     ->sum('effective_leave_days');
 
                 $personalLeaveBalance = LeavesBalance::where('user_id', $user->id)->sum('leave_day_limit');
@@ -51,6 +52,7 @@ class LeaveBalanceController extends Controller
                 $sickLeaveEffectiveDays = Leave::where('user_id', $user->id)
                     ->where('leave_type', 'sick_leave')
                     ->whereYear('start_date', $currentYear)
+                    ->where('status', 'approved')
                     ->sum('leave_days_requested');
 
                 return [
