@@ -178,8 +178,8 @@ class LeaveController extends Controller
             ]);
         }
 
-        $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'personal_leave' ? $request->other_type : null, $leaveEntries);
-        $this->notifyAdminOnLeaveRequest(auth()->user(), $request->leave_type, $request->leave_type === 'personal_leave' ? $request->other_type : null, $leaveEntries);
+        $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null, $leaveEntries);
+        $this->notifyAdminOnLeaveRequest(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null, $leaveEntries);
         return response()->json([
             'message' => 'Leave request stored successfully!',
             'leave' => $leaveEntries,
