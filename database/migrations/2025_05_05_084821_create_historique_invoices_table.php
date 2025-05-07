@@ -4,11 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateHistoriqueShipmentsTable extends Migration
+class CreateHistoriqueinvoicesTable extends Migration
 {
     public function up()
     {
-        Schema::create('historique_shipments', function (Blueprint $table) {
+        Schema::create('historique_invoices', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('invoice_id')->nullable();
             $table->unsignedBigInteger('old_invoice_id')->nullable();

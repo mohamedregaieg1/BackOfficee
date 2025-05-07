@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Leave;
+use App\Models\User;
 class DashboardController extends Controller
 {
-    //Diagramme en cercle : Montrer la distribution des différents types de congés demandés de cette moins actuel  par les employés
+    //Diagramme en cercle : Montrer la distribution des différents types de congés demandés de cette moins actuel de cette annnee par les employés
     public function leaveTypeDistribution()
     {
         $currentMonth = now()->month;
@@ -35,7 +36,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    // count de demandes de congés (en attente, approuvées, rejetées) pour cette moins actuel. : Diagramme en cercle
+    // count de demandes de congés (en attente, approuvées, rejetées) pour cette moins actuel de cette annee  : Diagramme en cercle
     public function leaveStatusDistribution()
     {
         $currentMonth = now()->month;
@@ -52,10 +53,14 @@ class DashboardController extends Controller
         ]);
     }
 
-    //Identifier les employés qui prennent le plus de congés. : Diagramme en barres
+    //Identifier les employés qui prennent le plus de congés. : Diagramme en barres ( ken user 3atah year ta3tik year eli 5taro user snn par defaut taffichi bel year actuel )
     public function approvedLeavesByEmployee()
-    {
+{
+    try {
+        $year = request()->input('year', now()->year);
+
         $approvedLeaves = Leave::where('status', 'approved')
+            ->whereYear('start_date', $year)
             ->select('user_id')
             ->selectRaw('SUM(effective_leave_days) as total_days')
             ->groupBy('user_id')
@@ -63,7 +68,7 @@ class DashboardController extends Controller
             ->get();
 
         $approvedLeavesWithNames = $approvedLeaves->map(function ($item) {
-            $user = \App\Models\User::find($item->user_id);
+            $user = User::find($item->user_id);
             $fullName = $user ? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) : 'Unknown';
             return [
                 'user_id' => $item->user_id,
@@ -71,10 +76,19 @@ class DashboardController extends Controller
                 'total_days' => $item->total_days,
             ];
         });
+
         return response()->json([
+            'year' => $year,
             'approved_leaves_by_employee' => $approvedLeavesWithNames,
-        ]);
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Une erreur est survenue.',
+            'details' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     //Comparer les tendances des demandes de congés qui approved entre différentes années. : Graphe linéaire avec plusieurs courbes
     public function compareApprovedLeavesByYear()

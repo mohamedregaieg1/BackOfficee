@@ -52,8 +52,6 @@ class InvoiceController extends Controller
 
             $incrementFormatted = str_pad($increment, 5, '0', STR_PAD_LEFT);
             $finalNumber = "{$request->number}/{$incrementFormatted}";
-
-            // ✅ Correction ici
             $data = $validated->validated();
             $data['number'] = $finalNumber;
 
@@ -162,15 +160,15 @@ class InvoiceController extends Controller
                 'client_type' => 'required|in:professional,individual',
                 'name' => 'required_if:client_type,professional',
                 'client_id' => 'sometimes|required_if:client_type,individual|exists:clients,id',
-                'civility' => 'nullable',
-                'first_name' => 'nullable',
-                'last_name' => 'nullable',
+                'civility' => 'sometimes|required_if:client_type,individual|',
+                'first_name' => 'sometimes|required_if:client_type,individual|',
+                'last_name' => 'sometimes|required_if:client_type,individual|',
                 'tva_number_client' => 'nullable|numeric',
                 'address' => 'required|string',
                 'postal_code' => 'required|string',
                 'rib_bank' => 'nullable|string',
                 'country' => 'required|in:' . implode(',', $countries),
-                'email' => 'nullable|email',
+                'email' => 'required|email',
                 'phone_number' => 'required|string|max:15',
             ])->validate();
 

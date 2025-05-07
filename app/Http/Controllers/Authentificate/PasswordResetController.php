@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Jobs\SendPasswordResetLinkJob;
+
 class PasswordResetController extends Controller
 {
     public function sendResetLink(Request $request)
@@ -173,10 +175,8 @@ class PasswordResetController extends Controller
     </div>
 </body>
 </html>";
-        Mail::html($htmlContent, function ($message) use ($request) {
-            $message->to($request->email)
-                ->subject('Password Reset Link');
-        });
+        dispatch(new SendPasswordResetLinkJob($request->email, $htmlContent));
+
 
         return response()->json(['message' => 'Password reset link sent successfully.']);
     }

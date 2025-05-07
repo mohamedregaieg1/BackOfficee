@@ -39,7 +39,7 @@ return new class extends Migration
                 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan',
                 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
             ])->default('Tunisia');
-            $table->string('email')->nullable();
+            $table->string('email');
             $table->string('phone_number', 15);
             $table->timestamps();
         });

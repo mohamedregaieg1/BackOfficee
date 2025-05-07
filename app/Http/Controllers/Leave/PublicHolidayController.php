@@ -125,4 +125,26 @@ class PublicHolidayController extends Controller
         }
     }
 
+    public function destroy($id)
+    {
+        try {
+            $publicHoliday = PublicHoliday::findOrFail($id);
+            $publicHoliday->delete();
+
+            return response()->json([
+                'message' => 'Public holiday deleted successfully!'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Public holiday not found.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 }

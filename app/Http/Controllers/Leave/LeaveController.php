@@ -17,6 +17,9 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\SendLeaveRequestNotificationJob;
+use App\Jobs\NotifyHRRejectedLeaveJob;
+
 
 
 class LeaveController extends Controller
@@ -224,7 +227,7 @@ class LeaveController extends Controller
     }
 
 
-    public function notifyAdminOnLeaveRequest($authUser, $leaveType, $otherType, $leaveEntries)
+    private function notifyAdminOnLeaveRequest($authUser, $leaveType, $otherType, $leaveEntries)
     {
         $admins = User::whereIn('role', ['admin', 'hr'])
             ->when($authUser->role === 'hr', function ($query) use ($authUser) {
@@ -312,12 +315,7 @@ class LeaveController extends Controller
         ";
 
             foreach ($admins as $adminEmail) {
-                Mail::send([], [], function ($message) use ($adminEmail, $authUser, $htmlContent) {
-                    $message->to($adminEmail)
-                        ->from('noreply@procan.com', 'PROCAN HR System')
-                        ->subject('New Leave Request Notification')
-                        ->html($htmlContent);
-                });
+                dispatch(new SendLeaveRequestNotificationJob($adminEmail, $htmlContent));
             }
         }
     }
@@ -691,13 +689,9 @@ class LeaveController extends Controller
         ";
 
             foreach ($hrs as $hrEmail) {
-                Mail::send([], [], function ($message) use ($hrEmail, $authUser, $htmlContent) {
-                    $message->to($hrEmail)
-                        ->from($authUser->email, "{$authUser->first_name} {$authUser->last_name}")
-                        ->subject('Demande de congé refusée')
-                        ->html($htmlContent);
-                });
+                dispatch(new NotifyHRRejectedLeaveJob($hrEmail, $authUser, $htmlContent));
             }
+
 
             return response()->json(['message' => 'Notification envoyée aux RH.'], 200);
 

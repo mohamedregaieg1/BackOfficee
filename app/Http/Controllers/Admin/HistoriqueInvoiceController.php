@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Service;
+use App\Models\Company;
 use Illuminate\Http\Request;
-use App\Models\HistoriqueShipment;
+use App\Models\HistoriqueInvoice;
 
 class HistoriqueInvoiceController extends Controller
 {
@@ -17,7 +18,7 @@ class HistoriqueInvoiceController extends Controller
             $month = request()->input('month');
             $type = request()->input('type');
 
-            $query = Invoice::with(['client', 'historiqueShipments']);
+            $query = Invoice::with(['client']);
 
             if ($year) {
                 $query->whereYear('creation_date', $year);
@@ -33,41 +34,14 @@ class HistoriqueInvoiceController extends Controller
 
             $invoices = $query->paginate(7);
 
-            $formattedData = collect($invoices->items())->map(callback: function ($invoice) {
+            $formattedData = collect($invoices->items())->map(function ($invoice) {
                 $invoiceArray = $invoice->toArray();
                 unset($invoiceArray['client']);
-                unset($invoiceArray['historique_shipments']);
 
-                $mergedChanges = [];
-                foreach ($invoice->historiqueShipments as $historique) {
-                    $changes = json_decode($historique->changes, true);
-                    foreach ($changes as $key => $change) {
-                        if (!isset($mergedChanges[$key])) {
-                            $mergedChanges[$key] = [
-                                'old_value' => $change['old_value'],
-                                'new_value' => $change['new_value'],
-                            ];
-                        } else {
-                            if ($mergedChanges[$key]['new_value'] !== $change['new_value']) {
-                                $mergedChanges[$key]['old_value'] = $mergedChanges[$key]['new_value'];
-                                $mergedChanges[$key]['new_value'] = $change['new_value'];
-                            }
-                        }
-                    }
-                }
-                $response = [
+                return [
                     'invoice' => $invoiceArray,
                     'client_name' => $invoice->client?->name,
                 ];
-
-                if (!empty($mergedChanges)) {
-                    $response['historiques'] = [
-                        'changes' => $mergedChanges,
-                        'created_at' => $invoice->created_at,
-                    ];
-                }
-
-                return $response;
             });
 
             return response()->json([
@@ -87,6 +61,44 @@ class HistoriqueInvoiceController extends Controller
             ], 500);
         }
     }
+
+    public function getHistoriqueByInvoiceId($id)
+    {
+        try {
+            $historiqueRecords = HistoriqueInvoice::where('invoice_id', $id)
+                ->orWhere('old_invoice_id', $id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($historiqueRecords->isEmpty()) {
+                return response()->json([
+                    'message' => 'Aucun historique trouvé pour cette facture.',
+                    'data' => [],
+                ], 404);
+            }
+
+            $formattedData = $historiqueRecords->map(function ($historique) {
+                return [
+                    'id' => $historique->id,
+                    'invoice_id' => $historique->invoice_id,
+                    'old_invoice_id' => $historique->old_invoice_id,
+                    'changes' => json_decode($historique->changes, true),
+                    'created_at' => $historique->created_at,
+                ];
+            });
+
+            return response()->json([
+                'message' => 'Historique récupéré avec succès.',
+                'data' => $formattedData,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Une erreur est survenue.',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     public function getServicesByInvoice($id)
     {
@@ -135,7 +147,7 @@ class HistoriqueInvoiceController extends Controller
 
             if ($request->has('company_id')) {
                 $companyId = $request->input('company_id');
-                $company = \App\Models\Company::find($companyId);
+                $company = Company::find($companyId);
 
                 if ($company) {
                     $newInvoice->company_name = $company->name;
@@ -175,7 +187,7 @@ class HistoriqueInvoiceController extends Controller
                 ];
             }
 
-            HistoriqueShipment::create([
+            HistoriqueInvoice::create([
                 'invoice_id' => $newInvoice->id,
                 'old_invoice_id' => $invoice->id,
                 'changes' => json_encode($changes),
@@ -303,7 +315,7 @@ class HistoriqueInvoiceController extends Controller
 
                     $factureAvoir->save();
                     if (!empty($invoiceChanges)) {
-                        HistoriqueShipment::create([
+                        HistoriqueInvoice::create([
                             'invoice_id' => $factureAvoir->id,
                             'old_invoice_id' => $invoice->id,
                             'changes' => json_encode($invoiceChanges),
@@ -330,7 +342,7 @@ class HistoriqueInvoiceController extends Controller
                     }
 
                     $newInvoice->save();
-                    HistoriqueShipment::create([
+                    HistoriqueInvoice::create([
                         'invoice_id' => $newInvoice->id,
                         'old_invoice_id' => $invoice->id,
                         'changes' => json_encode([
@@ -354,7 +366,7 @@ class HistoriqueInvoiceController extends Controller
                     $invoiceId = $newInvoice->id;
                     $oldInvoiceId = $invoice->id;
                 }
-                HistoriqueShipment::create([
+                HistoriqueInvoice::create([
                     'invoice_id' => $invoiceId,
                     'old_invoice_id' => $oldInvoiceId,
                     'changes' => json_encode($changes),

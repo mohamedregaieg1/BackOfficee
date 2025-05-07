@@ -70,6 +70,7 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
     //home:
     Route::get('/dashboard/leave-type-distribution', [DashboardController::class, 'leaveTypeDistribution']);
+    Route::get('/invoices/{id}/historique', [DashboardController::class, 'getHistoriqueByInvoiceId']);
     Route::get('/dashboard/leave-status-distribution', [DashboardController::class, 'leaveStatusDistribution']);
     Route::get('/dashboard/approved-leaves-by-employee', [DashboardController::class, 'approvedLeavesByEmployee']);
     Route::get('/dashboard/compare-leaves-by-year', [DashboardController::class, 'compareApprovedLeavesByYear']);

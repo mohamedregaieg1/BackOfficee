@@ -14,6 +14,8 @@ use App\Models\Notification;
 use Exception;
 use App\Events\NewNotificationEvent;
 use Illuminate\Support\Facades\Mail;
+use App\Jobs\SendLeaveStatusUpdateEmailJob;
+
 
 class ViewLeaveController extends Controller
 {
@@ -413,12 +415,8 @@ class ViewLeaveController extends Controller
     </html>
     ";
 
-    Mail::send([], [], function ($message) use ($sender, $htmlContent) {
-        $message->to($sender->email)
-            ->from('noreply@procan.com', 'PROCAN HR System')
-            ->subject('Leave Status Update')
-            ->html($htmlContent);
-    });
+    dispatch(new SendLeaveStatusUpdateEmailJob($sender->email, $htmlContent));
+
 }
     public function updateLeave(Request $request, $leaveId)
     {

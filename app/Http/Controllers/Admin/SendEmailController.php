@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\InvoiceMail;
+use App\Jobs\SendInvoiceEmailJob;
+
 
 class SendEmailController extends Controller
 {
@@ -47,7 +47,7 @@ class SendEmailController extends Controller
                 'companyLogoUrl' => $companyLogoUrl,
             ])->render();
 
-            Mail::to($invoice->client->email)->send(new InvoiceMail($htmlContent));
+            dispatch(new SendInvoiceEmailJob($invoice->client->email, $htmlContent));
 
             return response()->json(['message' => 'Email sent successfully to the client'], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
