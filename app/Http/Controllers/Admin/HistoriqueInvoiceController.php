@@ -37,10 +37,16 @@ class HistoriqueInvoiceController extends Controller
             $formattedData = collect($invoices->items())->map(function ($invoice) {
                 $invoiceArray = $invoice->toArray();
                 unset($invoiceArray['client']);
+                $originalInvoiceNumber = null;
+                if ($invoice->original_invoice_id) {
+                    $originalInvoice = Invoice::find($invoice->original_invoice_id);
+                    $originalInvoiceNumber = $originalInvoice?->number;
+                }
 
                 return [
                     'invoice' => $invoiceArray,
                     'client_name' => $invoice->client?->name,
+                    'original_invoice_number' => $originalInvoiceNumber,
                 ];
             });
 
@@ -61,6 +67,7 @@ class HistoriqueInvoiceController extends Controller
             ], 500);
         }
     }
+
 
     public function getHistoriqueByInvoiceId($id)
     {

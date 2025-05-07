@@ -40,7 +40,7 @@ class Invoice extends Model {
     }
     public function historiqueShipments()
     {
-        return $this->hasMany(HistoriqueShipment::class, 'invoice_id');
+        return $this->hasMany(HistoriqueInvoice::class, 'invoice_id');
     }
     public function relatedInvoices()
 {

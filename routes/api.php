@@ -16,6 +16,7 @@ use App\Http\Controllers\Leave\ViewLeaveController;
 use App\Http\Controllers\Leave\FixedLeavesController;
 use App\Http\Controllers\Leave\PublicHolidayController;
 use App\Http\Controllers\Employee\ProfileController;
+use App\Http\Controllers\Employee\HomeEmployeeController;
 use App\Http\Controllers\Accountant\ClientController;
 use App\Http\Controllers\NotificationController;
 
@@ -38,7 +39,6 @@ Route::post('password/reset', [PasswordResetController::class, 'resetPassword'])
 
 //route for admin
 Route::middleware(['auth:api', 'role:admin'])->group(function () {
-    Route::apiResource('leave-limits', FixedLeavesController::class);
     Route::apiResource('public-holidays', PublicHolidayController::class);
     Route::get('/by-name', [CompanyController::class, 'showByName']);
     Route::post('/companies', [CompanyController::class, 'store']);
@@ -68,6 +68,7 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::get('/admin/employees/{userId}/leaves', [ViewLeaveController::class, 'showLeavesForAdmin']);
     Route::put('/leave/{leaveId}/update', [ViewLeaveController::class, 'updateLeaveForAdmin']);
     Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
+    Route::apiResource('leave-limits', FixedLeavesController::class);
     //home:
     Route::get('/dashboard/leave-type-distribution', [DashboardController::class, 'leaveTypeDistribution']);
     Route::get('/invoices/{id}/historique', [DashboardController::class, 'getHistoriqueByInvoiceId']);
@@ -88,6 +89,12 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::get('/employee/leaves', [ViewLeaveController::class, 'showLeavesForEmployee']);
     Route::post('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'updateLeave']);
     Route::delete('/employee/leaves/{leaveId}', [ViewLeaveController::class, 'deleteLeave']);
+    //home
+    Route::get('/employee/home/leaves-status', [HomeEmployeeController::class, 'leavesByStatus']);
+    Route::get('/employee/home/leave-balance', [HomeEmployeeController::class, 'leaveBalance']);
+    Route::get('/employee/home/last-leave-addition', [HomeEmployeeController::class, 'lastLeaveAddition']);
+    Route::get('/employee/home/calendar', [HomeEmployeeController::class, 'getCalendarData']);
+
 
 
 });
@@ -121,5 +128,8 @@ Route::middleware(['auth:api', 'role:employee,hr,admin,accountant'])->group(func
     Route::get('/user/profile', [ProfileController::class, 'show']);
     Route::post('/user/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
+    //home pour admin et employe :
+    Route::get('home/user/info', [HomeEmployeeController::class, 'getAuthenticatedUserInfo']);
+
 
 });

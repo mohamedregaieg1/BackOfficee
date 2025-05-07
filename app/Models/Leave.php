@@ -18,7 +18,7 @@ class Leave extends Model {
         return $this->belongsTo(User::class);
     }
 
-    
+
     public function leaveLimit()
     {
         return $this->belongsTo(FixedLeaves::class, 'leave_type', 'leave_type');
@@ -26,6 +26,6 @@ class Leave extends Model {
 
     public function leaveBalance()
     {
-        return $this->belongsTo(LeaveBalance::class, 'user_id');
+        return $this->belongsTo(LeavesBalance::class, 'user_id');
     }
 }
