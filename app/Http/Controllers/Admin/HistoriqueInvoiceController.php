@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Service;
-use App\Models\Company;
 use Illuminate\Http\Request;
 use App\Models\HistoriqueInvoice;
 
@@ -14,22 +13,33 @@ class HistoriqueInvoiceController extends Controller
     public function index()
     {
         try {
-            $year = request()->input('year');
-            $month = request()->input('month');
-            $type = request()->input('type');
+            $startDate = request()->input('start_date');
+            $endDate = request()->input('end_date');
+            $clientName = request()->input('client_name');
+            $sortByPaymentStatus = request()->boolean('sort_by_payment_status');
 
-            $query = Invoice::with(['client']);
-
-            if ($year) {
-                $query->whereYear('creation_date', $year);
+            if ($endDate && !$startDate) {
+                return response()->json([
+                    'error' => 'start_date is required when end_date is provided.',
+                ], 422);
             }
 
-            if ($month) {
-                $query->whereMonth('creation_date', $month);
+            $query = Invoice::with('client');
+
+            if ($startDate && $endDate) {
+                $query->whereBetween('creation_date', [$startDate, $endDate]);
+            } elseif ($startDate) {
+                $query->whereDate('creation_date', '>=', $startDate);
             }
 
-            if ($type) {
-                $query->where('type', $type);
+            if ($clientName) {
+                $query->whereHas('client', function ($q) use ($clientName) {
+                    $q->where('name', 'like', '%' . $clientName . '%');
+                });
+            }
+
+            if ($sortByPaymentStatus) {
+                $query->orderByRaw("FIELD(payment_status, 'paid', 'partially paid', 'unpaid')");
             }
 
             $invoices = $query->paginate(7);
@@ -37,6 +47,7 @@ class HistoriqueInvoiceController extends Controller
             $formattedData = collect($invoices->items())->map(function ($invoice) {
                 $invoiceArray = $invoice->toArray();
                 unset($invoiceArray['client']);
+
                 $originalInvoiceNumber = null;
                 if ($invoice->original_invoice_id) {
                     $originalInvoice = Invoice::find($invoice->original_invoice_id);
@@ -68,6 +79,80 @@ class HistoriqueInvoiceController extends Controller
         }
     }
 
+    public function updatePaymentStatus(Request $request, $invoiceId)
+    {
+        try {
+            $request->validate([
+                'amount_paid' => 'nullable|numeric|min:0',
+                'unpaid_amount' => 'nullable|numeric|min:0',
+            ]);
+
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            $status = $invoice->payment_status;
+            $totalTTC = $invoice->total_ttc;
+            $amountPaid = $request->input('amount_paid', $invoice->amount_paid);
+            $unpaidAmount = $request->input('unpaid_amount', $invoice->unpaid_amount);
+
+            if ($status === 'paid') {
+                return response()->json([
+                    'error' => 'Invoice is fully paid. No updates allowed.'
+                ], 403);
+            }
+
+            if ($status === 'unpaid') {
+                if ($amountPaid > $totalTTC) {
+                    return response()->json([
+                        'error' => 'Amount paid cannot exceed total TTC.'
+                    ], 422);
+                }
+
+                $invoice->amount_paid = $amountPaid;
+            }
+
+            if ($status === 'partially paid') {
+                if ($amountPaid < 0 || $unpaidAmount < 0) {
+                    return response()->json([
+                        'error' => 'Amounts cannot be negative.'
+                    ], 422);
+                }
+
+                if (($amountPaid + $unpaidAmount) > $totalTTC) {
+                    return response()->json([
+                        'error' => 'Combined amounts cannot exceed total TTC.'
+                    ], 422);
+                }
+
+                $invoice->amount_paid = $amountPaid;
+                $invoice->unpaid_amount = $unpaidAmount;
+            }
+
+            $invoice->save();
+
+            HistoriqueInvoice::create([
+                'invoice_id' => $invoice->id,
+                'old_invoice_id' => null,
+                'changes' => json_encode([
+                    'payment_status_updated' => true,
+                    'new_values' => [
+                        'amount_paid' => $invoice->amount_paid,
+                        'unpaid_amount' => $invoice->unpaid_amount,
+                    ],
+                ]),
+            ]);
+
+            return response()->json([
+                'message' => 'Invoice payment information updated successfully.',
+                'invoice' => $invoice,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     public function getHistoriqueByInvoiceId($id)
     {
@@ -106,7 +191,6 @@ class HistoriqueInvoiceController extends Controller
         }
     }
 
-
     public function getServicesByInvoice($id)
     {
         try {
@@ -128,81 +212,37 @@ class HistoriqueInvoiceController extends Controller
             ], 500);
         }
     }
-    public function update(Request $request, $id)
+
+    public function updateService(Request $request)
     {
         try {
-            $invoice = Invoice::findOrFail($id);
-            $newInvoice = $invoice->replicate();
-            $newInvoice->number = $this->generateUniqueInvoiceNumber($invoice->type, now());
-            $newInvoice->save();
-            $updatableFields = [
-                'unpaid_amount',
-                'amount_paid',
-                'payment_status',
-                'due_date',
-                'payment_mode',
-                'client_id',
-                'company_id',
-                'additional_date'
-            ];
-
-            foreach ($updatableFields as $field) {
-                if ($request->has($field)) {
-                    $newInvoice->$field = $request->input($field);
-                }
-            }
-
-            if ($request->has('company_id')) {
-                $companyId = $request->input('company_id');
-                $company = Company::find($companyId);
-
-                if ($company) {
-                    $newInvoice->company_name = $company->name;
-                } else {
-                    return response()->json([
-                        'error' => 'Invalid company_id provided.',
-                    ], 400);
-                }
-            }
-
-            if ($invoice->type === 'facture') {
-                $this->convertToFactureAvoir($newInvoice);
-            } elseif ($request->has('type') && in_array($request->input('type'), ['devis', 'facture'])) {
-                $newInvoice->type = $request->input('type');
-            }
-
-            $newInvoice->original_invoice_id = $invoice->id;
-            $newInvoice->save();
-            $changes = [];
-            foreach ($updatableFields as $field) {
-                if ($request->has($field)) {
-                    $oldValue = $invoice->$field;
-                    $newValue = $request->input($field);
-                    if ($oldValue !== $newValue) {
-                        $changes[$field] = [
-                            'old_value' => $oldValue,
-                            'new_value' => $newValue,
-                        ];
-                    }
-                }
-            }
-
-            if ($invoice->type !== $newInvoice->type) {
-                $changes['type'] = [
-                    'old_value' => $invoice->type,
-                    'new_value' => $newInvoice->type,
-                ];
-            }
-
-            HistoriqueInvoice::create([
-                'invoice_id' => $newInvoice->id,
-                'old_invoice_id' => $invoice->id,
-                'changes' => json_encode($changes),
+            $request->validate([
+                'services' => 'required|array|min:1',
+                'services.*.id' => 'required|integer|exists:services,id',
+                'services.*.name' => 'nullable|string|max:255',
+                'services.*.quantity' => 'nullable|numeric|min:0',
+                'services.*.unit' => 'nullable|string|max:50',
+                'services.*.price_ht' => 'nullable|numeric|min:0',
+                'services.*.tva' => 'nullable|numeric|min:0',
+                'services.*.total_ht' => 'nullable|numeric|min:0',
+                'services.*.total_ttc' => 'nullable|numeric|min:0',
+                'services.*.comment' => 'nullable|string',
+                'TTotal_HT' => 'required|numeric',
+                'TTotal_TVA' => 'required|numeric',
+                'TTotal_TTC' => 'required|numeric',
             ]);
 
+            $firstService = Service::findOrFail($request->input('services.0.id'));
+            $invoice = Invoice::findOrFail($firstService->invoice_id);
+
+            if ($invoice->type === 'facture') {
+                [$factureAvoir, $newInvoice] = $this->createAvoirAndUpdatedInvoiceForMultiple($invoice, $request->input('services'), $request);
+            } elseif ($invoice->type === 'devis') {
+                $this->updateDevisAndServices($invoice, $request->input('services'), $request);
+            }
+
             return response()->json([
-                'message' => 'Invoice updated successfully',
-                'data' => $newInvoice,
+                'message' => 'Services updated successfully via avoir and new facture',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -211,16 +251,112 @@ class HistoriqueInvoiceController extends Controller
             ], 500);
         }
     }
-    private function convertToFactureAvoir(Invoice $invoice)
+
+    private function createAvoirAndUpdatedInvoiceForMultiple(Invoice $originalInvoice, array $servicesData, Request $request)
     {
-        $newNumber = $this->generateUniqueInvoiceNumber('facture_avoir', now());
-        $invoice->type = 'facture_avoir';
-        $invoice->number = $newNumber;
-        $invoice->save();
+        $now = now();
+        $avoirInvoice = $originalInvoice->replicate();
+        $avoirInvoice->number = $this->generateUniqueInvoiceNumber('facture_avoir', now());
+        $avoirInvoice->type = 'facture_avoir';
+        $avoirInvoice->creation_date = $now;
+        $avoirInvoice->total_ht = -$originalInvoice->total_ht;
+        $avoirInvoice->total_tva = -$originalInvoice->total_tva;
+        $avoirInvoice->total_ttc = -$originalInvoice->total_ttc;
+        $avoirInvoice->original_invoice_id = $originalInvoice->id;
+        $avoirInvoice->save();
+
+        $newInvoice = $originalInvoice->replicate();
+        $newInvoice->number = $this->generateUniqueInvoiceNumber('facture', now());
+        $newInvoice->type = 'facture';
+        $newInvoice->creation_date = $now;
+        $newInvoice->total_ht = $request->input('TTotal_HT');
+        $newInvoice->total_tva = $request->input('TTotal_TVA');
+        $newInvoice->total_ttc = $request->input('TTotal_TTC');
+        $newInvoice->original_invoice_id = $originalInvoice->id;
+        $newInvoice->save();
+
+        foreach ($servicesData as $serviceData) {
+            $originalService = Service::findOrFail($serviceData['id']);
+
+            $avoirService = $originalService->replicate();
+            $avoirService->invoice_id = $avoirInvoice->id;
+            $avoirService->quantity = -$originalService->quantity;
+            $avoirService->price_ht = -$originalService->price_ht;
+            $avoirService->tva = -$originalService->tva;
+            $avoirService->total_ht = -$originalService->total_ht;
+            $avoirService->total_ttc = -$originalService->total_ttc;
+            $avoirService->save();
+
+            $newService = $originalService->replicate();
+            $newService->invoice_id = $newInvoice->id;
+
+            foreach (['name', 'quantity', 'unit', 'price_ht', 'tva', 'total_ht', 'total_ttc', 'comment'] as $field) {
+                if (isset($serviceData[$field])) {
+                    $newService->$field = $serviceData[$field];
+                }
+            }
+            $newService->save();
+        }
+
+        HistoriqueInvoice::create([
+            'invoice_id' => $avoirInvoice->id,
+            'old_invoice_id' => $originalInvoice->id,
+            'changes' => json_encode([
+                'facture_avoir_created' => true,
+                'reason' => 'Multiple services updated via avoir',
+            ]),
+        ]);
+
+        HistoriqueInvoice::create([
+            'invoice_id' => $newInvoice->id,
+            'old_invoice_id' => $originalInvoice->id,
+            'changes' => json_encode([
+                'facture_updated_created' => true,
+                'services_updated' => $servicesData,
+            ]),
+        ]);
+
+        return [$avoirInvoice, $newInvoice];
     }
+    private function updateDevisAndServices(Invoice $invoice, array $servicesData, Request $request)
+    {
+        foreach ($servicesData as $serviceData) {
+            $service = Service::findOrFail($serviceData['id']);
+
+            foreach (['name', 'quantity', 'unit', 'price_ht', 'tva', 'total_ht', 'total_ttc', 'comment'] as $field) {
+                if (isset($serviceData[$field])) {
+                    $service->$field = $serviceData[$field];
+                }
+            }
+
+            $service->save();
+        }
+
+        $invoice->total_ht = $request->input('TTotal_HT');
+        $invoice->total_tva = $request->input('TTotal_TVA');
+        $invoice->total_ttc = $request->input('TTotal_TTC');
+        $invoice->save();
+
+        HistoriqueInvoice::create([
+            'invoice_id' => $invoice->id,
+            'old_invoice_id' => null,
+            'changes' => json_encode([
+                'devis_updated' => true,
+                'services_updated' => $servicesData,
+                'totals_updated' => [
+                    'total_ht' => $request->input('TTotal_HT'),
+                    'total_tva' => $request->input('TTotal_TVA'),
+                    'total_ttc' => $request->input('TTotal_TTC'),
+                ]
+            ]),
+        ]);
+    }
+
+
     private function generateUniqueInvoiceNumber($type, $date)
     {
-        $baseNumber = "FAV-" . $date->format('mY') . "-";
+        $prefix = $type === 'facture_avoir' ? 'FAV' : 'F';
+        $baseNumber = $prefix . '-' . $date->format('mY') . '-';
 
         $lastInvoice = Invoice::where('number', 'like', $baseNumber . '%')
             ->orderBy('number', 'desc')
@@ -230,165 +366,9 @@ class HistoriqueInvoiceController extends Controller
             $lastIncrement = intval(substr($lastInvoice->number, -5));
             $newIncrement = str_pad($lastIncrement + 1, 5, '0', STR_PAD_LEFT);
         } else {
-            $newIncrement = "00001";
+            $newIncrement = '00001';
         }
+
         return $baseNumber . $newIncrement;
-    }
-
-    public function updateService(Request $request, $id)
-    {
-        try {
-            $request->validate([
-                'name' => 'nullable|string|max:255',
-                'quantity' => 'nullable|numeric|min:0',
-                'unit' => 'nullable|string|max:50',
-                'price_ht' => 'nullable|numeric|min:0',
-                'tva' => 'nullable|numeric|min:0',
-                'total_ht' => 'nullable|numeric|min:0',
-                'total_ttc' => 'nullable|numeric|min:0',
-                'comment' => 'nullable|string',
-                'TTotal_HT' => 'nullable|numeric|min:0',
-                'TTotal_TVA' => 'nullable|numeric|min:0',
-                'TTotal_TTC' => 'nullable|numeric|min:0',
-            ]);
-
-            $service = Service::findOrFail($id);
-            $updatableFields = [
-                'name',
-                'quantity',
-                'unit',
-                'price_ht',
-                'tva',
-                'total_ht',
-                'total_ttc',
-                'comment'
-            ];
-            $changes = [];
-            foreach ($updatableFields as $field) {
-                if ($request->has($field)) {
-                    $oldValue = $service->$field;
-                    $newValue = $request->input($field);
-                    if ($oldValue !== $newValue) {
-                        $service->$field = $newValue;
-                        $changes[$field] = [
-                            'old_value' => $oldValue,
-                            'new_value' => $newValue,
-                        ];
-                    }
-                }
-            }
-
-            $service->save();
-            $invoice = Invoice::find($service->invoice_id);
-
-            if (!$invoice) {
-                return response()->json([
-                    'error' => 'No associated invoice found for this service.',
-                ], 400);
-            }
-            if ($invoice->type === 'facture') {
-                $factureAvoir = Invoice::where('original_invoice_id', $invoice->id)->first();
-                $newInvoice = null;
-
-                if ($factureAvoir) {
-                    $invoiceChanges = [];
-                    if ($request->has('TTotal_HT')) {
-                        $oldHT = $factureAvoir->total_ht;
-                        $newHT = $request->input('TTotal_HT');
-                        $factureAvoir->total_ht = $newHT;
-                        $invoiceChanges['TTotal_HT'] = [
-                            'old_value' => $oldHT,
-                            'new_value' => $newHT,
-                        ];
-                    }
-                    if ($request->has('TTotal_TVA')) {
-                        $oldTVA = $factureAvoir->total_tva;
-                        $newTVA = $request->input('TTotal_TVA');
-                        $factureAvoir->total_tva = $newTVA;
-                        $invoiceChanges['TTotal_TVA'] = [
-                            'old_value' => $oldTVA,
-                            'new_value' => $newTVA,
-                        ];
-                    }
-                    if ($request->has('TTotal_TTC')) {
-                        $oldTTC = $factureAvoir->total_ttc;
-                        $newTTC = $request->input('TTotal_TTC');
-                        $factureAvoir->total_ttc = $newTTC;
-                        $invoiceChanges['TTotal_TTC'] = [
-                            'old_value' => $oldTTC,
-                            'new_value' => $newTTC,
-                        ];
-                    }
-
-                    $factureAvoir->save();
-                    if (!empty($invoiceChanges)) {
-                        HistoriqueInvoice::create([
-                            'invoice_id' => $factureAvoir->id,
-                            'old_invoice_id' => $invoice->id,
-                            'changes' => json_encode($invoiceChanges),
-                        ]);
-                    }
-                } else {
-                    $newInvoice = $invoice->replicate();
-                    $newInvoice->number = $this->generateUniqueInvoiceNumber($invoice->type, now());
-
-                    if ($request->has('TTotal_HT')) {
-                        $newInvoice->total_ht = $request->input('TTotal_HT');
-                    }
-                    if ($request->has('TTotal_TVA')) {
-                        $newInvoice->total_tva = $request->input('TTotal_TVA');
-                    }
-                    if ($request->has('TTotal_TTC')) {
-                        $newInvoice->total_ttc = $request->input('TTotal_TTC');
-                    }
-
-                    if ($invoice->type === 'facture') {
-                        $this->convertToFactureAvoir($newInvoice);
-                    } elseif ($request->has('type') && in_array($request->input('type'), ['devis', 'facture'])) {
-                        $newInvoice->type = $request->input('type');
-                    }
-
-                    $newInvoice->save();
-                    HistoriqueInvoice::create([
-                        'invoice_id' => $newInvoice->id,
-                        'old_invoice_id' => $invoice->id,
-                        'changes' => json_encode([
-                            'TTotal_HT' => ['old_value' => $invoice->total_ht, 'new_value' => $newInvoice->total_ht],
-                            'TTotal_TVA' => ['old_value' => $invoice->total_tva, 'new_value' => $newInvoice->total_tva],
-                            'TTotal_TTC' => ['old_value' => $invoice->total_ttc, 'new_value' => $newInvoice->total_ttc],
-                        ]),
-                    ]);
-                }
-            }
-
-            if (!empty($changes)) {
-                $invoiceId = $invoice->id;
-                $oldInvoiceId = null;
-                if (isset($factureAvoir)) {
-                    $invoiceId = $factureAvoir->id;
-                    $oldInvoiceId = $invoice->id;
-                }
-
-                if (isset($newInvoice)) {
-                    $invoiceId = $newInvoice->id;
-                    $oldInvoiceId = $invoice->id;
-                }
-                HistoriqueInvoice::create([
-                    'invoice_id' => $invoiceId,
-                    'old_invoice_id' => $oldInvoiceId,
-                    'changes' => json_encode($changes),
-                ]);
-            }
-
-            return response()->json([
-                'message' => 'Service updated successfully',
-                'data' => $service,
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'An unexpected error occurred.',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
     }
 }

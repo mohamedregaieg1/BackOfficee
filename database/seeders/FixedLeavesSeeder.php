@@ -13,9 +13,9 @@ class FixedLeavesSeeder extends Seeder
     public function run(): void
     {
         $fixedLeaves = [
-            ['leave_type' => 'paternity_leave', 'max_days' => 10],
+            ['leave_type' => 'paternity_leave', 'max_days' => 25],
             ['leave_type' => 'maternity_leave', 'max_days' => 90],
-            ['leave_type' => 'sick_leave', 'max_days' => 30]
+            ['leave_type' => 'sick_leave', 'max_days' => 24]
         ];
 
         foreach ($fixedLeaves as $leave) {

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -16,6 +15,7 @@ class PublicHolidaysSeeder extends Seeder
     {
         $year = Carbon::now()->year;
 
+        // Jours fériés fixes en Tunisie
         $holidays = [
             [
                 'name' => 'Nouvel An',
@@ -26,6 +26,11 @@ class PublicHolidaysSeeder extends Seeder
                 'name' => 'Fête de la Révolution',
                 'start_date' => "$year-01-14",
                 'end_date' => "$year-01-14",
+            ],
+            [
+                'name' => 'Fête de l’Indépendance',
+                'start_date' => "$year-03-20",
+                'end_date' => "$year-03-20",
             ],
             [
                 'name' => 'Fête du Travail',
@@ -42,12 +47,27 @@ class PublicHolidaysSeeder extends Seeder
                 'start_date' => "$year-08-13",
                 'end_date' => "$year-08-13",
             ],
+        ];
+
+        $mobileHolidays = [
             [
-                'name' => 'Fête de l’Indépendance',
-                'start_date' => "$year-03-20",
-                'end_date' => "$year-03-20",
+                'name' => 'Aïd el-Fitr',
+                'start_date' => "$year-04-21", // 21 avril 2025
+                'end_date' => "$year-04-21",
+            ],
+            [
+                'name' => 'Aïd el-Adha',
+                'start_date' => "$year-06-27", // 27 juin 2025
+                'end_date' => "$year-06-27",
+            ],
+            [
+                'name' => 'Nouvel An Hégire',
+                'start_date' => "$year-07-17", // 17 juillet 2025
+                'end_date' => "$year-07-17",
             ],
         ];
+
+        $holidays = array_merge($holidays, $mobileHolidays);
 
         foreach ($holidays as &$holiday) {
             $start = Carbon::parse($holiday['start_date']);

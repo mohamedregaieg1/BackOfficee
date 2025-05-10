@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\SendEmailController;
 use App\Http\Controllers\Admin\HistoriqueInvoiceController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InvoiceDashboardController;
 use App\Http\Controllers\Leave\LeaveController;
 use App\Http\Controllers\Leave\LeaveBalanceController;
 use App\Http\Controllers\Leave\ViewLeaveController;
@@ -71,7 +72,6 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::apiResource('leave-limits', FixedLeavesController::class);
     //home:
     Route::get('/dashboard/leave-type-distribution', [DashboardController::class, 'leaveTypeDistribution']);
-    Route::get('/invoices/{id}/historique', [DashboardController::class, 'getHistoriqueByInvoiceId']);
     Route::get('/dashboard/leave-status-distribution', [DashboardController::class, 'leaveStatusDistribution']);
     Route::get('/dashboard/approved-leaves-by-employee', [DashboardController::class, 'approvedLeavesByEmployee']);
     Route::get('/dashboard/compare-leaves-by-year', [DashboardController::class, 'compareApprovedLeavesByYear']);
@@ -112,10 +112,13 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
 Route::middleware(['auth:api', 'role:accountant,admin'])->group(function () {
     Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf']);
     Route::get('/show/invoices', [HistoriqueInvoiceController::class, 'index']);
+    Route::put('/invoices/{id}/payment-status', [HistoriqueInvoiceController::class, 'updatePaymentStatus']);
+    Route::get('/invoices/{id}/historique', [HistoriqueInvoiceController::class, 'getHistoriqueByInvoiceId']);
     Route::get('/invoices/{id}/services', [HistoriqueInvoiceController::class, 'getServicesByInvoice']);
-    Route::put('/invoices/update/{id}', [HistoriqueInvoiceController::class, 'update'])->name('invoices.update');
-    Route::put('/services/{id}', [HistoriqueInvoiceController::class, 'updateService'])->name('service.update');
-
+    Route::put('/invoices/services/batch-update', [HistoriqueInvoiceController::class, 'updateService'])->name('service.update');
+    Route::get('/payment-status', [InvoiceDashboardController::class, 'paymentStatusStats']);
+    Route::get('/type-stats', [InvoiceDashboardController::class, 'invoiceTypeStats']);
+    Route::get('/payment-mode', [InvoiceDashboardController::class, 'paymentModeStats']);
 
 
 });

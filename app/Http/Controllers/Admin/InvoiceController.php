@@ -253,7 +253,7 @@ class InvoiceController extends Controller
                 'services' => 'required|array',
                 'services.*.name' => 'required|string',
                 'services.*.quantity' => 'required|numeric',
-                'services.*.unit' => 'required|in:hours,days',
+                'services.*.unit' => 'nullable|string',
                 'services.*.price_ht' => 'required|numeric',
                 'services.*.tva' => 'required|numeric',
                 'services.*.total_ht' => 'required|numeric',

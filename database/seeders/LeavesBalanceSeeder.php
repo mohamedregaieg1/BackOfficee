@@ -14,7 +14,7 @@ class LeavesBalanceSeeder extends Seeder
         foreach ($users as $user) {
             DB::table('leaves_balances')->insert([
                 'user_id' => $user->id,
-                'leave_day_limit' => 10,
+                'leave_day_limit' => rand(10, 20), // Génère un nombre aléatoire entre 10 et 20
                 'description' => 'Initial leave balance',
                 'created_at' => now(),
                 'updated_at' => now(),

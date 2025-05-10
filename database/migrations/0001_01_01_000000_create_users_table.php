@@ -26,7 +26,6 @@ return new class extends Migration
             $table->enum('role', ['admin', 'employee', 'hr','accountant'])->default('employee');
             $table->string('job_description');
             $table->date('start_date');
-            $table->double('leave_balance', 8, 2)->default(0);
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

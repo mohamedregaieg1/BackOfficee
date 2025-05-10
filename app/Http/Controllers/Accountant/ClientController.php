@@ -8,12 +8,21 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-    // Afficher tous les clients avec filtrage par name et pagination
+    // Afficher tous les clients avec filtrage par name ou email ou phone_number  et pagination
     public function index(Request $request)
     {
         $query = Client::query();
-        if ($request->has('name') && $request->name != '') {
+
+        if ($request->filled('name')) {
             $query->where('name', 'LIKE', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('email')) {
+            $query->where('email', 'LIKE', '%' . $request->email . '%');
+        }
+
+        if ($request->filled('phone_number')) {
+            $query->where('phone_number', 'LIKE', '%' . $request->phone_number . '%');
         }
 
         $query->orderBy('created_at', 'desc');
@@ -30,6 +39,7 @@ class ClientController extends Controller
             ],
         ]);
     }
+
     // Itha individual metb3tch tva w ken professional eb3th tva
     public function store(Request $request)
     {

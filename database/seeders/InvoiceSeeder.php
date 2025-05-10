@@ -15,7 +15,7 @@ class InvoiceSeeder extends Seeder
         $paymentModes = ['bank transfer', 'credit card', 'cash', 'paypal', 'cheque', 'other'];
         $date = Carbon::now();
 
-        $factureNumber = 'F/' . $date->format('mY') . '/1';
+        $factureNumber = 'F-' . $date->format('mY') . '-00001';
 
         $facture = Invoice::create([
             'type' => 'facture',
@@ -32,7 +32,7 @@ class InvoiceSeeder extends Seeder
             'amount_paid' => $faker->randomFloat(2, 100, 1000),
         ]);
 
-        $devisNumber = 'D/' . $date->format('mY') . '/2';
+        $devisNumber = 'D-' . $date->format('mY') . '-00002';
 
         $devis = Invoice::create([
             'type' => 'devis',
