@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['facture', 'devis','facture_avoir']);
+            $table->enum('type', ['facture', 'devis','facture_avoir','facture_avoir_partiel']);
             $table->date('creation_date');
             $table->string('number')->unique();
             $table->enum('additional_date_type', ['Date of sale', 'Expiry date', 'Withdrawal date until'])->nullable();

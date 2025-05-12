@@ -9,6 +9,8 @@ use App\Models\FixedLeaves;
 use App\Models\LeavesBalance;
 use App\Models\PublicHoliday;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
 
 class HomeEmployeeController extends Controller
 {
@@ -30,6 +32,37 @@ class HomeEmployeeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Erreur inattendue',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function upcomingPublicHolidays(Request $request)
+    {
+        try {
+            $today = now()->startOfDay();
+            $endDate = $today->copy()->addDays(60);
+
+            $holidays = PublicHoliday::whereDate('start_date', '>=', $today)
+                ->whereDate('start_date', '<=', $endDate)
+                ->orderBy('start_date', 'asc')
+                ->get(['name', 'start_date', 'end_date'])
+                ->map(function ($holiday) {
+                    return [
+                        'title' => $holiday->name,
+                        'start' => \Carbon\Carbon::parse($holiday->start_date)->format('Y-m-d'),
+                        'end' => \Carbon\Carbon::parse($holiday->end_date)->format('Y-m-d'),
+                        'days_left' => now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($holiday->start_date)->startOfDay()),
+                    ];
+                });
+
+            return response()->json([
+                'message' => 'Upcoming public holidays retrieved successfully.',
+                'data' => $holidays
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
                 'details' => $e->getMessage()
             ], 500);
         }
@@ -65,24 +98,60 @@ class HomeEmployeeController extends Controller
             $userId = Auth::id();
             $currentYear = now()->year;
 
-            $userBalance = LeavesBalance::where('user_id', $userId)->sum('leave_day_limit');
+            $customTypes = ['personal_leave', 'other'];
+            $fixedTypes = ['sick_leave', 'maternity_leave', 'paternity_leave'];
 
-            $fixedLeaves = FixedLeaves::sum('max_days');
+            $response = [];
 
-            $usedLeaves = Leave::where('user_id', $userId)
-                ->whereYear('start_date', $currentYear)
-                ->sum('effective_leave_days');
-            $totalAvailable = $userBalance + $fixedLeaves;
-            $remainingBalance = $totalAvailable - $usedLeaves;
+            // Soldes personnalisés
+            $customBalances = LeavesBalance::where('user_id', $userId)->get();
+
+            foreach ($customTypes as $type) {
+                $balance = $customBalances->where('leave_type', $type)->first();
+                $limit = $balance ? $balance->leave_day_limit : 0;
+
+                $used = Leave::where('user_id', $userId)
+                    ->where('leave_type', $type)
+                    ->where('status', 'approved')
+                    ->whereYear('start_date', $currentYear)
+                    ->sum('effective_leave_days');
+
+                $remaining = max($limit - $used, 0);
+
+                if ($remaining > 0) {
+                    $response[] = [
+                        'leave_type' => $type,
+                        'remaining' => $remaining
+                    ];
+                }
+            }
+
+            // Soldes fixes
+            foreach ($fixedTypes as $type) {
+                $fixed = FixedLeaves::where('leave_type', $type)->first();
+                $limit = $fixed ? $fixed->max_days : 0;
+
+                $used = Leave::where('user_id', $userId)
+                    ->where('leave_type', $type)
+                    ->where('status', 'approved')
+                    ->whereYear('start_date', $currentYear)
+                    ->sum('effective_leave_days');
+
+                $remaining = max($limit - $used, 0);
+
+                if ($remaining > 0) {
+                    $response[] = [
+                        'leave_type' => $type,
+                        'remaining' => $remaining
+                    ];
+                }
+            }
 
             return response()->json([
-                'message' => 'Leave balance calculated successfully',
-                'data' => [
-                    'total_available' => $totalAvailable,
-                    'used' => $usedLeaves,
-                    'remaining' => $remainingBalance
-                ]
+                'message' => 'Filtered leave balances (only with remaining days)',
+                'data' => $response
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An unexpected error occurred.',
@@ -90,6 +159,7 @@ class HomeEmployeeController extends Controller
             ], 500);
         }
     }
+
 
     public function lastLeaveAddition()
     {
@@ -130,6 +200,7 @@ class HomeEmployeeController extends Controller
 
             // Récupérer les congés de l'utilisateur pour l'année en cours
             $userLeaves = Leave::where('user_id', $userId)
+                ->where('status', 'approved')
                 ->whereYear('start_date', $currentYear)
                 ->get(['start_date', 'end_date', 'leave_type'])
                 ->map(function ($leave) {

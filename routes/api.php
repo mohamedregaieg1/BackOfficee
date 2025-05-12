@@ -71,6 +71,10 @@ Route::middleware(['auth:api', 'role:admin,hr'])->group(function () {
     Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
     Route::apiResource('leave-limits', FixedLeavesController::class);
     //home:
+    Route::get('/dashboard/count/approved', [DashboardController::class, 'countApprovedLeavesThisMonth']);
+    Route::get('/dashboard/count/rejected', [DashboardController::class, 'countRejectedLeavesThisMonth']);
+    Route::get('/dashboard/count/on-hold', [DashboardController::class, 'countOnHoldLeavesThisMonth']);
+    Route::get('/dashboard/leaves/today', [DashboardController::class, 'getLeavesToday']);
     Route::get('/dashboard/leave-type-distribution', [DashboardController::class, 'leaveTypeDistribution']);
     Route::get('/dashboard/leave-status-distribution', [DashboardController::class, 'leaveStatusDistribution']);
     Route::get('/dashboard/approved-leaves-by-employee', [DashboardController::class, 'approvedLeavesByEmployee']);
@@ -94,6 +98,8 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::get('/employee/home/leave-balance', [HomeEmployeeController::class, 'leaveBalance']);
     Route::get('/employee/home/last-leave-addition', [HomeEmployeeController::class, 'lastLeaveAddition']);
     Route::get('/employee/home/calendar', [HomeEmployeeController::class, 'getCalendarData']);
+    Route::get('/employee/home/holidays/upcoming', [HomeEmployeeController::class, 'upcomingPublicHolidays']);
+
 
 
 
@@ -116,9 +122,11 @@ Route::middleware(['auth:api', 'role:accountant,admin'])->group(function () {
     Route::get('/invoices/{id}/historique', [HistoriqueInvoiceController::class, 'getHistoriqueByInvoiceId']);
     Route::get('/invoices/{id}/services', [HistoriqueInvoiceController::class, 'getServicesByInvoice']);
     Route::put('/invoices/services/batch-update', [HistoriqueInvoiceController::class, 'updateService'])->name('service.update');
+    Route::post('/invoices/transfer-avp', [HistoriqueInvoiceController::class, 'transferAVP']);
     Route::get('/payment-status', [InvoiceDashboardController::class, 'paymentStatusStats']);
     Route::get('/type-stats', [InvoiceDashboardController::class, 'invoiceTypeStats']);
     Route::get('/payment-mode', [InvoiceDashboardController::class, 'paymentModeStats']);
+
 
 
 });
