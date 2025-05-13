@@ -103,11 +103,10 @@ class HomeEmployeeController extends Controller
 
             $response = [];
 
-            // Soldes personnalisés
             $customBalances = LeavesBalance::where('user_id', $userId)->get();
 
             foreach ($customTypes as $type) {
-                $balance = $customBalances->where('leave_type', $type)->first();
+                $balance = $customBalances->firstWhere('leave_type', $type);
                 $limit = $balance ? $balance->leave_day_limit : 0;
 
                 $used = Leave::where('user_id', $userId)
@@ -118,17 +117,16 @@ class HomeEmployeeController extends Controller
 
                 $remaining = max($limit - $used, 0);
 
-                if ($remaining > 0) {
-                    $response[] = [
-                        'leave_type' => $type,
-                        'remaining' => $remaining
-                    ];
-                }
+                $response[] = [
+                    'leave_type' => $type,
+                    'remaining' => $remaining
+                ];
             }
 
-            // Soldes fixes
+            $fixedLeaves = FixedLeaves::whereIn('leave_type', $fixedTypes)->get();
+
             foreach ($fixedTypes as $type) {
-                $fixed = FixedLeaves::where('leave_type', $type)->first();
+                $fixed = $fixedLeaves->firstWhere('leave_type', $type);
                 $limit = $fixed ? $fixed->max_days : 0;
 
                 $used = Leave::where('user_id', $userId)
@@ -139,16 +137,14 @@ class HomeEmployeeController extends Controller
 
                 $remaining = max($limit - $used, 0);
 
-                if ($remaining > 0) {
-                    $response[] = [
-                        'leave_type' => $type,
-                        'remaining' => $remaining
-                    ];
-                }
+                $response[] = [
+                    'leave_type' => $type,
+                    'remaining' => $remaining
+                ];
             }
 
             return response()->json([
-                'message' => 'Filtered leave balances (only with remaining days)',
+                'message' => 'Leave balance retrieved successfully.',
                 'data' => $response
             ]);
 
@@ -159,6 +155,7 @@ class HomeEmployeeController extends Controller
             ], 500);
         }
     }
+
 
 
     public function lastLeaveAddition()
