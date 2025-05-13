@@ -95,39 +95,44 @@ class HomeEmployeeController extends Controller
     public function leaveBalance()
     {
         try {
-            $userId = Auth::id();
+            $user = Auth::user();
+            $userId = $user->id;
             $currentYear = now()->year;
-
-            $customTypes = ['personal_leave', 'other'];
-            $fixedTypes = ['sick_leave', 'maternity_leave', 'paternity_leave'];
 
             $response = [];
 
-            $customBalances = LeavesBalance::where('user_id', $userId)->get();
+            // === Traitement pour "personal_leave" combiné avec "other"
+            $customTypes = ['personal_leave', 'other'];
 
-            foreach ($customTypes as $type) {
-                $balance = $customBalances->firstWhere('leave_type', $type);
-                $limit = $balance ? $balance->leave_day_limit : 0;
+            $customBalance = LeavesBalance::where('user_id', $userId)
+                ->sum('leave_day_limit');
 
-                $used = Leave::where('user_id', $userId)
-                    ->where('leave_type', $type)
-                    ->where('status', 'approved')
-                    ->whereYear('start_date', $currentYear)
-                    ->sum('effective_leave_days');
+            $customUsed = Leave::where('user_id', $userId)
+                ->whereIn('leave_type', $customTypes)
+                ->where('status', 'approved')
+                ->whereYear('start_date', $currentYear)
+                ->sum('effective_leave_days');
 
-                $remaining = max($limit - $used, 0);
+            $customRemaining = $customBalance - $customUsed;
 
-                $response[] = [
-                    'leave_type' => $type,
-                    'remaining' => $remaining
-                ];
+            $response[] = [
+                'leave_type' => 'personal_leave',
+                'remaining' => round($customRemaining, 2)
+            ];
+
+            // === Traitement des types fixes selon le genre
+            $fixedTypes = ['sick_leave'];
+
+            if ($user->gender === 'male') {
+                $fixedTypes[] = 'paternity_leave';
+            } elseif ($user->gender === 'female') {
+                $fixedTypes[] = 'maternity_leave';
             }
 
             $fixedLeaves = FixedLeaves::whereIn('leave_type', $fixedTypes)->get();
 
             foreach ($fixedTypes as $type) {
-                $fixed = $fixedLeaves->firstWhere('leave_type', $type);
-                $limit = $fixed ? $fixed->max_days : 0;
+                $limit = optional($fixedLeaves->firstWhere('leave_type', $type))->max_days ?? 0;
 
                 $used = Leave::where('user_id', $userId)
                     ->where('leave_type', $type)
@@ -135,11 +140,11 @@ class HomeEmployeeController extends Controller
                     ->whereYear('start_date', $currentYear)
                     ->sum('effective_leave_days');
 
-                $remaining = max($limit - $used, 0);
+                $remaining = $limit - $used;
 
                 $response[] = [
                     'leave_type' => $type,
-                    'remaining' => $remaining
+                    'remaining' => round($remaining, 2)
                 ];
             }
 

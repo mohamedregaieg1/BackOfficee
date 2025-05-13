@@ -51,7 +51,7 @@ class InvoiceController extends Controller
                 ->count() + 1;
 
             $incrementFormatted = str_pad($increment, 5, '0', STR_PAD_LEFT);
-            $finalNumber = "{$request->number}/{$incrementFormatted}";
+            $finalNumber = "{$request->number}-{$incrementFormatted}";
             $data = $validated->validated();
             $data['number'] = $finalNumber;
 
@@ -184,22 +184,23 @@ class InvoiceController extends Controller
                         $data = [
                             'client_id' => $existingClient->id,
                             'name' => $existingClient->name,
-                            'client_type' => $request->client_type,
+                            'client_type' => $existingClient->client_type,
                             'address' => $existingClient->address,
                             'postal_code' => $existingClient->postal_code,
-                            'rib_bank' => $existingClient->rib_bank ?? null,
+                            'rib_bank' => $existingClient->rib_bank,
                             'country' => $existingClient->country,
-                            'email' => $existingClient->email ?? null,
+                            'email' => $existingClient->email,
                             'phone_number' => $existingClient->phone_number,
                         ];
                     } else {
                         return response()->json(['error' => 'Client not found'], 404);
                     }
                 } else {
+                    // Nouveau client individuel (non enregistré ici, juste mis en cookie)
                     $name = $request->civility . ' ' . $request->first_name . ' ' . $request->last_name;
                     $data = [
                         'name' => $name,
-                        'client_type' => $request->client_type,
+                        'client_type' => 'individual',
                         'address' => $request->address,
                         'postal_code' => $request->postal_code,
                         'rib_bank' => $request->rib_bank,
@@ -212,19 +213,41 @@ class InvoiceController extends Controller
 
             // === Cas PROFESSIONAL ===
             if ($request->client_type === 'professional') {
-                $data = [
-                    'name' => $request->name,
-                    'client_type' => $request->client_type,
-                    'tva_number_client' => $request->tva_number_client ?? null,
-                    'address' => $request->address,
-                    'postal_code' => $request->postal_code,
-                    'rib_bank' => $request->rib_bank ?? null,
-                    'country' => $request->country,
-                    'email' => $request->email,
-                    'phone_number' => $request->phone_number,
-                ];
+                $existingClient = Client::where('client_type', 'professional')
+                    ->where('name', $request->name)
+                    ->where('email', $request->email)
+                    ->first();
+
+                if ($existingClient) {
+                    $data = [
+                        'client_id' => $existingClient->id,
+                        'name' => $existingClient->name,
+                        'client_type' => $existingClient->client_type,
+                        'tva_number_client' => $existingClient->tva_number_client,
+                        'address' => $existingClient->address,
+                        'postal_code' => $existingClient->postal_code,
+                        'rib_bank' => $existingClient->rib_bank,
+                        'country' => $existingClient->country,
+                        'email' => $existingClient->email,
+                        'phone_number' => $existingClient->phone_number,
+                    ];
+                } else {
+                    // Sinon, utilise les données du formulaire (non enregistrées pour le moment)
+                    $data = [
+                        'name' => $request->name,
+                        'client_type' => 'professional',
+                        'tva_number_client' => $request->tva_number_client,
+                        'address' => $request->address,
+                        'postal_code' => $request->postal_code,
+                        'rib_bank' => $request->rib_bank,
+                        'country' => $request->country,
+                        'email' => $request->email,
+                        'phone_number' => $request->phone_number,
+                    ];
+                }
             }
 
+            // Stocker dans le cookie
             $cookie = cookie('invoice_step2', json_encode($data), 120);
 
             if (!$request->cookie('invoice_step1')) {
@@ -235,6 +258,7 @@ class InvoiceController extends Controller
                 'message' => 'Step 2 completed successfully',
                 'data' => $data
             ])->cookie($cookie);
+
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {
@@ -244,8 +268,6 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
-
-
     public function stepThree(Request $request)
     {
         try {
@@ -265,13 +287,20 @@ class InvoiceController extends Controller
                 'payment_mode' => 'nullable|in:bank transfer,credit card,cash,paypal,cheque,other',
                 'due_date' => 'nullable|string',
                 'payment_status' => 'nullable|in:paid,partially paid,unpaid',
-                'amount_paid' => 'nullable|numeric',
+                'amount_paid' => 'nullable|numeric|min:0',
             ])->validate();
 
-            $unpaidAmount = null;
-            if ($request->payment_status === 'partially paid') {
-                $unpaidAmount = $request->TTotal_TTC - ($request->amount_paid ?? 0);
-                $validated['unpaid_amount'] = $unpaidAmount;
+            $paymentStatus = $request->payment_status;
+            $amountPaid = $request->amount_paid ?? 0;
+
+            if ($paymentStatus === 'partially paid') {
+                $validated['unpaid_amount'] = $request->TTotal_TTC - $amountPaid;
+            } elseif ($paymentStatus === 'unpaid') {
+                $validated['amount_paid'] = 0;
+                $validated['unpaid_amount'] = $request->TTotal_TTC;
+            } elseif ($paymentStatus === 'paid') {
+                $validated['amount_paid'] = $request->TTotal_TTC;
+                $validated['unpaid_amount'] = 0;
             }
 
             // Enregistrer les données dans un cookie
@@ -297,6 +326,7 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
+
     // mateb3th chy fi function store
     public function store(Request $request)
     {
@@ -346,15 +376,24 @@ class InvoiceController extends Controller
                     'company_id' => $data['company_id']
                 ]);
             }
-            $unpaidAmount = null;
+
+            // Gérer les montants selon le statut de paiement
+            $amountPaid = $data['amount_paid'] ?? 0;
+            $unpaidAmount = 0;
+
             if ($data['payment_status'] === 'partially paid') {
-                $unpaidAmount = $data['TTotal_TTC'] - ($data['amount_paid'] ?? 0);
+                $unpaidAmount = $data['TTotal_TTC'] - $amountPaid;
+            } elseif ($data['payment_status'] === 'unpaid') {
+                $amountPaid = 0;
+                $unpaidAmount = $data['TTotal_TTC'];
             }
+
             $invoice = Invoice::create(array_merge($data, [
                 'client_id' => $client->id,
                 'total_ht' => $data['TTotal_HT'],
                 'total_tva' => $data['TTotal_TVA'],
                 'total_ttc' => $data['TTotal_TTC'],
+                'amount_paid' => $amountPaid,
                 'unpaid_amount' => $unpaidAmount,
             ]));
 

@@ -196,7 +196,7 @@ class ViewLeaveController extends Controller
                     'attachment_path' => $leave->attachment_path ? asset($leave->attachment_path) : null,
                 ];
 
-                if ($leave->leave_type === 'personal_leave') {
+                if ($leave->leave_type === 'other') {
                     $leaveData['other_type'] = $leave->other_type;
                 }
 

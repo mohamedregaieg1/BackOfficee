@@ -44,6 +44,7 @@ class DashboardController extends Controller
 
         $leavesToday = Leave::whereDate('start_date', '<=', $today)
             ->whereDate('end_date', '>=', $today)
+            ->where('status', 'approved')
             ->with('user:id,first_name,last_name')
             ->get()
             ->map(function ($leave) {

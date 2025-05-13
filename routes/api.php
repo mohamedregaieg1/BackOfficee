@@ -98,7 +98,6 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::get('/employee/home/leave-balance', [HomeEmployeeController::class, 'leaveBalance']);
     Route::get('/employee/home/last-leave-addition', [HomeEmployeeController::class, 'lastLeaveAddition']);
     Route::get('/employee/home/calendar', [HomeEmployeeController::class, 'getCalendarData']);
-    Route::get('/employee/home/holidays/upcoming', [HomeEmployeeController::class, 'upcomingPublicHolidays']);
 
 
 
@@ -141,6 +140,8 @@ Route::middleware(['auth:api', 'role:employee,hr,admin,accountant'])->group(func
     Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
     //home pour admin et employe :
     Route::get('home/user/info', [HomeEmployeeController::class, 'getAuthenticatedUserInfo']);
+    Route::get('/employee/home/holidays/upcoming', [HomeEmployeeController::class, 'upcomingPublicHolidays']);
+
 
 
 });

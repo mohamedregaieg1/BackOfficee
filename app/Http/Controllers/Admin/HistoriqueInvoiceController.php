@@ -216,26 +216,42 @@ class HistoriqueInvoiceController extends Controller
     private function createAvoirAndUpdatedInvoiceForMultiple(Invoice $originalInvoice, array $servicesData, Request $request)
     {
         $now = now();
+
         $avoirInvoice = $originalInvoice->replicate();
-        $avoirInvoice->number = $this->generateUniqueInvoiceNumber('facture_avoir', now());
+        $avoirInvoice->number = $this->generateUniqueInvoiceNumber('facture_avoir', $now);
         $avoirInvoice->type = 'facture_avoir';
         $avoirInvoice->creation_date = $now;
         $avoirInvoice->total_ht = -$originalInvoice->total_ht;
         $avoirInvoice->total_tva = -$originalInvoice->total_tva;
         $avoirInvoice->total_ttc = -$originalInvoice->total_ttc;
         $avoirInvoice->original_invoice_id = $originalInvoice->id;
+        $avoirInvoice->unpaid_amount = null;
         $avoirInvoice->save();
 
         $newInvoice = $originalInvoice->replicate();
-        $newInvoice->number = $this->generateUniqueInvoiceNumber('facture', now());
+        $newInvoice->number = $this->generateUniqueInvoiceNumber('facture', $now);
         $newInvoice->type = 'facture';
         $newInvoice->creation_date = $now;
         $newInvoice->total_ht = $request->input('TTotal_HT');
         $newInvoice->total_tva = $request->input('TTotal_TVA');
         $newInvoice->total_ttc = $request->input('TTotal_TTC');
         $newInvoice->original_invoice_id = $originalInvoice->id;
+        $newInvoice->amount_paid = $originalInvoice->amount_paid;
+        $newInvoice->unpaid_amount = $newInvoice->total_ttc - $newInvoice->amount_paid;
+
+        // Statut de paiement
+        if ($newInvoice->amount_paid == 0) {
+            $newInvoice->payment_status = 'unpaid';
+        } elseif ($newInvoice->amount_paid < $newInvoice->total_ttc) {
+            $newInvoice->payment_status = 'partially paid';
+        } else {
+            $newInvoice->payment_status = 'paid';
+            $newInvoice->unpaid_amount = $newInvoice->total_ttc - $newInvoice->amount_paid;
+        }
+
         $newInvoice->save();
 
+        // Création des services AV et des services mis à jour
         foreach ($servicesData as $serviceData) {
             $originalService = Service::findOrFail($serviceData['id']);
 
@@ -255,12 +271,14 @@ class HistoriqueInvoiceController extends Controller
                     $newService->$field = $serviceData[$field];
                 }
             }
+
             $newService->save();
         }
 
-
         return [$avoirInvoice, $newInvoice];
     }
+
+
     private function updateDevisAndServices(Invoice $invoice, array $servicesData, Request $request)
     {
         foreach ($servicesData as $serviceData) {
@@ -336,7 +354,9 @@ class HistoriqueInvoiceController extends Controller
         $avpInvoice->total_tva = $request->input('total_tva');
         $avpInvoice->total_ttc = $request->input('total_ttc');
         $avpInvoice->original_invoice_id = $originalInvoice->id;
+        $avpInvoice->unpaid_amount = null;
         $avpInvoice->save();
+
         foreach ($services as $service) {
             $avpService = $service->replicate();
             $avpService->invoice_id = $avpInvoice->id;
@@ -347,8 +367,25 @@ class HistoriqueInvoiceController extends Controller
             $avpService->save();
         }
 
+        $originalInvoice->total_ht -= $request->input('total_ht');
+        $originalInvoice->total_tva -= $request->input('total_tva');
+        $originalInvoice->total_ttc -= $request->input('total_ttc');
+        $originalInvoice->unpaid_amount = $originalInvoice->total_ttc - $originalInvoice->amount_paid;
+
+        if ($originalInvoice->amount_paid == 0) {
+            $originalInvoice->payment_status = 'unpaid';
+        } elseif ($originalInvoice->amount_paid < $originalInvoice->total_ttc) {
+            $originalInvoice->payment_status = 'partially paid';
+        } else {
+            $originalInvoice->payment_status = 'paid';
+            $originalInvoice->unpaid_amount = $originalInvoice->total_ttc - $originalInvoice->amount_paid;
+        }
+
+
+        $originalInvoice->save();
+
         return response()->json([
-            'message' => 'AVP invoice created successfully.',
+            'message' => 'AVP invoice created and original invoice updated successfully.',
             'invoice' => $avpInvoice,
         ], 201);
     }
