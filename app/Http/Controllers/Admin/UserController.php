@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -9,54 +10,61 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
-
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $search = trim($request->input('search'));
-        $query = User::where('role', '!=', 'admin');
-        if (!empty($search)) {
-            if (str_contains($search, ' ')) {
-                [$firstName, $lastName] = explode(' ', $search, 2);
-                $query->where('first_name', 'LIKE', "%$firstName%")
-                    ->where('last_name', 'LIKE', "%$lastName%");
-            } else {
-                $query->where(function ($q) use ($search) {
-                    $q->where('first_name', 'LIKE', "%$search%")
-                        ->orWhere('last_name', 'LIKE', "%$search%");
-                });
+        try {
+            $search = trim($request->input('search'));
+            $query = User::where('role', '!=', 'admin');
+            if (!empty($search)) {
+                if (str_contains($search, ' ')) {
+                    [$firstName, $lastName] = explode(' ', $search, 2);
+                    $query->where('first_name', 'LIKE', "%$firstName%")
+                        ->where('last_name', 'LIKE', "%$lastName%");
+                } else {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('first_name', 'LIKE', "%$search%")
+                            ->orWhere('last_name', 'LIKE', "%$search%");
+                    });
+                }
             }
+
+            $users = $query->select('id', 'first_name', 'last_name', 'email', 'phone', 'company', 'role', 'start_date', 'avatar_path', 'job_description')
+                ->orderBy('first_name', 'asc')
+                ->paginate(6);
+
+            return response()->json([
+                'success' => true,
+                'data' => $users->makeHidden('avatar_path')->map(function ($user) {
+                    return [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'company' => $user->company,
+                        'role' => $user->role,
+                        'start_date' => $user->start_date->format('Y-m-d'),
+                        'job_description' => $user->job_description,
+                        'avatar_path' => $user->avatar_path,
+                    ];
+                }),
+                'meta' => [
+                    'current_page' => $users->currentPage(),
+                    'per_page' => $users->perPage(),
+                    'total_pages' => $users->lastPage(),
+                    'total_employees' => $users->total(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur inattendue est survenue.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
-
-        $users = $query->select('id', 'first_name', 'last_name', 'email', 'phone', 'company', 'role', 'start_date', 'avatar_path', 'job_description')
-            ->orderBy('first_name', 'asc')
-            ->paginate(6);
-
-        return response()->json([
-            'data' => $users->makeHidden('avatar_path')->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'company' => $user->company,
-                    'role' => $user->role,
-                    'start_date' => $user->start_date->format('Y-m-d'),
-                    'job_description' => $user->job_description,
-                    'avatar_path' => $user->avatar_path,
-                ];
-            }),
-            'meta' => [
-                'current_page' => $users->currentPage(),
-                'per_page' => $users->perPage(),
-                'total_pages' => $users->lastPage(),
-                'total_employees' => $users->total(),
-            ],
-        ]);
     }
-
 
     public function store(Request $request)
     {
@@ -111,14 +119,21 @@ class UserController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'User created successfully!'
+                'success' => true,
+                'message' => 'Utilisateur créé avec succès.',
             ], 201);
 
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
+        } catch (ValidationException $ve) {
+            $messages = collect($ve->errors())->flatten()->implode(' ');
+
+            return response()->json([
+                'success' => false,
+                'message' => $messages,
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'Une erreur inattendue est survenue.',
                 'details' => $e->getMessage(),
             ], 500);
         }
@@ -129,22 +144,25 @@ class UserController extends Controller
         try {
             $user = User::where('id', $id)->lockForUpdate()->firstOrFail();
 
-            $validated = $request->validate([
-                'job_description' => 'required|string|max:15',
-                'company' => 'required|in:adequate,procan',
-                'role' => 'required|in:employee,hr,accountant',
-                'email' => 'required|email|unique:users,email,' . $id,
-                'phone' => 'nullable|digits:8',
-            ], [
-                'job_description.required' => 'The job description is required.',
-                'job_description.max' => 'The job description must not exceed 20 characters.',
-                'company.required' => 'The company is required.',
-                'role.required' => 'The role is required.',
-                'email.required' => 'The email is required.',
-                'email.email' => 'The email must be a valid email address.',
-                'email.unique' => 'This email is already in use.',
-                'phone.digits' => 'The phone number must be exactly 8 digits.',
-            ]);
+            $validated = $request->validate(
+                [
+                    'job_description' => 'required|string|max:20',
+                    'company' => 'required|in:adequate,procan',
+                    'role' => 'required|in:employee,hr,accountant',
+                    'email' => 'required|email|unique:users,email,' . $id,
+                    'phone' => 'nullable|digits:8',
+                ],
+                [
+                    'job_description.required' => 'The job description is required.',
+                    'job_description.max' => 'The job description must not exceed 20 characters.',
+                    'company.required' => 'The company is required.',
+                    'role.required' => 'The role is required.',
+                    'email.required' => 'The email is required.',
+                    'email.email' => 'The email must be a valid email address.',
+                    'email.unique' => 'This email is already in use.',
+                    'phone.digits' => 'The phone number must be exactly 8 digits.',
+                ]
+            );
 
             $user->update([
                 'job_description' => $validated['job_description'],
@@ -155,14 +173,21 @@ class UserController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'User updated successfully!'
+                'success' => true,
+                'message' => 'Utilisateur mis à jour avec succès.',
             ]);
 
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
+        } catch (ValidationException $ve) {
+            $messages = collect($ve->errors())->flatten()->implode(' ');
+
+            return response()->json([
+                'success' => false,
+                'message' => $messages,
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'Une erreur inattendue est survenue.',
                 'details' => $e->getMessage(),
             ], 500);
         }
@@ -172,15 +197,16 @@ class UserController extends Controller
     {
         try {
             $user = User::where('id', $id)->lockForUpdate()->firstOrFail();
-
             $user->delete();
 
             return response()->json([
-                'message' => 'User successfully deleted!',
+                'success' => true,
+                'message' => 'Utilisateur supprimé avec succès.',
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error has occurred.',
+                'success' => false,
+                'message' => 'Une erreur inattendue est survenue.',
                 'details' => $e->getMessage(),
             ], 500);
         }

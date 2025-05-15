@@ -137,6 +137,7 @@ class DashboardController extends Controller
                 ->selectRaw('SUM(effective_leave_days) as total_days')
                 ->groupBy('user_id')
                 ->orderByDesc('total_days')
+                ->take(10)
                 ->get();
 
             $approvedLeavesWithNames = $approvedLeaves->map(function ($item) {
@@ -165,22 +166,24 @@ class DashboardController extends Controller
     //Comparer les tendances des demandes de congés qui approved entre différentes années. : Graphe linéaire avec plusieurs courbes
     public function compareApprovedLeavesByYear()
     {
-        $years = Leave::where('status', 'approved')
-            ->selectRaw('YEAR(start_date) as year')
-            ->distinct()
-            ->orderBy('year', 'asc')
-            ->pluck('year');
+        $currentYear = now()->year;
+        $years = [
+            $currentYear - 1, // Année passée
+            $currentYear,     // Année en cours
+            $currentYear + 1, // Année future
+        ];
 
         $leaveData = [];
+
         foreach ($years as $year) {
             $monthlyData = Leave::where('status', 'approved')
                 ->whereYear('start_date', $year)
-                ->selectRaw('MONTH(start_date) as month')
-                ->selectRaw('COUNT(*) as count')
+                ->selectRaw('MONTH(start_date) as month, COUNT(*) as count')
                 ->groupBy('month')
                 ->orderBy('month', 'asc')
                 ->get()
                 ->keyBy('month');
+
             $monthlyCounts = [];
             for ($month = 1; $month <= 12; $month++) {
                 $monthlyCounts[$month] = $monthlyData->has($month) ? $monthlyData[$month]['count'] : 0;
@@ -192,8 +195,10 @@ class DashboardController extends Controller
                 'total_count' => array_sum($monthlyCounts),
             ];
         }
+
         return response()->json([
             'approved_leave_comparison_by_year' => $leaveData,
         ]);
     }
+
 }

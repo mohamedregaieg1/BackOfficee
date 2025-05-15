@@ -13085,3 +13085,557 @@ Did you mean one of these?
 [2025-05-13 20:57:36] local.DEBUG: Step 1 Cookie Data: {"type":"facture","creation_date":"2025-05-14","additional_date_type":null,"additional_date":null,"company_name":"Procan","number":"F-202505-00001","company":{"id":1,"name":"Procan","image_path":null,"tva_number":null,"address":null,"postal_code":null,"country":"Tunisia","rib_bank":null,"email":null,"website":null,"phone_number":null,"created_at":"2025-05-12T15:49:43.000000Z","updated_at":"2025-05-12T15:49:43.000000Z"}} 
 [2025-05-13 20:57:36] local.DEBUG: Step 2 Cookie Data: {"client_id":11,"name":"mohamed","client_type":"professional","tva_number_client":19,"address":"gremda","postal_code":"3032","rib_bank":"1234567789","country":"Tunisia","email":"mohamedregaieg@gmail.com","phone_number":"12345678"} 
 [2025-05-13 20:57:36] local.DEBUG: Step 3 Cookie Data: {"TTotal_HT":300,"TTotal_TVA":30,"TTotal_TTC":330,"payment_mode":null,"due_date":null,"payment_status":"unpaid","amount_paid":0,"services":[{"name":"test","quantity":1,"unit":null,"price_ht":100,"tva":10,"total_ht":100,"total_ttc":110,"comment":null},{"name":"test2","quantity":1,"unit":"hours","price_ht":200,"tva":10,"total_ht":200,"total_ttc":220,"comment":null}],"unpaid_amount":330} 
+[2025-05-14 16:54:47] local.ERROR: Symfony\Component\Mime\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\Component\Mime\Part\AbstractPart, string given, called in C:\Users\MSI\OneDrive\Documents\GitHub\BackOfficee\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php on line 23 {"exception":"[object] (TypeError(code: 0): Symfony\\Component\\Mime\\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\\Component\\Mime\\Part\\AbstractPart, string given, called in C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php on line 23 at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\mime\\Message.php:45)
+[stacktrace]
+#0 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(23): Symfony\\Component\\Mime\\Message->setBody('\\n<html>\\n<head>\\n...', 'text/html')
+#1 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(52): Illuminate\\Mail\\Message->forwardCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#2 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Message.php(411): Illuminate\\Mail\\Message->forwardDecoratedCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#3 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(181): Illuminate\\Mail\\Message->__call('setBody', Array)
+#4 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php(316): App\\Http\\Controllers\\Authentificate\\PasswordResetController->App\\Http\\Controllers\\Authentificate\\{closure}(Object(Illuminate\\Mail\\Message))
+#5 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\MailManager.php(622): Illuminate\\Mail\\Mailer->send(NULL, Array, Object(Closure))
+#6 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Facades\\Facade.php(361): Illuminate\\Mail\\MailManager->__call('send', Array)
+#7 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(178): Illuminate\\Support\\Facades\\Facade::__callStatic('send', Array)
+#8 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Controller.php(54): App\\Http\\Controllers\\Authentificate\\PasswordResetController->sendResetLink(Object(Illuminate\\Http\\Request))
+#9 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php(44): Illuminate\\Routing\\Controller->callAction('sendResetLink', Array)
+#10 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Authentificate\\PasswordResetController), 'sendResetLink')
+#11 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(212): Illuminate\\Routing\\Route->runController()
+#12 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(808): Illuminate\\Routing\\Route->run()
+#13 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#14 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Middleware\\SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#15 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#16 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#17 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#18 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#19 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#20 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#21 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(210): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#22 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#23 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#24 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#26 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#29 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#30 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#31 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#32 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#33 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#34 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#35 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#36 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#37 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#38 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#39 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(185): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#41 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(154): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#42 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1216): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#43 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\public\\index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#44 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('C:\\\\Users\\\\MSI\\\\On...')
+#45 {main}
+"} 
+[2025-05-14 16:55:06] local.ERROR: Symfony\Component\Mime\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\Component\Mime\Part\AbstractPart, string given, called in C:\Users\MSI\OneDrive\Documents\GitHub\BackOfficee\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php on line 23 {"exception":"[object] (TypeError(code: 0): Symfony\\Component\\Mime\\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\\Component\\Mime\\Part\\AbstractPart, string given, called in C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php on line 23 at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\mime\\Message.php:45)
+[stacktrace]
+#0 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(23): Symfony\\Component\\Mime\\Message->setBody('\\n<html>\\n<head>\\n...', 'text/html')
+#1 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(52): Illuminate\\Mail\\Message->forwardCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#2 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Message.php(411): Illuminate\\Mail\\Message->forwardDecoratedCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#3 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(181): Illuminate\\Mail\\Message->__call('setBody', Array)
+#4 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php(316): App\\Http\\Controllers\\Authentificate\\PasswordResetController->App\\Http\\Controllers\\Authentificate\\{closure}(Object(Illuminate\\Mail\\Message))
+#5 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\MailManager.php(622): Illuminate\\Mail\\Mailer->send(NULL, Array, Object(Closure))
+#6 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Facades\\Facade.php(361): Illuminate\\Mail\\MailManager->__call('send', Array)
+#7 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(178): Illuminate\\Support\\Facades\\Facade::__callStatic('send', Array)
+#8 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Controller.php(54): App\\Http\\Controllers\\Authentificate\\PasswordResetController->sendResetLink(Object(Illuminate\\Http\\Request))
+#9 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php(44): Illuminate\\Routing\\Controller->callAction('sendResetLink', Array)
+#10 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Authentificate\\PasswordResetController), 'sendResetLink')
+#11 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(212): Illuminate\\Routing\\Route->runController()
+#12 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(808): Illuminate\\Routing\\Route->run()
+#13 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#14 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Middleware\\SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#15 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#16 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#17 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#18 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#19 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#20 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#21 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(210): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#22 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#23 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#24 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#26 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#29 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#30 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#31 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#32 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#33 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#34 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#35 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#36 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#37 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#38 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#39 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(185): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#41 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(154): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#42 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1216): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#43 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\public\\index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#44 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('C:\\\\Users\\\\MSI\\\\On...')
+#45 {main}
+"} 
+[2025-05-14 16:56:29] local.ERROR: Symfony\Component\Mime\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\Component\Mime\Part\AbstractPart, string given, called in C:\Users\MSI\OneDrive\Documents\GitHub\BackOfficee\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php on line 23 {"exception":"[object] (TypeError(code: 0): Symfony\\Component\\Mime\\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\\Component\\Mime\\Part\\AbstractPart, string given, called in C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php on line 23 at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\mime\\Message.php:45)
+[stacktrace]
+#0 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(23): Symfony\\Component\\Mime\\Message->setBody('\\n<html>\\n<head>\\n...', 'text/html')
+#1 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(52): Illuminate\\Mail\\Message->forwardCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#2 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Message.php(411): Illuminate\\Mail\\Message->forwardDecoratedCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#3 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(181): Illuminate\\Mail\\Message->__call('setBody', Array)
+#4 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php(316): App\\Http\\Controllers\\Authentificate\\PasswordResetController->App\\Http\\Controllers\\Authentificate\\{closure}(Object(Illuminate\\Mail\\Message))
+#5 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\MailManager.php(622): Illuminate\\Mail\\Mailer->send(NULL, Array, Object(Closure))
+#6 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Facades\\Facade.php(361): Illuminate\\Mail\\MailManager->__call('send', Array)
+#7 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(178): Illuminate\\Support\\Facades\\Facade::__callStatic('send', Array)
+#8 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Controller.php(54): App\\Http\\Controllers\\Authentificate\\PasswordResetController->sendResetLink(Object(Illuminate\\Http\\Request))
+#9 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php(44): Illuminate\\Routing\\Controller->callAction('sendResetLink', Array)
+#10 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Authentificate\\PasswordResetController), 'sendResetLink')
+#11 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(212): Illuminate\\Routing\\Route->runController()
+#12 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(808): Illuminate\\Routing\\Route->run()
+#13 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#14 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Middleware\\SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#15 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#16 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#17 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#18 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#19 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#20 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#21 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(210): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#22 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#23 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#24 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#26 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#29 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#30 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#31 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#32 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#33 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#34 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#35 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#36 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#37 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#38 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#39 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(185): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#41 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(154): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#42 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1216): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#43 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\public\\index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#44 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('C:\\\\Users\\\\MSI\\\\On...')
+#45 {main}
+"} 
+[2025-05-14 16:57:05] local.ERROR: Symfony\Component\Mime\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\Component\Mime\Part\AbstractPart, string given, called in C:\Users\MSI\OneDrive\Documents\GitHub\BackOfficee\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php on line 23 {"exception":"[object] (TypeError(code: 0): Symfony\\Component\\Mime\\Message::setBody(): Argument #1 ($body) must be of type ?Symfony\\Component\\Mime\\Part\\AbstractPart, string given, called in C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php on line 23 at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\mime\\Message.php:45)
+[stacktrace]
+#0 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(23): Symfony\\Component\\Mime\\Message->setBody('\\n<html>\\n<head>\\n...', 'text/html')
+#1 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Traits\\ForwardsCalls.php(52): Illuminate\\Mail\\Message->forwardCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#2 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Message.php(411): Illuminate\\Mail\\Message->forwardDecoratedCallTo(Object(Symfony\\Component\\Mime\\Email), 'setBody', Array)
+#3 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(181): Illuminate\\Mail\\Message->__call('setBody', Array)
+#4 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php(316): App\\Http\\Controllers\\Authentificate\\PasswordResetController->App\\Http\\Controllers\\Authentificate\\{closure}(Object(Illuminate\\Mail\\Message))
+#5 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\MailManager.php(622): Illuminate\\Mail\\Mailer->send(NULL, Array, Object(Closure))
+#6 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Facades\\Facade.php(361): Illuminate\\Mail\\MailManager->__call('send', Array)
+#7 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(178): Illuminate\\Support\\Facades\\Facade::__callStatic('send', Array)
+#8 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Controller.php(54): App\\Http\\Controllers\\Authentificate\\PasswordResetController->sendResetLink(Object(Illuminate\\Http\\Request))
+#9 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php(44): Illuminate\\Routing\\Controller->callAction('sendResetLink', Array)
+#10 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Authentificate\\PasswordResetController), 'sendResetLink')
+#11 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(212): Illuminate\\Routing\\Route->runController()
+#12 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(808): Illuminate\\Routing\\Route->run()
+#13 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#14 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Middleware\\SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#15 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#16 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#17 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#18 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#19 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#20 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#21 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(210): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#22 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#23 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#24 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#26 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#27 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#28 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#29 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#30 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#31 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#32 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#33 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#34 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#35 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#36 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#37 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#38 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#39 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(185): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#41 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(154): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#42 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1216): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#43 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\public\\index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#44 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('C:\\\\Users\\\\MSI\\\\On...')
+#45 {main}
+"} 
+[2025-05-14 17:01:20] local.ERROR: Invalid view. {"exception":"[object] (InvalidArgumentException(code: 0): Invalid view. at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php:404)
+[stacktrace]
+#0 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php(309): Illuminate\\Mail\\Mailer->parseView(Object(Symfony\\Component\\Mime\\Email))
+#1 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\MailManager.php(622): Illuminate\\Mail\\Mailer->send(Object(Symfony\\Component\\Mime\\Email))
+#2 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Facades\\Facade.php(361): Illuminate\\Mail\\MailManager->__call('send', Array)
+#3 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Http\\Controllers\\Authentificate\\PasswordResetController.php(86): Illuminate\\Support\\Facades\\Facade::__callStatic('send', Array)
+#4 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Controller.php(54): App\\Http\\Controllers\\Authentificate\\PasswordResetController->sendResetLink(Object(Illuminate\\Http\\Request))
+#5 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php(44): Illuminate\\Routing\\Controller->callAction('sendResetLink', Array)
+#6 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\Authentificate\\PasswordResetController), 'sendResetLink')
+#7 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php(212): Illuminate\\Routing\\Route->runController()
+#8 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(808): Illuminate\\Routing\\Route->run()
+#9 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
+#10 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Middleware\\SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#11 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#12 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#13 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#14 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
+#15 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
+#16 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
+#17 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(210): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
+#18 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
+#19 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#20 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#21 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#22 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#23 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#24 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#25 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#26 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#27 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#28 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#29 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\HandleCors.php(62): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#30 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#31 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Http\\Middleware\\TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#32 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#33 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#34 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
+#35 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
+#36 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(185): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#37 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(154): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#38 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1216): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#39 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\public\\index.php(17): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
+#40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\resources\\server.php(23): require_once('C:\\\\Users\\\\MSI\\\\On...')
+#41 {main}
+"} 
+[2025-05-14 17:04:49] local.ERROR: Email "
+<html>
+<head>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .email-border {
+            max-width: 650px;
+            margin: 40px auto;
+            border: 2px solid #000000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #333333;
+        }
+        .email-header {
+            background-color: #1e40af;
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .highlight {
+            color: #1e40af;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            background: transparent;
+            color: #007BFF;
+            padding: 12px 28px;
+            border: 2px solid #007BFF;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button:hover {
+            background: #007BFF;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .info-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 15px;
+            color: #444;
+        }
+        .icon {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Outer Border -->
+    <div class='email-border'>
+        <!-- Email Container -->
+        <div class='email-container'>
+            <!-- Header -->
+            <div class='email-header'>
+                PROCAN | Password Reset Request
+            </div>
+
+            <!-- Content -->
+            <h2>Password Reset Request</h2>
+            <p> Hello,</p>
+            <p>We received a request to reset the password for your account.</p>
+            <p>If you did not request this, please ignore this email.</p>
+
+            <!-- Action Button -->
+            <p>To reset your password, click the button below:</p>
+            <center><a href='http://localhost:4200/#/reset-password?token=xHY9XeX5eICUJlhORhzOUSR5XAhLgwsh13xqxCiQXc38OFDqfdomYMtxtTW9' class='button'>Reset Your Password</a></center>
+
+            <!-- Additional Information -->
+            <div class='info-section'>
+                <p><img src='https://img.icons8.com/ios-glyphs/30/time-span.png' class='icon' /> This link will expire in <strong class='highlight'>60 minutes</strong>.</p>
+                <p><img src='https://img.icons8.com/ios-glyphs/30/help.png' class='icon' /> If you have any questions, feel free to contact our support team.</p>
+            </div>
+
+            <!-- Footer -->
+            <p class='footer'>
+                This is an automated message. Please do not reply directly to this email.<br>
+                For any inquiries, contact the HR department at <a href='mailto:info@procan-group.com'>info@procan-group.com</a>.<br>
+                PROCAN HR System © 2025
+            </p>
+        </div>
+    </div>
+</body>
+</html>" does not comply with addr-spec of RFC 2822. {"exception":"[object] (Symfony\\Component\\Mime\\Exception\\RfcComplianceException(code: 0): Email \"
+<html>
+<head>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .email-border {
+            max-width: 650px;
+            margin: 40px auto;
+            border: 2px solid #000000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #333333;
+        }
+        .email-header {
+            background-color: #1e40af;
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .highlight {
+            color: #1e40af;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            background: transparent;
+            color: #007BFF;
+            padding: 12px 28px;
+            border: 2px solid #007BFF;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button:hover {
+            background: #007BFF;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .info-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 15px;
+            color: #444;
+        }
+        .icon {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Outer Border -->
+    <div class='email-border'>
+        <!-- Email Container -->
+        <div class='email-container'>
+            <!-- Header -->
+            <div class='email-header'>
+                PROCAN | Password Reset Request
+            </div>
+
+            <!-- Content -->
+            <h2>Password Reset Request</h2>
+            <p> Hello,</p>
+            <p>We received a request to reset the password for your account.</p>
+            <p>If you did not request this, please ignore this email.</p>
+
+            <!-- Action Button -->
+            <p>To reset your password, click the button below:</p>
+            <center><a href='http://localhost:4200/#/reset-password?token=xHY9XeX5eICUJlhORhzOUSR5XAhLgwsh13xqxCiQXc38OFDqfdomYMtxtTW9' class='button'>Reset Your Password</a></center>
+
+            <!-- Additional Information -->
+            <div class='info-section'>
+                <p><img src='https://img.icons8.com/ios-glyphs/30/time-span.png' class='icon' /> This link will expire in <strong class='highlight'>60 minutes</strong>.</p>
+                <p><img src='https://img.icons8.com/ios-glyphs/30/help.png' class='icon' /> If you have any questions, feel free to contact our support team.</p>
+            </div>
+
+            <!-- Footer -->
+            <p class='footer'>
+                This is an automated message. Please do not reply directly to this email.<br>
+                For any inquiries, contact the HR department at <a href='mailto:info@procan-group.com'>info@procan-group.com</a>.<br>
+                PROCAN HR System © 2025
+            </p>
+        </div>
+    </div>
+</body>
+</html>\" does not comply with addr-spec of RFC 2822. at C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\mime\\Address.php:54)
+[stacktrace]
+#0 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Message.php(247): Symfony\\Component\\Mime\\Address->__construct('\\n<html>\\n<head>\\n...', '')
+#1 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Message.php(111): Illuminate\\Mail\\Message->addAddresses('\\n<html>\\n<head>\\n...', NULL, 'To')
+#2 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Jobs\\SendPasswordResetLinkJob.php(28): Illuminate\\Mail\\Message->to('\\n<html>\\n<head>\\n...')
+#3 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php(316): App\\Jobs\\SendPasswordResetLinkJob->App\\Jobs\\{closure}(Object(Illuminate\\Mail\\Message))
+#4 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\Mailer.php(212): Illuminate\\Mail\\Mailer->send(Object(Illuminate\\Support\\HtmlString), Array, Object(Closure))
+#5 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Mail\\MailManager.php(622): Illuminate\\Mail\\Mailer->html('mohamedregaieg5...', Object(Closure))
+#6 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Support\\Facades\\Facade.php(361): Illuminate\\Mail\\MailManager->__call('html', Array)
+#7 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\app\\Jobs\\SendPasswordResetLinkJob.php(27): Illuminate\\Support\\Facades\\Facade::__callStatic('html', Array)
+#8 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): App\\Jobs\\SendPasswordResetLinkJob->handle()
+#9 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#10 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#11 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#12 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(694): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#13 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Bus\\Dispatcher.php(126): Illuminate\\Container\\Container->call(Array)
+#14 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Bus\\Dispatcher->Illuminate\\Bus\\{closure}(Object(App\\Jobs\\SendPasswordResetLinkJob))
+#15 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(App\\Jobs\\SendPasswordResetLinkJob))
+#16 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Bus\\Dispatcher.php(130): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#17 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\CallQueuedHandler.php(126): Illuminate\\Bus\\Dispatcher->dispatchNow(Object(App\\Jobs\\SendPasswordResetLinkJob), false)
+#18 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(170): Illuminate\\Queue\\CallQueuedHandler->Illuminate\\Queue\\{closure}(Object(App\\Jobs\\SendPasswordResetLinkJob))
+#19 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Pipeline\\Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(App\\Jobs\\SendPasswordResetLinkJob))
+#20 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\CallQueuedHandler.php(121): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
+#21 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\CallQueuedHandler.php(69): Illuminate\\Queue\\CallQueuedHandler->dispatchThroughMiddleware(Object(Illuminate\\Queue\\Jobs\\DatabaseJob), Object(App\\Jobs\\SendPasswordResetLinkJob))
+#22 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\Jobs\\Job.php(102): Illuminate\\Queue\\CallQueuedHandler->call(Object(Illuminate\\Queue\\Jobs\\DatabaseJob), Array)
+#23 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\Worker.php(442): Illuminate\\Queue\\Jobs\\Job->fire()
+#24 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\Worker.php(392): Illuminate\\Queue\\Worker->process('database', Object(Illuminate\\Queue\\Jobs\\DatabaseJob), Object(Illuminate\\Queue\\WorkerOptions))
+#25 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\Worker.php(178): Illuminate\\Queue\\Worker->runJob(Object(Illuminate\\Queue\\Jobs\\DatabaseJob), 'database', Object(Illuminate\\Queue\\WorkerOptions))
+#26 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\Console\\WorkCommand.php(149): Illuminate\\Queue\\Worker->daemon('database', 'default', Object(Illuminate\\Queue\\WorkerOptions))
+#27 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Queue\\Console\\WorkCommand.php(132): Illuminate\\Queue\\Console\\WorkCommand->runWorker('database', 'default')
+#28 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(36): Illuminate\\Queue\\Console\\WorkCommand->handle()
+#29 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Util.php(43): Illuminate\\Container\\BoundMethod::Illuminate\\Container\\{closure}()
+#30 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(95): Illuminate\\Container\\Util::unwrapIfClosure(Object(Closure))
+#31 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod(Object(Illuminate\\Foundation\\Application), Array, Object(Closure))
+#32 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Container\\Container.php(694): Illuminate\\Container\\BoundMethod::call(Object(Illuminate\\Foundation\\Application), Array, Array, NULL)
+#33 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(213): Illuminate\\Container\\Container->call(Array)
+#34 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\console\\Command\\Command.php(279): Illuminate\\Console\\Command->execute(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#35 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Console\\Command.php(182): Symfony\\Component\\Console\\Command\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Illuminate\\Console\\OutputStyle))
+#36 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\console\\Application.php(1094): Illuminate\\Console\\Command->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#37 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\console\\Application.php(342): Symfony\\Component\\Console\\Application->doRunCommand(Object(Illuminate\\Queue\\Console\\WorkCommand), Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#38 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\symfony\\console\\Application.php(193): Symfony\\Component\\Console\\Application->doRun(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#39 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Console\\Kernel.php(198): Symfony\\Component\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#40 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(1231): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
+#41 C:\\Users\\MSI\\OneDrive\\Documents\\GitHub\\BackOfficee\\artisan(13): Illuminate\\Foundation\\Application->handleCommand(Object(Symfony\\Component\\Console\\Input\\ArgvInput))
+#42 {main}
+"} 
+[2025-05-15 17:48:23] local.DEBUG: Step 1 Cookie Data: {"type":"facture","creation_date":"2025-05-15","additional_date_type":"Date of sale","additional_date":"2025-05-16","company_name":"Procan","number":"F-202505-00004","company":{"id":1,"name":"Procan","image_path":null,"tva_number":null,"address":null,"postal_code":null,"country":"Tunisia","rib_bank":null,"email":null,"website":null,"phone_number":null,"created_at":"2025-05-12T15:49:43.000000Z","updated_at":"2025-05-12T15:49:43.000000Z"}} 
+[2025-05-15 17:48:23] local.DEBUG: Step 2 Cookie Data: {"client_id":11,"name":"mohamed","client_type":"professional","tva_number_client":19,"address":"gremda","postal_code":"3032","rib_bank":"1234567789","country":"Tunisia","email":"mohamedregaieg@gmail.com","phone_number":"12345678"} 
+[2025-05-15 17:48:23] local.DEBUG: Step 3 Cookie Data: {"TTotal_HT":12,"TTotal_TVA":1.44,"TTotal_TTC":13.44,"payment_mode":null,"due_date":null,"payment_status":"unpaid","amount_paid":0,"services":[{"name":"test","quantity":1,"unit":null,"price_ht":12,"tva":12,"total_ht":12,"total_ttc":13.44,"comment":null}],"unpaid_amount":13.44} 

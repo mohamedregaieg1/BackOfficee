@@ -140,7 +140,6 @@ Route::middleware(['auth:api', 'role:employee,hr,admin,accountant'])->group(func
     Route::post('/user/profile/update-avatar', [ProfileController::class, 'updateAvatar']);
     //home pour admin et employe :
     Route::get('home/user/info', [HomeEmployeeController::class, 'getAuthenticatedUserInfo']);
-    Route::get('/employee/home/holidays/upcoming', [HomeEmployeeController::class, 'upcomingPublicHolidays']);
 
 
 

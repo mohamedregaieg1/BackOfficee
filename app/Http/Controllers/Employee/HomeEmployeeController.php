@@ -222,7 +222,7 @@ class HomeEmployeeController extends Controller
                         'title' => $holiday->name,
                         'start' => \Carbon\Carbon::parse($holiday->start_date)->format('Y-m-d'),
                         'end' => \Carbon\Carbon::parse($holiday->end_date)->format('Y-m-d'),
-                        'color' => '#FF5733',  // Une couleur spécifique pour les jours fériés
+                        'color' => '#F4C430',  // Une couleur spécifique pour les jours fériés
                     ];
                 });
 
@@ -249,7 +249,7 @@ class HomeEmployeeController extends Controller
     {
         $colors = [
             'paternity_leave' => '#4CAF50',  // Vert pour congé paternité
-            'maternity_leave' => '#FFC107',  // Jaune pour congé maternité
+            'maternity_leave' => '#E91E63',  // Jaune pour congé maternité
             'sick_leave' => '#F44336',       // Rouge pour congé maladie
             'personal_leave' => '#2196F3',   // Bleu pour congé personnel
             'other' => '#9E9E9E',            // Gris pour autre type
