@@ -98,6 +98,8 @@ Route::middleware(['auth:api', 'role:employee,hr'])->group(function () {
     Route::get('/employee/home/leave-balance', [HomeEmployeeController::class, 'leaveBalance']);
     Route::get('/employee/home/last-leave-addition', [HomeEmployeeController::class, 'lastLeaveAddition']);
     Route::get('/employee/home/calendar', [HomeEmployeeController::class, 'getCalendarData']);
+    Route::get('/employee/home/holidays/upcoming', [HomeEmployeeController::class, 'upcomingPublicHolidays']);
+
 
 
 

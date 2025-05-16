@@ -12,22 +12,20 @@ class SendLeaveRequestNotificationJob implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $htmlContent, $userEmail;
+    protected $adminEmail;
+    protected $htmlContent;
 
-    public function __construct($htmlContent, $userEmail)
+    public function __construct($adminEmail, $htmlContent)
     {
+        $this->adminEmail = $adminEmail;
         $this->htmlContent = $htmlContent;
-        $this->userEmail = $userEmail;
     }
 
     public function handle()
     {
-        $adminEmail = env('ADMIN_EMAIL');
-
-        Mail::send([], [], function ($message) use ($adminEmail) {
-            $message->to($adminEmail)
-                ->from(env('MAIL_FROM_ADDRESS'), 'PROCAN HR System')
-                ->replyTo($this->userEmail)
+        Mail::send([], [], function ($message) {
+            $message->to($this->adminEmail)
+                ->from('noreply@procan.com', 'PROCAN HR System')
                 ->subject('New Leave Request Notification')
                 ->html($this->htmlContent);
         });
