@@ -168,9 +168,9 @@ class DashboardController extends Controller
     {
         $currentYear = now()->year;
         $years = [
+            $currentYear -2,
             $currentYear - 1, // Année passée
             $currentYear,     // Année en cours
-            $currentYear + 1, // Année future
         ];
 
         $leaveData = [];

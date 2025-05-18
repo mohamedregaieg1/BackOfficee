@@ -234,7 +234,7 @@
                     <tr>
                         <td><?php echo e($service->name); ?><br><small><?php echo e($service->comment); ?></small></td>
                         <td><?php echo e($service->quantity); ?></td>
-                        <td><?php echo e($service->price_ht); ?></td>
+                        <td><?php echo e($service->total_ht); ?></td>
                         <td><?php echo e($service->tva); ?></td>
                         <td><?php echo e($service->total_ttc); ?></td>
                     </tr>
@@ -246,11 +246,15 @@
             <table style="float: right;">
                 <tr>
                     <td><strong>Price HT :</strong></td>
-                    <td><?php echo e($totalPriceHT); ?> </td>
+                    <td><?php echo e($invoice->total_ht); ?> </td>
+                </tr>
+                <tr>
+                    <td><strong>Price TVA :</strong></td>
+                    <td><?php echo e($invoice->total_tva); ?> </td>
                 </tr>
                 <tr class="total-final">
                     <td><strong>TOTAL :</strong></td>
-                    <td><?php echo e($totalPriceTTC); ?> </td>
+                    <td><?php echo e($invoice->total_ttc); ?> </td>
                 </tr>
             </table>
         </div>
