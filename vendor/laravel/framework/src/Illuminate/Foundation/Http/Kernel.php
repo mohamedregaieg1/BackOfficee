@@ -79,6 +79,8 @@ class Kernel implements KernelContract
      */
     protected $routeMiddleware = [
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'check.token.version' => \App\Http\Middleware\VerifyTokenVersion::class,
+
     ];
 
     /**

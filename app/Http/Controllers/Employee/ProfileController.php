@@ -85,43 +85,44 @@ class ProfileController extends Controller
         }
     }
     public function updateAvatar(Request $request)
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        try {
-            $validated = $request->validate([
-                'avatar_path' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            ], [
-                'avatar_path.image' => 'The file must be an image.',
-                'avatar_path.mimes' => 'Only JPEG, PNG, JPG, and GIF are allowed.',
-                'avatar_path.max' => 'The image must not exceed 2MB.',
-            ]);
+    try {
+        $validated = $request->validate([
+            'avatar_path' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'avatar_path.image' => 'The file must be an image.',
+            'avatar_path.mimes' => 'Only JPEG, PNG, JPG, and GIF are allowed.',
+            'avatar_path.max' => 'The image must not exceed 2MB.',
+        ]);
 
-            if ($request->hasFile('avatar_path')) {
-                if ($user->avatar_path) {
-                    $oldAvatarPath = str_replace('/storage/', 'public/', $user->avatar_path);
-                    Storage::delete($oldAvatarPath);
-                }
-
-                $avatar = $request->file('avatar_path');
-                $avatarName = uniqid() . '_' . $avatar->getClientOriginalName();
-                $path = $avatar->storeAs('avatars', $avatarName, 'public');
-                $user->avatar_path = env('STORAGE') . '/avatars/' . $avatarName;
-                $user->save();
+        if ($request->hasFile('avatar_path')) {
+            if ($user->avatar_path) {
+                $oldAvatarPath = str_replace('/storage/', 'public/', $user->avatar_path);
+                Storage::delete($oldAvatarPath);
             }
 
-            return response()->json([
-                'message' => 'Avatar updated successfully!',
-                'avatar_path' => asset($user->avatar_path),
-            ], 200);
-
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'An unexpected error occurred.',
-                'details' => $e->getMessage()
-            ], 500);
+            $avatar = $request->file('avatar_path');
+            $avatarName = uniqid() . '_' . $avatar->getClientOriginalName();
+            $path = $avatar->storeAs('avatars', $avatarName, 'public');
+            $user->avatar_path = 'storage/avatars/' . $avatarName;
+            $user->save();
         }
+
+        return response()->json([
+            'message' => 'Avatar updated successfully!',
+            'avatar_path' => asset($user->avatar_path),
+        ], 200);
+
+    } catch (\Illuminate\Validation\ValidationException $ve) {
+        return response()->json($ve->errors(), 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'An unexpected error occurred.',
+            'details' => $e->getMessage()
+        ], 500);
     }
+}
+
 }

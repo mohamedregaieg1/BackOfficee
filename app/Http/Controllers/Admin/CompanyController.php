@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Company;
-use Illuminate\Validation\ValidationException;
-use Exception;
 
 class CompanyController extends Controller
 {
@@ -21,38 +19,52 @@ class CompanyController extends Controller
 
             if ($company) {
                 return response()->json([
-                    'id' => $company->id,
-                    'name' => $company->name,
-                    'tva_number' => $company->tva_number,
-                    'address' => $company->address,
-                    'postal_code' => $company->postal_code,
-                    'country' => $company->country,
-                    'rib_bank' => $company->rib_bank,
-                    'email' => $company->email,
-                    'website' => $company->website,
-                    'phone_number' => $company->phone_number,
-                    'image_path' => $company->image_path,
+                    'success' => true,
+                    'message' => 'Company found.',
+                    'data' => [
+                        'id' => $company->id,
+                        'name' => $company->name,
+                        'tva_number' => $company->tva_number,
+                        'address' => $company->address,
+                        'postal_code' => $company->postal_code,
+                        'country' => $company->country,
+                        'rib_bank' => $company->rib_bank,
+                        'email' => $company->email,
+                        'website' => $company->website,
+                        'phone_number' => $company->phone_number,
+                        'image_path' => $company->image_path,
+                    ],
                 ]);
             }
 
+            // Si pas trouvé, on renvoie quand même succès false mais pas d'erreur technique
             return response()->json([
-                'id' => null,
-                'name' => $validated['name'],
-                'tva_number' => null,
-                'address' => null,
-                'postal_code' => null,
-                'country' => null,
-                'rib_bank' => null,
-                'email' => null,
-                'website' => null,
-                'phone_number' => null,
-                'image_path' => null,
+                'success' => false,
+                'message' => 'Company not found.',
+                'data' => [
+                    'id' => null,
+                    'name' => $validated['name'],
+                    'tva_number' => null,
+                    'address' => null,
+                    'postal_code' => null,
+                    'country' => null,
+                    'rib_bank' => null,
+                    'email' => null,
+                    'website' => null,
+                    'phone_number' => null,
+                    'image_path' => null,
+                ],
             ]);
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $ve->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
@@ -73,22 +85,26 @@ class CompanyController extends Controller
             ]);
 
             $logoFileName = $validated['name'] === 'Procan' ? 'logo-procan.webp' : 'logo-Adequate.webp';
-
             $logoUrl = url('/dist/img/' . $logoFileName);
-
             $validated['image_path'] = $logoUrl;
 
             $company = Company::create($validated);
 
             return response()->json([
+                'success' => true,
                 'message' => 'Company profile created successfully',
-                'data' => $company
+                'data' => $company,
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $ve->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
@@ -113,14 +129,20 @@ class CompanyController extends Controller
             $company->update($validated);
 
             return response()->json([
+                'success' => true,
                 'message' => 'Company profile updated successfully',
-                'data' => $company
+                'data' => $company,
             ]);
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $ve->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }

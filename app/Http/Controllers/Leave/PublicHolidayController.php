@@ -10,11 +10,16 @@ use Exception;
 
 class PublicHolidayController extends Controller
 {
+    /**
+     * List public holidays paginated.
+     * Returns JSON with data and pagination metadata.
+     */
     public function index()
     {
         $holidays = PublicHoliday::orderBy('start_date', 'asc')->paginate(7);
 
         return response()->json([
+            'success' => true,
             'data' => $holidays->items(),
             'meta' => [
                 'current_page' => $holidays->currentPage(),
@@ -24,7 +29,16 @@ class PublicHolidayController extends Controller
             ],
         ]);
     }
-
+    /**
+     * Create a new public holiday.
+     * Validates input and calculates number_of_days.
+     * Updates related leaves after creation.
+     *
+     * Returns success message with created holiday data.
+     * Errors:
+     * - 422 for validation errors (with validation messages)
+     * - 500 for unexpected errors (with error details)
+     */
     public function store(Request $request)
     {
         try {
@@ -39,30 +53,40 @@ class PublicHolidayController extends Controller
             $numberOfDays = $startDate->diffInDays($endDate) + 1;
 
             $publicHoliday = PublicHoliday::create([
-                'name' => $request->name,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
+                'name' => $validated['name'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
                 'number_of_days' => $numberOfDays,
             ]);
 
             $this->updateLeavesForNewHoliday($publicHoliday);
 
             return response()->json([
-                'message' => 'Public holiday added successfully!',
+                'success' => true,
+                'message' => 'Public holiday added successfully.',
                 'data' => $publicHoliday
-            ]);
+            ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $ve->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
     }
-
-
+    
+    /**
+     * Updates leaves overlapping the new/updated public holiday.
+     * Recalculates leave days and effective days for each affected leave.
+     *
+     */
     private function updateLeavesForNewHoliday($publicHoliday)
     {
         $affectedLeaves = \App\Models\Leave::where(function ($query) use ($publicHoliday) {
@@ -86,7 +110,6 @@ class PublicHolidayController extends Controller
         }
     }
 
-
     public function update(Request $request, $id)
     {
         try {
@@ -103,23 +126,29 @@ class PublicHolidayController extends Controller
             $numberOfDays = $startDate->diffInDays($endDate) + 1;
 
             $publicHoliday->update([
-                'name' => $request->name,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
+                'name' => $validated['name'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
                 'number_of_days' => $numberOfDays,
             ]);
 
             $this->updateLeavesForNewHoliday($publicHoliday);
+
             return response()->json([
-                'message' => 'Public holiday updated successfully!',
+                'success' => true,
+                'message' => 'Public holiday updated successfully.',
                 'data' => $publicHoliday
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json($ve->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $ve->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
@@ -132,19 +161,20 @@ class PublicHolidayController extends Controller
             $publicHoliday->delete();
 
             return response()->json([
-                'message' => 'Public holiday deleted successfully!'
+                'success' => true,
+                'message' => 'Public holiday deleted successfully.'
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
-                'error' => 'Public holiday not found.'
+                'success' => false,
+                'message' => 'Public holiday not found.'
             ], 404);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage()
             ], 500);
         }
     }
-
-
 }

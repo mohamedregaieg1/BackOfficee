@@ -15,7 +15,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\SendLeaveRequestNotificationJob;
 use App\Jobs\NotifyHRRejectedLeaveJob;
@@ -26,167 +25,216 @@ class LeaveController extends Controller
 {
     public function calculateLeaveDays(Request $request)
     {
-        $leaveType = $request->leave_type;
+        try {
+            $leaveType = $request->leave_type;
 
-        if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
-            $validator = Validator::make($request->all(), [
-                'start_date' => 'required|date_format:Y-m-d H:i:s',
-                'leave_type' => 'required|in:paternity_leave,maternity_leave',
-            ]);
-        } else {
-            $validator = Validator::make($request->all(), [
-                'start_date' => 'required|date_format:Y-m-d H:i:s',
-                'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
-                'leave_type' => 'required|in:sick_leave,personal_leave,other',
-                'other_type' => 'required_if:leave_type,other',
-            ]);
-        }
+            if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
+                $validator = Validator::make($request->all(), [
+                    'start_date' => 'required|date_format:Y-m-d H:i:s',
+                    'leave_type' => 'required|in:paternity_leave,maternity_leave',
+                ]);
+            } else {
+                $validator = Validator::make($request->all(), [
+                    'start_date' => 'required|date_format:Y-m-d H:i:s',
+                    'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
+                    'leave_type' => 'required|in:sick_leave,personal_leave,other',
+                    'other_type' => 'required_if:leave_type,other',
+                ]);
+            }
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
 
-        $user = Auth::user();
-        $start = Carbon::parse($request->start_date);
+            $user = Auth::user();
 
-        if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
-            $oneYearAgo = $start->copy()->subYear();
-
-            $alreadyTaken = Leave::where('user_id', $user->id)
+            // *** NOUVELLE VÉRIFICATION : le même congé existe-t-il déjà ? ***
+            $existingLeaveQuery = Leave::where('user_id', $user->id)
                 ->where('leave_type', $leaveType)
-                ->whereBetween('start_date', [$oneYearAgo, $start])
-                ->whereIn('status', ['on_hold', 'approved'])
-                ->exists();
+                ->where('start_date', $request->start_date);
 
-            if ($alreadyTaken) {
+            // Pour les congés avec end_date (pas maternité/paternité), vérifier aussi la date de fin
+            if (!in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
+                $existingLeaveQuery->where('end_date', $request->end_date);
+            }
+
+            $existingLeave = $existingLeaveQuery->first();
+
+            if ($existingLeave) {
                 return response()->json([
-                    'message' => "already taken"
+                    'message' => 'You have already applied for this leave with the same dates.'
                 ], 422);
             }
+            // *** FIN NOUVELLE VÉRIFICATION ***
 
-            $fixedLeave = FixedLeaves::where('leave_type', $leaveType)->first();
+            $start = Carbon::parse($request->start_date);
 
-            if (!$fixedLeave) {
-                return response()->json(['message' => 'Fixed leave not found.'], 404);
+            if (in_array($leaveType, ['maternity_leave', 'paternity_leave'])) {
+                $oneYearAgo = $start->copy()->subYear();
+
+                $alreadyTaken = Leave::where('user_id', $user->id)
+                    ->where('leave_type', $leaveType)
+                    ->whereBetween('start_date', [$oneYearAgo, $start])
+                    ->whereIn('status', ['on_hold', 'approved'])
+                    ->exists();
+
+                if ($alreadyTaken) {
+                    return response()->json([
+                        'message' => "already taken"
+                    ], 422);
+                }
+
+                $fixedLeave = FixedLeaves::where('leave_type', $leaveType)->first();
+
+                if (!$fixedLeave) {
+                    return response()->json(['message' => 'Fixed leave not found.'], 404);
+                }
+
+                $leaveDays = $fixedLeave->max_days;
+                $end = $start->copy()->addDays($leaveDays - 1)->setTime(8, 0, 0);
+
+                $remainingDays = $this->getRemainingLeaveDays($user->id, $leaveType, $leaveDays);
+
+                return response()->json([
+                    'start_date' => $start->toDateTimeString(),
+                    'end_date' => $end->toDateTimeString(),
+                    'leave_days' => $leaveDays,
+                    'leave_type' => $leaveType,
+                    'other_type' => null,
+                    'remaining_days' => round($remainingDays, 2)
+                ], 200);
             }
 
-            $leaveDays = $fixedLeave->max_days;
-            $end = $start->copy()->addDays($leaveDays - 1)->setTime(8, 0, 0);
-
+            $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
             $remainingDays = $this->getRemainingLeaveDays($user->id, $leaveType, $leaveDays);
 
             return response()->json([
-                'start_date' => $start->toDateTimeString(),
-                'end_date' => $end->toDateTimeString(),
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
                 'leave_days' => $leaveDays,
                 'leave_type' => $leaveType,
-                'other_type' => null,
+                'other_type' => $leaveType === 'other' ? $request->other_type : null,
                 'remaining_days' => round($remainingDays, 2)
             ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while calculating leave days.',
+                'details' => $e->getMessage()
+            ], 500);
         }
-
-        $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
-        $remainingDays = $this->getRemainingLeaveDays($user->id, $leaveType, $leaveDays);
-
-        return response()->json([
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'leave_days' => $leaveDays,
-            'leave_type' => $leaveType,
-            'other_type' => $leaveType === 'other' ? $request->other_type : null,
-            'remaining_days' => round($remainingDays, 2)
-        ], 200);
     }
-
-
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date_format:Y-m-d H:i:s',
-            'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
-            'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave,other',
-            'leave_days' => 'required|regex:/^\d+(\.\d{1})?$/',
-            'other_type' => 'required_if:leave_type,other|string|max:255',
-            'attachment' => 'required_if:leave_type,sick_leave,maternity_leave,paternity_leave|file',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'start_date' => 'required|date_format:Y-m-d H:i:s',
+                'end_date' => 'required|date_format:Y-m-d H:i:s|after_or_equal:start_date',
+                'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave,other',
+                'leave_days' => 'required|regex:/^\d+(\.\d{1})?$/',
+                'other_type' => 'required_if:leave_type,other|string|max:255',
+                'attachment' => 'required_if:leave_type,sick_leave,maternity_leave,paternity_leave|file',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error.',
+                    'details' => $validator->errors()
+                ], 422);
+            }
 
-        $attachmentPath = null;
-        if (
-            in_array($request->leave_type, ['sick_leave', 'maternity_leave', 'paternity_leave'])
-            && $request->hasFile('attachment')
-        ) {
-            $file = $request->file('attachment');
-            $path = $file->store('attachments', 'public');
-            $filename = basename($path);
-            $attachmentPath = env('STORAGE') . '/attachments/' . $filename;
-        }
+            $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
 
-        if (in_array($request->leave_type, ['maternity_leave', 'paternity_leave'])) {
+            if ($leaveDays === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected leave period only includes weekends or public holidays.',
+                ], 422);
+            }
+
+            $attachmentPath = null;
+            if (
+                in_array($request->leave_type, ['sick_leave', 'maternity_leave', 'paternity_leave'])
+                && $request->hasFile('attachment')
+            ) {
+                $file = $request->file('attachment');
+                $path = $file->store('attachments', 'public');
+                $filename = basename($path);
+                $attachmentPath = env('STORAGE') . '/attachments/' . $filename;
+            }
+
+            if (in_array($request->leave_type, ['maternity_leave', 'paternity_leave'])) {
+                $start = Carbon::parse($request->start_date);
+                $end = Carbon::parse($request->end_date);
+                $leaveDays = $start->diffInDays($end) + 1;
+            } else {
+                $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
+            }
+
+            $leaveDaysRequested = $this->calculateLeaveDaysRequested($request->leave_type, $leaveDays);
+            $effectiveLeaveDays = $leaveDaysRequested;
+
             $start = Carbon::parse($request->start_date);
             $end = Carbon::parse($request->end_date);
-            $leaveDays = $start->diffInDays($end) + 1;
-        } else {
-            $leaveDays = $this->getWorkingDays($request->start_date, $request->end_date);
+            $leaveEntries = [];
+
+            if ($start->year != $end->year) {
+                $midYearDate = Carbon::create($start->year, 12, 31);
+                $leaveEntries[] = Leave::create([
+                    'user_id' => auth()->id(),
+                    'start_date' => $request->start_date,
+                    'end_date' => $midYearDate->toDateString() . ' 08:00:00',
+                    'leave_type' => $request->leave_type,
+                    'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
+                    'leave_days_requested' => $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 08:00:00'),
+                    'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 23:59:59')),
+                    'attachment_path' => $attachmentPath,
+                    'status' => 'on_hold'
+                ]);
+
+                $leaveEntries[] = Leave::create([
+                    'user_id' => auth()->id(),
+                    'start_date' => $midYearDate->addDay()->toDateString() . ' 08:00:00',
+                    'end_date' => $request->end_date,
+                    'leave_type' => $request->leave_type,
+                    'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
+                    'leave_days_requested' => $this->getWorkingDays($midYearDate->toDateString() . ' 08:00:00', $request->end_date),
+                    'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($midYearDate->toDateString() . ' 00:00:00', $request->end_date)),
+                    'attachment_path' => $attachmentPath,
+                    'status' => 'on_hold'
+                ]);
+            } else {
+                $leaveEntries[] = Leave::create([
+                    'user_id' => auth()->id(),
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'leave_type' => $request->leave_type,
+                    'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
+                    'leave_days_requested' => $leaveDays,
+                    'effective_leave_days' => $effectiveLeaveDays,
+                    'attachment_path' => $attachmentPath,
+                    'status' => 'on_hold'
+                ]);
+            }
+
+            $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null, $leaveEntries);
+            $this->notifyAdminOnLeaveRequest(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null, $leaveEntries);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Leave request stored successfully!',
+                'details' => $leaveEntries,
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while storing the leave request.',
+                'details' => $e->getMessage(),
+            ], 500);
         }
-
-        $leaveDaysRequested = $this->calculateLeaveDaysRequested($request->leave_type, $leaveDays);
-        $effectiveLeaveDays = $leaveDaysRequested;
-
-
-        $start = Carbon::parse($request->start_date);
-        $end = Carbon::parse($request->end_date);
-        $leaveEntries = [];
-
-        if ($start->year != $end->year) {
-            $midYearDate = Carbon::create($start->year, 12, 31);
-            $leaveEntries[] = Leave::create([
-                'user_id' => auth()->id(),
-                'start_date' => $request->start_date,
-                'end_date' => $midYearDate->toDateString() . ' 08:00:00',
-                'leave_type' => $request->leave_type,
-                'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
-                'leave_days_requested' => $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 08:00:00'),
-                'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($request->start_date, $midYearDate->toDateString() . ' 23:59:59')),
-                'attachment_path' => $attachmentPath,
-                'status' => 'on_hold'
-            ]);
-
-            $leaveEntries[] = Leave::create([
-                'user_id' => auth()->id(),
-                'start_date' => $midYearDate->addDay()->toDateString() . ' 08:00:00',
-                'end_date' => $request->end_date,
-                'leave_type' => $request->leave_type,
-                'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
-                'leave_days_requested' => $this->getWorkingDays($midYearDate->toDateString() . ' 08:00:00', $request->end_date),
-                'effective_leave_days' => $this->calculateLeaveDaysRequested($request->leave_type, $this->getWorkingDays($midYearDate->toDateString() . ' 00:00:00', $request->end_date)),
-                'attachment_path' => $attachmentPath,
-                'status' => 'on_hold'
-            ]);
-        } else {
-            $leaveEntries[] = Leave::create([
-                'user_id' => auth()->id(),
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'leave_type' => $request->leave_type,
-                'other_type' => $request->leave_type == 'other' ? $request->other_type : null,
-                'leave_days_requested' => $leaveDays,
-                'effective_leave_days' => $effectiveLeaveDays,
-                'attachment_path' => $attachmentPath,
-                'status' => 'on_hold'
-            ]);
-        }
-
-        $this->sendLeaveNotification(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null, $leaveEntries);
-        $this->notifyAdminOnLeaveRequest(auth()->user(), $request->leave_type, $request->leave_type === 'other' ? $request->other_type : null, $leaveEntries);
-        return response()->json([
-            'message' => 'Leave request stored successfully!',
-            'leave' => $leaveEntries,
-        ], 201);
     }
 
     private function sendLeaveNotification($authUser, $leaveType, $otherType = null, $leaveEntries)
@@ -320,6 +368,11 @@ class LeaveController extends Controller
         }
     }
 
+    /**
+     * Calcule le nombre de jours de congé réellement demandés,
+     * en appliquant des règles spécifiques selon le type de congé.
+     * Par exemple, pour un congé maladie, les 2 premiers jours ne sont pas comptés.
+     */
     private function calculateLeaveDaysRequested($leaveType, $leaveDays)
     {
         if ($leaveType == 'sick_leave') {
@@ -329,6 +382,9 @@ class LeaveController extends Controller
         return $leaveDays;
     }
 
+    /**
+     * Récupère les informations d'un congé spécifique via son ID.
+     */
     public function show($id)
     {
         $leave = Leave::findOrFail($id);
@@ -338,57 +394,69 @@ class LeaveController extends Controller
         ]);
     }
 
-
+    /**
+     * Calcule le nombre de jours de congé restants pour un utilisateur,
+     * en tenant compte des règles spécifiques selon le type de congé.
+     */
     private function getRemainingLeaveDays($userId, $leaveType, $requestedLeaveDays)
     {
-        $specificLeaves = ['paternity_leave', 'maternity_leave', 'sick_leave'];
+        try {
+            $specificLeaves = ['paternity_leave', 'maternity_leave', 'sick_leave'];
 
-        if (in_array($leaveType, $specificLeaves)) {
-            $fixedLeave = FixedLeaves::where('leave_type', $leaveType)->first();
+            if (in_array($leaveType, $specificLeaves)) {
+                $fixedLeave = FixedLeaves::where('leave_type', $leaveType)->first();
 
-            if (!$fixedLeave) {
-                return 0;
-            }
+                if (!$fixedLeave) {
+                    return 0;
+                }
 
-            if ($leaveType === 'sick_leave') {
-                $sickLeaves = Leave::where('user_id', $userId)
-                    ->where('leave_type', 'sick_leave')
-                    ->whereIn('status', ['on_hold', 'approved'])
-                    ->get();
+                if ($leaveType === 'sick_leave') {
+                    $sickLeaves = Leave::where('user_id', $userId)
+                        ->where('leave_type', 'sick_leave')
+                        ->whereIn('status', ['on_hold', 'approved'])
+                        ->get();
 
-                $diffSum = $sickLeaves->sum(function ($leave) {
-                    return $leave->leave_days_requested - $leave->effective_leave_days;
-                });
+                    $diffSum = $sickLeaves->sum(function ($leave) {
+                        return $leave->leave_days_requested - $leave->effective_leave_days;
+                    });
 
-                $remainingDays = $fixedLeave->max_days - $diffSum - $requestedLeaveDays;
+                    $remainingDays = $fixedLeave->max_days - $diffSum - $requestedLeaveDays;
+                } else {
+                    $usedDays = Leave::where('user_id', $userId)
+                        ->where('leave_type', $leaveType)
+                        ->whereIn('status', ['on_hold', 'approved'])
+                        ->sum('leave_days_requested');
+
+                    $remainingDays = $fixedLeave->max_days - $usedDays - $requestedLeaveDays;
+                }
+
+                return $remainingDays;
             } else {
+                $leaveBalance = LeavesBalance::where('user_id', $userId)->first();
+
+                if (!$leaveBalance) {
+                    return 0;
+                }
+
                 $usedDays = Leave::where('user_id', $userId)
-                    ->where('leave_type', $leaveType)
+                    ->whereIn('leave_type', ['vacation', 'travel_leave', 'other'])
                     ->whereIn('status', ['on_hold', 'approved'])
-                    ->sum('leave_days_requested');
+                    ->sum('effective_leave_days');
 
-                $remainingDays = $fixedLeave->max_days - $usedDays - $requestedLeaveDays;
+                $remainingDays = $leaveBalance->leave_day_limit - $usedDays - $requestedLeaveDays;
+
+                return $remainingDays;
             }
-
-            return $remainingDays;
-        } else {
-            $leaveBalance = LeavesBalance::where('user_id', $userId)->first();
-
-            if (!$leaveBalance) {
-                return 0;
-            }
-
-            $usedDays = Leave::where('user_id', $userId)
-                ->whereIn('leave_type', ['vacation', 'travel_leave', 'other'])
-                ->whereIn('status', ['on_hold', 'approved'])
-                ->sum('effective_leave_days');
-
-            $remainingDays = $leaveBalance->leave_day_limit - $usedDays - $requestedLeaveDays;
-
-            return $remainingDays;
+        } catch (\Exception $e) {
+            return 0;
         }
     }
 
+    /**
+     * Calcule le nombre de jours ouvrables (hors weekends et jours fériés)
+     * entre deux dates données, en prenant en compte les fractions de journée
+     * selon l'heure de début et de fin.
+     */
     public static function getWorkingDays($startDate, $endDate)
     {
         $start = Carbon::parse($startDate);
@@ -441,6 +509,10 @@ class LeaveController extends Controller
         return $total;
     }
 
+    /**
+     * Calcule la fraction de jour pour un congé qui commence et finit
+     * le même jour, selon l'heure de début.
+     */
     private static function getSameDayFraction(Carbon $start)
     {
         $startHour = $start->hour;
@@ -459,7 +531,10 @@ class LeaveController extends Controller
 
         return 1;
     }
-
+    /**
+     * Calcule la fraction du premier jour ouvrable du congé
+     * selon l'heure de début.
+     */
     private static function getStartDayFraction(Carbon $start)
     {
         $startHour = $start->hour;
@@ -479,6 +554,10 @@ class LeaveController extends Controller
         return 1;
     }
 
+    /**
+     * Calcule la fraction du dernier jour ouvrable du congé
+     * selon l'heure de fin.
+     */
     private static function getEndDayFraction(Carbon $end)
     {
         $endHour = $end->hour;

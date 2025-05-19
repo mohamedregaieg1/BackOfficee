@@ -8,7 +8,6 @@ use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
 
-
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -37,6 +36,7 @@ class User extends Authenticatable implements JWTSubject
         'job_description',
         'start_date',
         'leave_balance',
+        'token_version',
 
     ];
 
@@ -72,7 +72,6 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->getKey();
     }
-
     /**
      * Return a key value array, containing any custom claims to be added to the JWT.
      *
@@ -80,7 +79,9 @@ class User extends Authenticatable implements JWTSubject
      */
     public function getJWTCustomClaims()
     {
-        return [];
+       return [
+            'token_version' => $this->token_version,
+        ];
     }
     public function getAvatarPathAttribute()
     {
@@ -106,6 +107,6 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Notification::class, 'receiver_id');
     }
 
-    
+
 
 }

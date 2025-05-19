@@ -161,7 +161,8 @@ class ViewLeaveController extends Controller
                     'leave_days_requested',
                     'effective_leave_days',
                     'attachment_path',
-                    'status'
+                    'status',
+                    'created_at'
                 );
 
             if ($year) {
@@ -185,22 +186,17 @@ class ViewLeaveController extends Controller
                 ->appends($request->query());
 
             $data = $leaves->map(function ($leave) {
-                $leaveData = [
+                return [
                     'id' => $leave->id,
                     'start_date' => $leave->start_date,
                     'end_date' => $leave->end_date,
-                    'leave_type' => $leave->leave_type,
+                    'leave_type' => $leave->leave_type === 'other' ? $leave->other_type : $leave->leave_type,
+                    'original_leave_type' => $leave->leave_type,
                     'status' => $leave->status,
                     'leave_days_requested' => $leave->leave_days_requested,
                     'effective_leave_days' => $leave->effective_leave_days,
                     'attachment_path' => $leave->attachment_path ? asset($leave->attachment_path) : null,
                 ];
-
-                if ($leave->leave_type === 'other') {
-                    $leaveData['other_type'] = $leave->other_type;
-                }
-
-                return $leaveData;
             });
 
             $stats = [];
@@ -238,8 +234,6 @@ class ViewLeaveController extends Controller
             ], 500);
         }
     }
-
-
 
     public function updateLeaveForAdmin(Request $request, $leaveId)
     {
@@ -325,25 +319,25 @@ class ViewLeaveController extends Controller
     }
 
     protected function sendEmailToSender($leave)
-{
-    $notification = Notification::where('leave_id', $leave->id)->first();
+    {
+        $notification = Notification::where('leave_id', $leave->id)->first();
 
-    if (!$notification) {
-        return;
-    }
+        if (!$notification) {
+            return;
+        }
 
-    $sender = $notification->sender;
+        $sender = $notification->sender;
 
-    if (!$sender || !$sender->email) {
-        return;
-    }
+        if (!$sender || !$sender->email) {
+            return;
+        }
 
-    $startDateFormatted = \Carbon\Carbon::parse($leave->start_date)->format('Y/m/d');
-    $endDateFormatted = \Carbon\Carbon::parse($leave->end_date)->format('Y/m/d');
+        $startDateFormatted = \Carbon\Carbon::parse($leave->start_date)->format('Y/m/d');
+        $endDateFormatted = \Carbon\Carbon::parse($leave->end_date)->format('Y/m/d');
 
-    $leaveTypeLabel = $leave->leave_type === 'other' && $leave->other_type ? $leave->other_type : $leave->leave_type;
+        $leaveTypeLabel = $leave->leave_type === 'other' && $leave->other_type ? $leave->other_type : $leave->leave_type;
 
-    $htmlContent = "
+        $htmlContent = "
     <html>
     <head>
         <style>
@@ -415,9 +409,9 @@ class ViewLeaveController extends Controller
     </html>
     ";
 
-    dispatch(new SendLeaveStatusUpdateEmailJob($sender->email, $htmlContent));
+        dispatch(new SendLeaveStatusUpdateEmailJob($sender->email, $htmlContent));
 
-}
+    }
     public function updateLeave(Request $request, $leaveId)
     {
         try {
@@ -494,8 +488,8 @@ class ViewLeaveController extends Controller
             }
 
             $leave->save();
-
-            return response()->json(['message' => 'Leave updated successfully!']);
+            $responseData['message'] = 'Leave updated successfully!';
+            return response()->json($responseData);
         } catch (\Illuminate\Validation\ValidationException $ve) {
             return response()->json($ve->errors(), 422);
         } catch (\Exception $e) {

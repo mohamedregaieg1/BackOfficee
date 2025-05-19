@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Service;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+
 
 class HistoriqueInvoiceController extends Controller
 {
@@ -21,7 +20,8 @@ class HistoriqueInvoiceController extends Controller
 
             if ($endDate && !$startDate) {
                 return response()->json([
-                    'error' => 'start_date is required when end_date is provided.',
+                    'success' => false,
+                    'message' => 'start_date is required when end_date is provided.',
                 ], 422);
             }
 
@@ -68,6 +68,7 @@ class HistoriqueInvoiceController extends Controller
             });
 
             return response()->json([
+                'success' => true,
                 'message' => 'Invoices retrieved successfully',
                 'data' => $formattedData,
                 'meta' => [
@@ -79,11 +80,13 @@ class HistoriqueInvoiceController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
     }
+
 
 
     public function updatePaymentStatus(Request $request, $invoiceId)
@@ -98,59 +101,44 @@ class HistoriqueInvoiceController extends Controller
             $totalTTC = $invoice->total_ttc;
             $inputAmount = $request->input('amount_paid');
 
-            // ----- Condition 1 : Paid -----
             if ($status === 'paid') {
                 return response()->json([
-                    'error' => 'Invoice is fully paid. No updates allowed.'
+                    'success' => false,
+                    'message' => 'Invoice is fully paid. No updates allowed.'
                 ], 403);
             }
 
-            // ----- Condition 2 : Unpaid -----
-            if ($status === 'unpaid') {
-                $newAmountPaid = $invoice->amount_paid + $inputAmount;
+            $newAmountPaid = $invoice->amount_paid + $inputAmount;
 
-                if ($newAmountPaid > $totalTTC) {
-                    return response()->json([
-                        'error' => 'Amount paid cannot exceed total TTC.'
-                    ], 422);
-                }
-
-                $invoice->amount_paid = $newAmountPaid;
-                $invoice->unpaid_amount = $totalTTC - $newAmountPaid;
-
-                $invoice->payment_status = ($newAmountPaid == $totalTTC) ? 'paid' : 'partially paid';
+            if ($newAmountPaid > $totalTTC) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Amount paid cannot exceed total TTC.'
+                ], 422);
             }
 
-            // ----- Condition 3 : Partially Paid -----
-            if ($status === 'partially paid') {
-                $newAmountPaid = $invoice->amount_paid + $inputAmount;
+            $invoice->amount_paid = $newAmountPaid;
+            $invoice->unpaid_amount = $totalTTC - $newAmountPaid;
 
-                if ($newAmountPaid > $totalTTC) {
-                    return response()->json([
-                        'error' => 'Amount paid cannot exceed total TTC.'
-                    ], 422);
-                }
-
-                $invoice->amount_paid = $newAmountPaid;
-                $invoice->unpaid_amount = $totalTTC - $newAmountPaid;
-
-                $invoice->payment_status = ($newAmountPaid == $totalTTC) ? 'paid' : 'partially paid';
-            }
+            $invoice->payment_status = ($newAmountPaid == $totalTTC) ? 'paid' : 'partially paid';
 
             $invoice->save();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Invoice payment information updated successfully.',
-                'invoice' => $invoice,
+                'data' => $invoice,
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An unexpected error occurred.',
+                'success' => false,
+                'message' => 'An unexpected error occurred.',
                 'details' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     public function getServicesByInvoice($id)
     {

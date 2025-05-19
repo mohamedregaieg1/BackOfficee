@@ -11,10 +11,20 @@ class SendEmailController extends Controller
     public function sendEmail($id)
     {
         try {
+            if (!is_numeric($id) || $id <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid invoice ID provided.'
+                ], 400);
+            }
+
             $invoice = Invoice::with(['client', 'company', 'services'])->findOrFail($id);
 
             if (!$invoice->client) {
-                return response()->json(['error' => 'Client not found for this invoice'], 404);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Client not found for this invoice.'
+                ], 404);
             }
 
             $companyLogoUrl = ($invoice->company && $invoice->company->company_name === 'Procan')
@@ -48,12 +58,25 @@ class SendEmailController extends Controller
 
             dispatch(new SendInvoiceEmailJob($invoice->client->email, $htmlContent));
 
-            return response()->json(['message' => 'Email sent successfully to the client'], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully to the client.'
+            ], 200);
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['error' => 'Invoice not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice not found.'
+            ], 404);
+
         } catch (\Exception $e) {
             \Log::error("Erreur lors de l'envoi de l'email : " . $e->getMessage());
-            return response()->json(['error' => 'An unexpected error occurred.', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while sending the email.',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
+
 }

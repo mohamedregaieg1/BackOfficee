@@ -28,6 +28,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
+            $table->integer('token_version')->default(0);
             $table->timestamps();
         });
 
