@@ -290,6 +290,15 @@ class InvoiceController extends Controller
                 'amount_paid' => 'nullable|numeric|min:0',
             ])->validate();
 
+            foreach ($validated['services'] as &$service) {
+                $service['price_ht'] = round($service['price_ht'], 2);
+                $service['total_ht'] = round($service['total_ht'], 2);
+                $service['total_ttc'] = round($service['total_ttc'], 2);
+            }
+
+            $validated['TTotal_HT'] = round($validated['TTotal_HT'], 2);
+            $validated['TTotal_TVA'] = round($validated['TTotal_TVA'], 2);
+            $validated['TTotal_TTC'] = round($validated['TTotal_TTC'], 2);
             $paymentStatus = $request->payment_status;
             $amountPaid = $request->amount_paid ?? 0;
 

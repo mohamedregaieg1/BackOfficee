@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Devis</title>
+    <title>Devis / Facture</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -175,9 +175,31 @@
         <div class="header">
             <div>
                 <h1 class="header-title">
-                    {{ $invoice->type === 'facture' ? 'INVOICE' : 'QUOTE' }}
+                    @switch($invoice->type)
+                        @case('facture')
+                            INVOICE
+                            @break
+                        @case('devis')
+                            QUOTE
+                            @break
+                        @case('facture_avoir')
+                            CREDIT NOTE
+                            @break
+                        @case('facture_avoir_partiel')
+                            PARTIAL CREDIT NOTE
+                            @break
+                        @default
+                            DOCUMENT
+                    @endswitch
                 </h1>
+
                 <p class="invoice-number"><strong>N°{{ $invoice->number }}</strong></p>
+
+                @if(in_array($invoice->type, ['facture_avoir', 'facture_avoir_partiel']) && $invoice->originalInvoice)
+                    <p style="margin-top: 10px; font-weight: bold; color: #d9534f;">
+                        This credit invoice refers to original invoice number: <strong>{{ $invoice->originalInvoice->number }}</strong>
+                    </p>
+                @endif
             </div>
             <div class="logo-container">
                 @if ($companyLogoBase64)
@@ -190,30 +212,63 @@
 
         <div class="invoice-details">
             <p><strong>Creation Date :</strong> {{ $invoice->creation_date }}</p>
-            <p><strong>{{ $invoice->additional_date_type }} :</strong> {{ $invoice->additional_date }}</p>
+            @if(!empty($invoice->additional_date_type) && !empty($invoice->additional_date))
+                <p><strong>{{ $invoice->additional_date_type }} :</strong> {{ $invoice->additional_date }}</p>
+            @endif
         </div>
 
         <div class="section-divider"></div>
 
         <div>
             <div class="company-info">
-                <p><strong>{{$company->name}}</strong></p>
-                <p>{{$company->address}}</p>
-                <p>{{$company->postal_code}},{{$company->country}}</p>
-                <p>Phone Number : {{$company->phone_number}}</p>
-                <p>Email : {{$company->email}}</p>
-                <p>Web Site : {{$company->website}}</p>
-                @if ($invoice->type === 'facture')
-                    <p>TVA : {{$company->tva_number}}</p>
+                <p><strong>{{ $company->name }}</strong></p>
+
+                @if(!empty($company->address))
+                    <p>{{ $company->address }}</p>
                 @endif
 
+                @if(!empty($company->postal_code) || !empty($company->country))
+                    <p>{{ $company->postal_code }}, {{ $company->country }}</p>
+                @endif
+
+                @if(!empty($company->phone_number))
+                    <p>Phone Number : {{ $company->phone_number }}</p>
+                @endif
+
+                @if(!empty($company->email))
+                    <p>Email : {{ $company->email }}</p>
+                @endif
+
+                @if(!empty($company->website))
+                    <p>Web Site : {{ $company->website }}</p>
+                @endif
+
+                @if($invoice->type === 'facture' && !empty($company->tva_number))
+                    <p>TVA : {{ $company->tva_number }}</p>
+                @endif
+
+                @if(!empty($company->rib_bank))
+                    <p>RIB Bank : {{ $company->rib_bank }}</p>
+                @endif
             </div>
+
             <div class="client-info">
                 <p><strong>Customer</strong></p>
+
                 <p>{{ $client->name }}</p>
-                <p>{{ $client->address }}</p>
-                <p>Phone Number : {{ $client->phone_number }}</p>
-                <p>Email : {{ $client->email }}</p>
+
+                @if(!empty($client->address))
+                    <p>{{ $client->address }}</p>
+                @endif
+
+                @if(!empty($client->phone_number))
+                    <p>Phone Number : {{ $client->phone_number }}</p>
+                @endif
+
+                @if(!empty($client->email))
+                    <p>Email : {{ $client->email }}</p>
+                @endif
+
             </div>
             <div class="clear"></div>
         </div>
@@ -231,11 +286,16 @@
             <tbody>
                 @foreach ($services as $service)
                     <tr>
-                        <td>{{ $service->name }}<br><small>{{ $service->comment }}</small></td>
+                        <td>
+                            {{ $service->name }}
+                            @if(!empty($service->comment))
+                                <br><small>{{ $service->comment }}</small>
+                            @endif
+                        </td>
                         <td>{{ $service->quantity }}</td>
-                        <td>{{ $service->total_ht }}</td>
-                        <td>{{ $service->tva }}</td>
-                        <td>{{ $service->total_ttc }}</td>
+                        <td>{{ number_format($service->total_ht, 2, '.', ',') }}</td>
+                        <td>{{ number_format($service->tva, 2, '.', ',') }}%</td>
+                        <td>{{ number_format($service->total_ttc, 2, '.', ',') }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -245,16 +305,26 @@
             <table style="float: right;">
                 <tr>
                     <td><strong>Price HT :</strong></td>
-                    <td>{{ $invoice->total_ht }} </td>
+                    <td>{{ number_format($invoice->total_ht, 2, '.', ',') }}</td>
                 </tr>
                 <tr>
                     <td><strong>Price TVA :</strong></td>
-                    <td>{{ $invoice->total_tva }} </td>
+                    <td>{{ number_format($invoice->total_tva, 2, '.', ',') }}</td>
                 </tr>
                 <tr class="total-final">
                     <td><strong>TOTAL :</strong></td>
-                    <td>{{ $invoice->total_ttc }} </td>
+                    <td>{{ number_format($invoice->total_ttc, 2, '.', ',') }}</td>
                 </tr>
+                @if(isset($invoice->amount_paid) && $invoice->amount_paid > 0 || isset($invoice->unpaid_amount) && $invoice->unpaid_amount > 0)
+                    <tr>
+                        <td><strong>Amount Paid :</strong></td>
+                        <td>{{ number_format($invoice->amount_paid, 2, '.', ',') }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Amount Unpaid :</strong></td>
+                        <td>{{ number_format($invoice->unpaid_amount, 2, '.', ',') }}</td>
+                    </tr>
+                @endif
             </table>
         </div>
         <div class="clear"></div>
@@ -262,10 +332,10 @@
         <div class="section-divider"></div>
 
         <div class="payment-method">
-            <h2>Payment Method :</h2>
-            <p>{{ $invoice->payment_mode }}</p>
-            <p>Amount Paid : {{$invoice->amount_paid}}</p>
-            <p>RIB Bank : {{$company->rib_bank}}</p>
+            <h2>Payment Method : @if(!empty($invoice->payment_mode))
+                <p>{{ ucfirst($invoice->payment_mode) }}</p>
+            @endif</h2>
+             <p>RIB Bank : {{$company->rib_bank}}</p>
         </div>
 
         <div class="terms-conditions">
@@ -273,16 +343,19 @@
             @if ($invoice->type === 'devis')
                 <p>This quote is valid for 1 month from the date of issue.</p>
             @else
-                <p>This invoice is valid for 3 month from the date of issue.</p>
+                <p>This invoice is valid for 3 months from the date of issue.</p>
             @endif
 
+            @if(!empty($invoice->terms_conditions))
+                <p>{{ $invoice->terms_conditions }}</p>
+            @endif
         </div>
 
         <div class="signature">
             @if ($invoice->type === 'devis')
                 <p><strong>Date and customer signature preceded</strong></p>
-            <hr> @endif
-
+                <hr>
+            @endif
         </div>
 
         <div class="footer">

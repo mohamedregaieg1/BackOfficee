@@ -152,9 +152,6 @@
                 <input type="checkbox" disabled {{ $leave->leave_type === 'sick_leave' ? 'checked' : '' }}> Sick Leave
                 <input type="checkbox" disabled {{ $leave->leave_type === 'paternity_leave' || $leave->leave_type === 'maternity_leave' ? 'checked' : '' }}> Paternity/Maternity Leave
                 <input type="checkbox" disabled {{ $leave->leave_type === 'other' ? 'checked' : '' }}> Other
-                @if ($leave->leave_type === 'other')
-                    <input type="text" value="{{ $leave->other_type }}" readonly>
-                @endif
             </div>
         </li>
     </ul>

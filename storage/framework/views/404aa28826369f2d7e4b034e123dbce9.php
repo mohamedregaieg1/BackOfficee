@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Devis</title>
+    <title>Devis / Facture</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -175,10 +175,31 @@
         <div class="header">
             <div>
                 <h1 class="header-title">
-                    <?php echo e($invoice->type === 'facture' ? 'INVOICE' : 'QUOTE'); ?>
-
+                    <?php switch($invoice->type):
+                        case ('facture'): ?>
+                            INVOICE
+                            <?php break; ?>
+                        <?php case ('devis'): ?>
+                            QUOTE
+                            <?php break; ?>
+                        <?php case ('facture_avoir'): ?>
+                            CREDIT NOTE
+                            <?php break; ?>
+                        <?php case ('facture_avoir_partiel'): ?>
+                            PARTIAL CREDIT NOTE
+                            <?php break; ?>
+                        <?php default: ?>
+                            DOCUMENT
+                    <?php endswitch; ?>
                 </h1>
+
                 <p class="invoice-number"><strong>N°<?php echo e($invoice->number); ?></strong></p>
+
+                <?php if(in_array($invoice->type, ['facture_avoir', 'facture_avoir_partiel']) && $invoice->originalInvoice): ?>
+                    <p style="margin-top: 10px; font-weight: bold; color: #d9534f;">
+                        This credit invoice refers to original invoice number: <strong><?php echo e($invoice->originalInvoice->number); ?></strong>
+                    </p>
+                <?php endif; ?>
             </div>
             <div class="logo-container">
                 <?php if($companyLogoBase64): ?>
@@ -191,7 +212,9 @@
 
         <div class="invoice-details">
             <p><strong>Creation Date :</strong> <?php echo e($invoice->creation_date); ?></p>
-            <p><strong><?php echo e($invoice->additional_date_type); ?> :</strong> <?php echo e($invoice->additional_date); ?></p>
+            <?php if(!empty($invoice->additional_date_type) && !empty($invoice->additional_date)): ?>
+                <p><strong><?php echo e($invoice->additional_date_type); ?> :</strong> <?php echo e($invoice->additional_date); ?></p>
+            <?php endif; ?>
         </div>
 
         <div class="section-divider"></div>
@@ -199,22 +222,53 @@
         <div>
             <div class="company-info">
                 <p><strong><?php echo e($company->name); ?></strong></p>
-                <p><?php echo e($company->address); ?></p>
-                <p><?php echo e($company->postal_code); ?>,<?php echo e($company->country); ?></p>
-                <p>Phone Number : <?php echo e($company->phone_number); ?></p>
-                <p>Email : <?php echo e($company->email); ?></p>
-                <p>Web Site : <?php echo e($company->website); ?></p>
-                <?php if($invoice->type === 'facture'): ?>
+
+                <?php if(!empty($company->address)): ?>
+                    <p><?php echo e($company->address); ?></p>
+                <?php endif; ?>
+
+                <?php if(!empty($company->postal_code) || !empty($company->country)): ?>
+                    <p><?php echo e($company->postal_code); ?>, <?php echo e($company->country); ?></p>
+                <?php endif; ?>
+
+                <?php if(!empty($company->phone_number)): ?>
+                    <p>Phone Number : <?php echo e($company->phone_number); ?></p>
+                <?php endif; ?>
+
+                <?php if(!empty($company->email)): ?>
+                    <p>Email : <?php echo e($company->email); ?></p>
+                <?php endif; ?>
+
+                <?php if(!empty($company->website)): ?>
+                    <p>Web Site : <?php echo e($company->website); ?></p>
+                <?php endif; ?>
+
+                <?php if($invoice->type === 'facture' && !empty($company->tva_number)): ?>
                     <p>TVA : <?php echo e($company->tva_number); ?></p>
                 <?php endif; ?>
 
+                <?php if(!empty($company->rib_bank)): ?>
+                    <p>RIB Bank : <?php echo e($company->rib_bank); ?></p>
+                <?php endif; ?>
             </div>
+
             <div class="client-info">
                 <p><strong>Customer</strong></p>
+
                 <p><?php echo e($client->name); ?></p>
-                <p><?php echo e($client->address); ?></p>
-                <p>Phone Number : <?php echo e($client->phone_number); ?></p>
-                <p>Email : <?php echo e($client->email); ?></p>
+
+                <?php if(!empty($client->address)): ?>
+                    <p><?php echo e($client->address); ?></p>
+                <?php endif; ?>
+
+                <?php if(!empty($client->phone_number)): ?>
+                    <p>Phone Number : <?php echo e($client->phone_number); ?></p>
+                <?php endif; ?>
+
+                <?php if(!empty($client->email)): ?>
+                    <p>Email : <?php echo e($client->email); ?></p>
+                <?php endif; ?>
+
             </div>
             <div class="clear"></div>
         </div>
@@ -232,11 +286,17 @@
             <tbody>
                 <?php $__currentLoopData = $services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr>
-                        <td><?php echo e($service->name); ?><br><small><?php echo e($service->comment); ?></small></td>
+                        <td>
+                            <?php echo e($service->name); ?>
+
+                            <?php if(!empty($service->comment)): ?>
+                                <br><small><?php echo e($service->comment); ?></small>
+                            <?php endif; ?>
+                        </td>
                         <td><?php echo e($service->quantity); ?></td>
-                        <td><?php echo e($service->total_ht); ?></td>
-                        <td><?php echo e($service->tva); ?></td>
-                        <td><?php echo e($service->total_ttc); ?></td>
+                        <td><?php echo e(number_format($service->total_ht, 2, '.', ',')); ?></td>
+                        <td><?php echo e(number_format($service->tva, 2, '.', ',')); ?>%</td>
+                        <td><?php echo e(number_format($service->total_ttc, 2, '.', ',')); ?></td>
                     </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
@@ -246,16 +306,26 @@
             <table style="float: right;">
                 <tr>
                     <td><strong>Price HT :</strong></td>
-                    <td><?php echo e($invoice->total_ht); ?> </td>
+                    <td><?php echo e(number_format($invoice->total_ht, 2, '.', ',')); ?></td>
                 </tr>
                 <tr>
                     <td><strong>Price TVA :</strong></td>
-                    <td><?php echo e($invoice->total_tva); ?> </td>
+                    <td><?php echo e(number_format($invoice->total_tva, 2, '.', ',')); ?></td>
                 </tr>
                 <tr class="total-final">
                     <td><strong>TOTAL :</strong></td>
-                    <td><?php echo e($invoice->total_ttc); ?> </td>
+                    <td><?php echo e(number_format($invoice->total_ttc, 2, '.', ',')); ?></td>
                 </tr>
+                <?php if(isset($invoice->amount_paid) && $invoice->amount_paid > 0 || isset($invoice->unpaid_amount) && $invoice->unpaid_amount > 0): ?>
+                    <tr>
+                        <td><strong>Amount Paid :</strong></td>
+                        <td><?php echo e(number_format($invoice->amount_paid, 2, '.', ',')); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Amount Unpaid :</strong></td>
+                        <td><?php echo e(number_format($invoice->unpaid_amount, 2, '.', ',')); ?></td>
+                    </tr>
+                <?php endif; ?>
             </table>
         </div>
         <div class="clear"></div>
@@ -263,10 +333,10 @@
         <div class="section-divider"></div>
 
         <div class="payment-method">
-            <h2>Payment Method :</h2>
-            <p><?php echo e($invoice->payment_mode); ?></p>
-            <p>Amount Paid : <?php echo e($invoice->amount_paid); ?></p>
-            <p>RIB Bank : <?php echo e($company->rib_bank); ?></p>
+            <h2>Payment Method : <?php if(!empty($invoice->payment_mode)): ?>
+                <p><?php echo e(ucfirst($invoice->payment_mode)); ?></p>
+            <?php endif; ?></h2>
+             <p>RIB Bank : <?php echo e($company->rib_bank); ?></p>
         </div>
 
         <div class="terms-conditions">
@@ -274,16 +344,19 @@
             <?php if($invoice->type === 'devis'): ?>
                 <p>This quote is valid for 1 month from the date of issue.</p>
             <?php else: ?>
-                <p>This invoice is valid for 3 month from the date of issue.</p>
+                <p>This invoice is valid for 3 months from the date of issue.</p>
             <?php endif; ?>
 
+            <?php if(!empty($invoice->terms_conditions)): ?>
+                <p><?php echo e($invoice->terms_conditions); ?></p>
+            <?php endif; ?>
         </div>
 
         <div class="signature">
             <?php if($invoice->type === 'devis'): ?>
                 <p><strong>Date and customer signature preceded</strong></p>
-            <hr> <?php endif; ?>
-
+                <hr>
+            <?php endif; ?>
         </div>
 
         <div class="footer">
