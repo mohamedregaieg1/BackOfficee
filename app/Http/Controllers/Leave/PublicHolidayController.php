@@ -81,7 +81,7 @@ class PublicHolidayController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Updates leaves overlapping the new/updated public holiday.
      * Recalculates leave days and effective days for each affected leave.
@@ -154,10 +154,39 @@ class PublicHolidayController extends Controller
         }
     }
 
+    private function restoreLeaveDaysForDeletedHoliday(PublicHoliday $holiday)
+    {
+        $affectedLeaves = \App\Models\Leave::where(function ($query) use ($holiday) {
+            $query->whereBetween('start_date', [$holiday->start_date, $holiday->end_date])
+                ->orWhereBetween('end_date', [$holiday->start_date, $holiday->end_date])
+                ->orWhere(function ($query) use ($holiday) {
+                    $query->where('start_date', '<=', $holiday->start_date)
+                        ->where('end_date', '>=', $holiday->end_date);
+                });
+        })->get();
+
+        foreach ($affectedLeaves as $leave) {
+            $leaveDays = (new \App\Http\Controllers\Leave\LeaveController)->getWorkingDays($leave->start_date, $leave->end_date);
+            $holidayDays = Carbon::parse($holiday->start_date)->diffInDays(Carbon::parse($holiday->end_date)) + 1;
+
+            $newLeaveDays = $leaveDays + $holidayDays;
+            $effectiveDays = $leave->leave_type === 'sick_leave'
+                ? max(0, $newLeaveDays - 2)
+                : $newLeaveDays;
+
+            $leave->leave_days_requested = $newLeaveDays;
+            $leave->effective_leave_days = $effectiveDays;
+            $leave->save();
+        }
+    }
+
     public function destroy($id)
     {
         try {
             $publicHoliday = PublicHoliday::findOrFail($id);
+
+            $this->restoreLeaveDaysForDeletedHoliday($publicHoliday);
+
             $publicHoliday->delete();
 
             return response()->json([
@@ -177,4 +206,5 @@ class PublicHolidayController extends Controller
             ], 500);
         }
     }
+
 }
