@@ -57,16 +57,15 @@ class ProfileController extends Controller
 
         try {
             $validated = $request->validate([
-                'email' => 'required|email|unique:users,email,' . $user->id,
+                'email' => 'nullable|email|unique:users,email,' . $user->id,
                 'phone' => 'nullable|string|max:12',
                 'address' => 'nullable|string|max:255',
             ], [
-                'email.required' => 'The email is required.',
                 'email.email' => 'The email must be valid.',
                 'email.unique' => 'This email is already taken.',
             ]);
 
-            $user->email = $validated['email'];
+            $user->email = $validated['email']?? $user->email;
             $user->phone = $validated['phone'] ?? $user->phone;
             $user->address = $validated['address'] ?? $user->address;
             $user->save();

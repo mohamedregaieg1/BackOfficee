@@ -179,13 +179,7 @@
                 </h1>
                 <p class="invoice-number"><strong>N°{{ $invoice->number }}</strong></p>
             </div>
-            <div class="logo-container">
-                @if ($companyLogoUrl)
-                <img src="{{ $companyLogoUrl }}" alt="Company Logo" style="width: 200px; height: auto;">
-                @else
-                    <p>Logo non disponible</p>
-                @endif
-            </div>
+            
         </div>
 
         <div class="invoice-details">

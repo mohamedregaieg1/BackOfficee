@@ -183,18 +183,31 @@ class PasswordResetController extends Controller
 
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'token' => 'required|string',
-            'new_password' => 'required|string|min:6|regex:/[A-Za-z]/|regex:/[0-9]/',
-            'confirm_password' => 'required|string|same:new_password',
-        ], [
-            'token.required' => 'The token is required.',
-            'new_password.required' => 'The password is required.',
-            'new_password.min' => 'The password must be at least 6 characters long.',
-            'new_password.regex' => 'The password must contain letters and numbers.',
-            'confirm_password.required' => 'The password confirmation is required.',
-            'confirm_password.same' => 'The password and confirmation do not match.',
-        ]);
+        try {
+            $validated = $request->validate([
+                'token' => 'required|string',
+                'new_password' => [
+                    'required',
+                    'string',
+                    'min:6',
+                    'regex:/[A-Za-z]/', // Must contain letters
+                    'regex:/[0-9]/'     // Must contain numbers
+                ],
+                'confirm_password' => 'required|string|same:new_password',
+            ], [
+                'token.required' => 'The token is required.',
+                'new_password.required' => 'The password is required.',
+                'new_password.min' => 'The password must be at least 6 characters long.',
+                'new_password.regex' => 'The password must contain letters and numbers.',
+                'confirm_password.required' => 'The password confirmation is required.',
+                'confirm_password.same' => 'The password and confirmation do not match.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'The given data was invalid.',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         $resetToken = PasswordResetToken::where('token', $request->token)->first();
 
@@ -214,8 +227,10 @@ class PasswordResetController extends Controller
 
         $user->password = Hash::make($request->new_password);
         $user->save();
+
         PasswordResetToken::where('email', $resetToken->email)->delete();
 
         return response()->json(['message' => 'The password has been successfully reset.']);
     }
+
 }

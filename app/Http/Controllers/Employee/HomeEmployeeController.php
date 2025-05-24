@@ -194,53 +194,54 @@ class HomeEmployeeController extends Controller
         }
     }
 
-    public function getCalendarData()
-    {
-        try {
-            $userId = Auth::id();
-            $currentYear = now()->year;
+public function getCalendarData()
+{
+    try {
+        $userId = Auth::id();
+        $currentYear = now()->year;
 
-            // Récupérer les congés de l'utilisateur pour l'année en cours
-            $userLeaves = Leave::where('user_id', $userId)
-                ->where('status', 'approved')
-                ->whereYear('start_date', $currentYear)
-                ->get(['start_date', 'end_date', 'leave_type'])
-                ->map(function ($leave) {
-                    return [
-                        'title' => ucfirst(str_replace('_', ' ', $leave->leave_type)),
-                        'start' => \Carbon\Carbon::parse($leave->start_date)->format('Y-m-d'),
-                        'end' => \Carbon\Carbon::parse($leave->end_date)->format('Y-m-d'),
-                        'color' => $this->getLeaveTypeColor($leave->leave_type),
-                    ];
-                });
+        // Récupérer les congés de l'utilisateur pour l'année en cours
+        $userLeaves = Leave::where('user_id', $userId)
+            ->where('status', 'approved')
+            ->whereYear('start_date', $currentYear)
+            ->get(['start_date', 'end_date', 'leave_type'])
+            ->map(function ($leave) {
+                return [
+                    'title' => ucfirst(str_replace('_', ' ', $leave->leave_type)),
+                    'start' => \Carbon\Carbon::parse($leave->start_date)->format('Y-m-d'),
+                    'end' => \Carbon\Carbon::parse($leave->end_date)->format('Y-m-d'),
+                    'color' => $this->getLeaveTypeColor($leave->leave_type),
+                ];
+            });
 
-            // Récupérer les jours fériés
-            $publicHolidays = PublicHoliday::whereYear('start_date', $currentYear)
-                ->get(['name', 'start_date', 'end_date'])
-                ->map(function ($holiday) {
-                    return [
-                        'title' => $holiday->name,
-                        'start' => \Carbon\Carbon::parse($holiday->start_date)->format('Y-m-d'),
-                        'end' => \Carbon\Carbon::parse($holiday->end_date)->format('Y-m-d'),
-                        'color' => '#F4C430',  // Une couleur spécifique pour les jours fériés
-                    ];
-                });
+        // Récupérer les jours fériés
+        $publicHolidays = PublicHoliday::whereYear('start_date', $currentYear)
+            ->get(['name', 'start_date', 'end_date'])
+            ->map(function ($holiday) {
+                return [
+                    'title' => $holiday->name,
+                    'start' => \Carbon\Carbon::parse($holiday->start_date)->format('Y-m-d'),
+                    'end' => \Carbon\Carbon::parse($holiday->end_date)->format('Y-m-d'),
+                    'color' => '#F4C430',  // Couleur fixe pour jours fériés
+                ];
+            });
 
-            // Fusionner les données de congés et de jours fériés
-            $calendarData = $userLeaves->merge($publicHolidays);
+        // Fusionner les deux (toujours des collections même si vides)
+        $calendarData = collect($userLeaves)->merge($publicHolidays);
 
-            return response()->json([
-                'message' => 'Calendar data retrieved successfully',
-                'data' => $calendarData
-            ]);
+        return response()->json([
+            'message' => 'Calendar data retrieved successfully',
+            'data' => $calendarData
+        ]);
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'An unexpected error occurred.',
-                'details' => $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'An unexpected error occurred.',
+            'details' => $e->getMessage()
+        ], 500);
     }
+}
+
 
 
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Leave;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 class DashboardController extends Controller
 {
     public function countOnHoldLeavesThisMonth()
@@ -49,8 +50,10 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($leave) {
                 return [
-                    'full_name' => $leave->user->first_name . ' ' . $leave->user->last_name,
-                    'leave_type' => $leave->leave_type,
+                    'full_name'   => $leave->user->first_name . ' ' . $leave->user->last_name,
+                    'leave_type'  => $leave->leave_type,
+                    'start_date'  => Carbon::parse($leave->start_date)->format('Y/m/d'),
+                    'end_date'    => Carbon::parse($leave->end_date)->format('Y/m/d'),
                 ];
             });
 

@@ -38,6 +38,7 @@ Route::post('password/reset', [PasswordResetController::class, 'resetPassword'])
 // Routes for admin
 Route::middleware(['auth:api', 'check.token.version', 'role:admin'])->group(function () {
     Route::apiResource('public-holidays', PublicHolidayController::class); // CRUD for public holidays
+    Route::get('/holiday-years', [PublicHolidayController::class, 'getAvailableHolidayYears']);// return year dispo for public holiday
     Route::get('/by-name', [CompanyController::class, 'showByName']); // Get company by name
     Route::post('/companies', [CompanyController::class, 'store']); // Create new company
     Route::put('/{id}', [CompanyController::class, 'update']); // Update company info

@@ -134,7 +134,7 @@ class LeaveController extends Controller
                 'leave_type' => 'required|in:paternity_leave,maternity_leave,sick_leave,personal_leave,other',
                 'leave_days' => 'required|regex:/^\d+(\.\d{1})?$/',
                 'other_type' => 'required_if:leave_type,other|string|max:255',
-                'attachment' => 'required_if:leave_type,sick_leave,maternity_leave,paternity_leave|file',
+                'attachment' => 'nullable|file',
             ]);
 
             if ($validator->fails()) {
@@ -142,6 +142,15 @@ class LeaveController extends Controller
                     'success' => false,
                     'message' => 'Validation error.',
                     'details' => $validator->errors()
+                ], 422);
+            }
+            if (in_array($request->leave_type, ['sick_leave', 'maternity_leave', 'paternity_leave']) && !$request->hasFile('attachment')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Attachment is required for this type of leave.',
+                    'details' => [
+                        'attachment' => ['The attachment file is required for this type of leave.']
+                    ]
                 ], 422);
             }
 

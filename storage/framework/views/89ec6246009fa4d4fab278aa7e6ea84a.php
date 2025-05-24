@@ -180,13 +180,7 @@
                 </h1>
                 <p class="invoice-number"><strong>N°<?php echo e($invoice->number); ?></strong></p>
             </div>
-            <div class="logo-container">
-                <?php if($companyLogoUrl): ?>
-                <img src="<?php echo e($companyLogoUrl); ?>" alt="Company Logo" style="width: 200px; height: auto;">
-                <?php else: ?>
-                    <p>Logo non disponible</p>
-                <?php endif; ?>
-            </div>
+            
         </div>
 
         <div class="invoice-details">

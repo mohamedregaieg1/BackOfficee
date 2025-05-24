@@ -6,17 +6,37 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PublicHoliday;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class PublicHolidayController extends Controller
 {
+
+    public function getAvailableHolidayYears()
+    {
+        $years = DB::table('public_holidays')
+            ->selectRaw('DISTINCT YEAR(start_date) as year')
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        return response()->json($years);
+    }
     /**
      * List public holidays paginated.
      * Returns JSON with data and pagination metadata.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $holidays = PublicHoliday::orderBy('start_date', 'asc')->paginate(7);
+        $query = PublicHoliday::query();
+
+        if ($request->has('name') && !empty($request->name)) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+        if ($request->has('year') && !empty($request->year)) {
+            $query->whereYear('start_date', $request->year);
+        }
+
+        $holidays = $query->orderBy('start_date', 'asc')->paginate(7);
 
         return response()->json([
             'success' => true,
@@ -29,6 +49,7 @@ class PublicHolidayController extends Controller
             ],
         ]);
     }
+
     /**
      * Create a new public holiday.
      * Validates input and calculates number_of_days.
@@ -107,50 +128,6 @@ class PublicHolidayController extends Controller
             $leave->leave_days_requested = $leaveDays;
             $leave->effective_leave_days = $effectiveDays;
             $leave->save();
-        }
-    }
-
-    public function update(Request $request, $id)
-    {
-        try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
-            ]);
-
-            $publicHoliday = PublicHoliday::findOrFail($id);
-
-            $startDate = Carbon::parse($validated['start_date']);
-            $endDate = Carbon::parse($validated['end_date']);
-            $numberOfDays = $startDate->diffInDays($endDate) + 1;
-
-            $publicHoliday->update([
-                'name' => $validated['name'],
-                'start_date' => $validated['start_date'],
-                'end_date' => $validated['end_date'],
-                'number_of_days' => $numberOfDays,
-            ]);
-
-            $this->updateLeavesForNewHoliday($publicHoliday);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Public holiday updated successfully.',
-                'data' => $publicHoliday
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $ve) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $ve->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An unexpected error occurred.',
-                'details' => $e->getMessage(),
-            ], 500);
         }
     }
 
