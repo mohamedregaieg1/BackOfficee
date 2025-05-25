@@ -125,8 +125,6 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $user = User::where('id', $id)->lockForUpdate()->firstOrFail();
-
             $validated = $request->validate([
                 'job_description' => 'required|string|max:30',
                 'company' => 'required|in:adequate,procan',
@@ -144,21 +142,26 @@ class UserController extends Controller
                 'phone.digits' => 'The phone number must be exactly 8 digits.',
             ]);
 
-            $oldRole = $user->role;
+            \DB::transaction(function () use ($id, $validated) {
+                $user = User::where('id', $id)->lockForUpdate()->firstOrFail();
 
-            $user->update([
-                'job_description' => $validated['job_description'],
-                'company' => $validated['company'],
-                'role' => $validated['role'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'] ?? null,
-            ]);
+                $oldRole = $user->role;
 
-            // Invalidate token if role changed
-            if ($oldRole !== $validated['role']) {
-                $user->token_version++;
-                $user->save();
-            }
+                $updateData = [
+                    'job_description' => $validated['job_description'],
+                    'company' => $validated['company'],
+                    'role' => $validated['role'],
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'] ?? null,
+                ];
+
+                // Invalidate token if role changed
+                if ($oldRole !== $validated['role']) {
+                    $updateData['token_version'] = $user->token_version + 1;
+                }
+
+                $user->update($updateData);
+            });
 
             return response()->json([
                 'message' => 'User updated successfully!'
@@ -173,6 +176,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
     public function destroy($id)
     {

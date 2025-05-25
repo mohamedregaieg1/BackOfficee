@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->enum('company_name', ['procan', 'adequate']);
             $table->foreignId('company_id')->constrained('companies')->default(1);
             $table->unsignedBigInteger('client_id');
-            $table->foreign('client_id')->references('id')->on('clients');
+            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');;
             $table->enum('payment_mode', [
                 'bank transfer',
                 'credit card',

@@ -98,10 +98,7 @@ Route::middleware(['auth:api', 'check.token.version', 'role:employee,hr'])->grou
 
 // Routes for accountant
 Route::middleware(['auth:api', 'check.token.version', 'role:accountant'])->group(function () {
-    Route::get('/show/clients', [ClientController::class, 'index']); // List clients
-    Route::post('/clients/add', [ClientController::class, 'store']); // Add new client
-    Route::put('/clients/{id}', [ClientController::class, 'update']); // Update client
-    Route::delete('/clients/{id}', [ClientController::class, 'destroy']); // Delete client
+
 });
 
 // Routes for accountant and admin
@@ -116,6 +113,10 @@ Route::middleware(['auth:api', 'role:accountant,admin'])->group(function () {
     Route::get('/payment-status', [InvoiceDashboardController::class, 'paymentStatusStats']); // Payment status stats
     Route::get('/type-stats', [InvoiceDashboardController::class, 'invoiceTypeStats']); // Invoice type stats
     Route::get('/payment-mode', [InvoiceDashboardController::class, 'paymentModeStats']); // Payment mode stats
+    Route::get('/show/clients', [ClientController::class, 'index']); // List clients
+    Route::post('/clients/add', [ClientController::class, 'store']); // Add new client
+    Route::put('/clients/{id}', [ClientController::class, 'update']); // Update client
+    Route::delete('/clients/{id}', [ClientController::class, 'destroy']); // Delete client
 });
 
 // Shared routes for all authenticated users

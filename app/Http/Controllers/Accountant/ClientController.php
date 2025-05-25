@@ -154,12 +154,28 @@ class ClientController extends Controller
     {
         try {
             $client = Client::findOrFail($id);
+            $unpaidInvoices = $client->invoices()
+                ->whereIn('payment_status', ['unpaid', 'partially paid'])
+                ->exists();
+
+            if ($unpaidInvoices) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This client cannot be deleted due to unpaid associated invoices.',
+                ], 400);
+            }
+
             $client->delete();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Client deleted successfully.',
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Client not found.',
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -168,4 +184,6 @@ class ClientController extends Controller
             ], 500);
         }
     }
+
+
 }
