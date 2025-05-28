@@ -152,9 +152,6 @@
                 <input type="checkbox" disabled <?php echo e($leave->leave_type === 'sick_leave' ? 'checked' : ''); ?>> Sick Leave
                 <input type="checkbox" disabled <?php echo e($leave->leave_type === 'paternity_leave' || $leave->leave_type === 'maternity_leave' ? 'checked' : ''); ?>> Paternity/Maternity Leave
                 <input type="checkbox" disabled <?php echo e($leave->leave_type === 'other' ? 'checked' : ''); ?>> Other
-                <?php if($leave->leave_type === 'other'): ?>
-                    <input type="text" value="<?php echo e($leave->other_type); ?>" readonly>
-                <?php endif; ?>
             </div>
         </li>
     </ul>

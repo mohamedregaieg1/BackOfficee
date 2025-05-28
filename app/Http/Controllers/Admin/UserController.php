@@ -13,7 +13,16 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = trim($request->input('search'));
-        $query = User::where('role', '!=', 'admin');
+        $authUser = auth()->user();
+
+        $query = User::query();
+
+        if ($authUser->role === 'hr') {
+            $query->where('role', 'employee');
+        } else {
+            $query->where('role', '!=', 'admin');
+        }
+
         if (!empty($search)) {
             if (str_contains($search, ' ')) {
                 [$firstName, $lastName] = explode(' ', $search, 2);
@@ -54,7 +63,6 @@ class UserController extends Controller
             ],
         ]);
     }
-
 
     public function store(Request $request)
     {

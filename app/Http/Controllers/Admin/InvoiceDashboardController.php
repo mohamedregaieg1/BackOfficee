@@ -18,6 +18,7 @@ class InvoiceDashboardController extends Controller
         $data = Invoice::select('payment_status', DB::raw('COUNT(*) as count'))
             ->whereYear('creation_date', $year)
             ->groupBy('payment_status')
+            ->where('type', 'facture')
             ->get();
 
         return response()->json([
@@ -49,6 +50,7 @@ class InvoiceDashboardController extends Controller
 
         $data = Invoice::select('payment_mode', DB::raw('COUNT(*) as count'))
             ->whereYear('creation_date', $year)
+            ->where('type', 'facture')
             ->groupBy('payment_mode')
             ->get();
 

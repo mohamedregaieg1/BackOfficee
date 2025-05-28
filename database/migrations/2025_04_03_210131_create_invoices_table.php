@@ -32,7 +32,7 @@ return new class extends Migration {
                 'paid',
                 'partially paid',
                 'unpaid'
-            ])->default('paid');
+            ])->default('paid')->nullable();
             $table->double('amount_paid')->nullable();
             $table->double('unpaid_amount')->nullable();
             $table->double('total_ttc')->nullable();

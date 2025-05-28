@@ -4,51 +4,74 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ClientsTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Liste des pays disponibles (extraits de la migration)
         $countries = [
-            'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
-            'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina',
-            'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Central African Republic',
-            'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic',
-            'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini',
-            'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada',
-            'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran',
-            'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Korea (North)',
-            'Korea (South)', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania',
-            'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico',
-            'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal',
-            'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine',
-            'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda',
-            'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles',
-            'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan',
-            'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago',
-            'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan',
-            'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+            'France', 'Germany', 'Belgium', 'Canada', 'United States',
+            'United Kingdom', 'Spain', 'Italy', 'Switzerland', 'Netherlands'
         ];
 
-        // Générer des données pour 10 clients
+        $civilities = ['Mr.', 'Mrs.', 'Ms.'];
+        $firstNames = ['John', 'Jane', 'Alice', 'Bob', 'Charlie', 'Emma', 'Liam', 'Sophia', 'Noah', 'Olivia'];
+        $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+
+        $companyNames = [
+            'TechCorp', 'GlobalSoft', 'EcoSolutions', 'FinServe', 'MediPlus',
+            'BuildRight', 'GreenEnergy', 'DataWorks', 'LogiTrans', 'SecureNet'
+        ];
+
+        // 10 individuals
         for ($i = 0; $i < 10; $i++) {
-            $clientType = $i % 2 === 0 ? 'professional' : 'individual'; // Alterner entre professionnel et individuel
-            $tvaNumber = $clientType === 'professional' ? '19' : null; // TVA fixée à 19 pour les professionnels
+            $civility = $civilities[array_rand($civilities)];
+            $firstName = $firstNames[array_rand($firstNames)];
+            $lastName = $lastNames[array_rand($lastNames)];
+            $fullName = trim("$civility $firstName $lastName");
+            $country = $countries[array_rand($countries)];
+            $email = 'individual' . ($i + 1) . '@gmail.com';
+            $phone = '+33' . rand(600000000, 699999999);
+            $postalCode = str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT);
+            $address = rand(1, 100) . ' Rue de Exemple, ' . $country;
 
             DB::table('clients')->insert([
-                'client_type' => $clientType,
-                'name' => 'Client ' . ($i + 1),
-                'tva_number_client' => $tvaNumber, // TVA uniquement pour les professionnels
-                'address' => 'Address ' . ($i + 1),
-                'postal_code' => rand(1000, 9999),
-                'rib_bank' => $clientType === 'professional' ? 'RIB-' . rand(1000, 9999) : null, // RIB uniquement pour les professionnels
-                'country' => $countries[array_rand($countries)], // Pays aléatoire
-                'email' => 'client' . ($i + 1) . '@example.com',
-                'phone_number' => '+123456789' . $i,
+                'client_type' => 'individual',
+                'name' => $fullName,
+                'tva_number_client' => null,
+                'address' => $address,
+                'postal_code' => $postalCode,
+                'rib_bank' => null,
+                'country' => $country,
+                'email' => $email,
+                'phone_number' => $phone,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // 10 professionals
+        for ($i = 0; $i < 10; $i++) {
+            $companyName = $companyNames[$i];
+            $country = $countries[array_rand($countries)];
+            $email = 'professional' . ($i + 1) . '@gmail.com';
+            $phone = '+33' . rand(600000000, 699999999);
+            $postalCode = str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT);
+            $address = rand(1, 100) . ' Rue de Exemple, ' . $country;
+            $tvaNumber = 19;
+            $rib = 'FR76' . strtoupper(Str::random(23));
+
+            DB::table('clients')->insert([
+                'client_type' => 'professional',
+                'name' => $companyName,
+                'tva_number_client' => $tvaNumber,
+                'address' => $address,
+                'postal_code' => $postalCode,
+                'rib_bank' => $rib,
+                'country' => $country,
+                'email' => $email,
+                'phone_number' => $phone,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
