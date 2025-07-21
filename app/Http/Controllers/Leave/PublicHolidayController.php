@@ -111,58 +111,46 @@ class PublicHolidayController extends Controller
     private function updateLeavesForNewHoliday($publicHoliday)
     {
         $affectedLeaves = \App\Models\Leave::where(function ($query) use ($publicHoliday) {
-            $query->whereBetween('start_date', [$publicHoliday->start_date, $publicHoliday->end_date])
-                ->orWhereBetween('end_date', [$publicHoliday->start_date, $publicHoliday->end_date])
-                ->orWhere(function ($query) use ($publicHoliday) {
-                    $query->where('start_date', '<=', $publicHoliday->start_date)
-                        ->where('end_date', '>=', $publicHoliday->end_date);
-                });
+            $query->whereDate('start_date', '<=', $publicHoliday->end_date)
+                ->whereDate('end_date', '>=', $publicHoliday->start_date);
         })->get();
-
         foreach ($affectedLeaves as $leave) {
-            $leaveDays = (new \App\Http\Controllers\Leave\LeaveController)->getWorkingDays($leave->start_date, $leave->end_date);
-            $effectiveDays = $leave->leave_type == 'sick_leave'
-                ? max(0, $leaveDays - 2)
-                : $leaveDays;
-
-            $leave->leave_days_requested = $leaveDays;
-            $leave->effective_leave_days = $effectiveDays;
-            $leave->save();
+            $this->recalculateLeaveDays($leave, $publicHoliday);
         }
     }
 
-    private function restoreLeaveDaysForDeletedHoliday(PublicHoliday $holiday)
+    private function recalculateLeaveDays($leave, $publicHoliday)
     {
-        $affectedLeaves = \App\Models\Leave::where(function ($query) use ($holiday) {
-            $query->whereBetween('start_date', [$holiday->start_date, $holiday->end_date])
-                ->orWhereBetween('end_date', [$holiday->start_date, $holiday->end_date])
-                ->orWhere(function ($query) use ($holiday) {
-                    $query->where('start_date', '<=', $holiday->start_date)
-                        ->where('end_date', '>=', $holiday->end_date);
-                });
-        })->get();
-
-        foreach ($affectedLeaves as $leave) {
-            $leaveDays = (new \App\Http\Controllers\Leave\LeaveController)->getWorkingDays($leave->start_date, $leave->end_date);
-            $holidayDays = Carbon::parse($holiday->start_date)->diffInDays(Carbon::parse($holiday->end_date)) + 1;
-
-            $newLeaveDays = $leaveDays + $holidayDays;
-            $effectiveDays = $leave->leave_type === 'sick_leave'
-                ? max(0, $newLeaveDays - 2)
-                : $newLeaveDays;
-
-            $leave->leave_days_requested = $newLeaveDays;
-            $leave->effective_leave_days = $effectiveDays;
-            $leave->save();
-        }
+        $holidayDays = $publicHoliday->number_of_days;
+        $leaveDaysRequested = max(0, $leave->leave_days_requested - $holidayDays);
+        $effectiveLeaveDays = $leave->leave_type == 'sick_leave'
+            ? max(0, $leaveDaysRequested - 2)
+            : $leaveDaysRequested;
+        $leave->leave_days_requested = $leaveDaysRequested;
+        $leave->effective_leave_days = $effectiveLeaveDays;
+        $leave->save();
     }
 
     public function destroy($id)
     {
         try {
             $publicHoliday = PublicHoliday::findOrFail($id);
+            $holidayDays = $publicHoliday->number_of_days;
+            $affectedLeaves = \App\Models\Leave::where(function ($query) use ($publicHoliday) {
+                $query->whereDate('start_date', '<=', $publicHoliday->end_date)
+                    ->whereDate('end_date', '>=', $publicHoliday->start_date);
+            })->get();
 
-            $this->restoreLeaveDaysForDeletedHoliday($publicHoliday);
+            foreach ($affectedLeaves as $leave) {
+                $leaveDaysRequested = $leave->leave_days_requested + $holidayDays;
+                $effectiveLeaveDays = $leave->leave_type == 'sick_leave'
+                    ? max(0, $leaveDaysRequested - 2)
+                    : $leaveDaysRequested;
+                $leave->leave_days_requested = $leaveDaysRequested;
+                $leave->effective_leave_days = $effectiveLeaveDays;
+                $leave->save();
+                \Log::info("Restauré les jours de congé pour le congé ID {$leave->id} : leave_days_requested = {$leaveDaysRequested}, effective_leave_days = {$effectiveLeaveDays}");
+            }
 
             $publicHoliday->delete();
 
