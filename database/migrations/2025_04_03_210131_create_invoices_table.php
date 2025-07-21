@@ -32,13 +32,13 @@ return new class extends Migration {
                 'paid',
                 'partially paid',
                 'unpaid'
-            ])->default('paid')->nullable();
+            ])->default('paid');
             $table->double('amount_paid')->nullable();
             $table->double('unpaid_amount')->nullable();
             $table->double('total_ttc')->nullable();
             $table->double('total_tva')->nullable();
             $table->double('total_ht')->nullable();
-            $table->unsignedBigInteger('original_invoice_id')->nullable(); // Peut être nul si c'est une facture originale
+            $table->unsignedBigInteger('original_invoice_id')->nullable();
         $table->foreign('original_invoice_id')->references('id')->on('invoices')->onDelete('cascade');
             $table->timestamps();
         });

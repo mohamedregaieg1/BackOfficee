@@ -17,15 +17,16 @@ class InvoiceDashboardController extends Controller
 
         $data = Invoice::select('payment_status', DB::raw('COUNT(*) as count'))
             ->whereYear('creation_date', $year)
-            ->groupBy('payment_status')
             ->where('type', 'facture')
+            ->groupBy('payment_status')
             ->get();
 
         return response()->json([
             'message' => 'Payment status statistics',
-            'data' => $data
+            'data' => $data ?? []
         ]);
     }
+
 
     // 2. Statistiques des types de facture (facture, facture_avoir, etc.)
     public function invoiceTypeStats()
@@ -56,7 +57,8 @@ class InvoiceDashboardController extends Controller
 
         return response()->json([
             'message' => 'Payment mode statistics',
-            'data' => $data
+            'data' => $data ?? []
         ]);
     }
+
 }

@@ -286,7 +286,7 @@ class InvoiceController extends Controller
                 'TTotal_TTC' => 'required|numeric',
                 'payment_mode' => 'nullable|in:bank transfer,credit card,cash,paypal,cheque,other',
                 'due_date' => 'nullable|string',
-                'payment_status' => 'nullable|in:paid,partially paid,unpaid',
+                'payment_status' => 'nullable|in:paid,partially paid,unpaid,null',
                 'amount_paid' => 'nullable|numeric|min:0',
             ])->validate();
 
@@ -345,9 +345,9 @@ class InvoiceController extends Controller
             \Log::debug('Step 3 Cookie Data:', json_decode($request->cookie('invoice_step3'), true));
 
             $data = array_merge(
-                json_decode($request->cookie('invoice_step1'), true),
-                json_decode($request->cookie('invoice_step2'), true),
-                json_decode($request->cookie('invoice_step3'), true)
+                json_decode($request->cookie('invoice_step1'), true) ?? [],
+                json_decode($request->cookie('invoice_step2'), true) ?? [],
+                json_decode($request->cookie('invoice_step3'), true) ?? []
             );
 
             if (!$data) {
@@ -361,50 +361,72 @@ class InvoiceController extends Controller
             $data['company_id'] = $data['company']['id'] ?? null;
 
             $client = null;
-            if (isset($data['client_id']) && $data['client_id']) {
+
+            if (!empty($data['client_id'])) {
                 $client = Client::find($data['client_id']);
                 if (!$client) {
-                    return response()->json(['error' => 'Client not found'], 404);
+                    return response()->json(['error' => 'Selected client not found'], 404);
+                }
+            } else {
+                $client = Client::where('client_type', $data['client_type'])
+                    ->where('email', $data['email'])
+                    ->where('name', $data['name'])
+                    ->first();
+
+                if (!$client) {
+                    $client = Client::create([
+                        'client_type' => $data['client_type'],
+                        'name' => $data['name'],
+                        'civility' => $data['civility'] ?? null,
+                        'first_name' => $data['first_name'] ?? null,
+                        'last_name' => $data['last_name'] ?? null,
+                        'tva_number_client' => $data['tva_number_client'] ?? null,
+                        'address' => $data['address'],
+                        'postal_code' => $data['postal_code'],
+                        'rib_bank' => $data['rib_bank'] ?? null,
+                        'country' => $data['country'],
+                        'email' => $data['email'] ?? null,
+                        'phone_number' => $data['phone_number'],
+                        'company_id' => $data['company_id']
+                    ]);
                 }
             }
 
-            if (!$client) {
-                $client = Client::create([
-                    'client_type' => $data['client_type'],
-                    'name' => $data['name'],
-                    'civility' => $data['civility'] ?? null,
-                    'first_name' => $data['first_name'] ?? null,
-                    'last_name' => $data['last_name'] ?? null,
-                    'tva_number_client' => $data['tva_number_client'] ?? null,
-                    'address' => $data['address'],
-                    'postal_code' => $data['postal_code'],
-                    'rib_bank' => $data['rib_bank'] ?? null,
-                    'country' => $data['country'],
-                    'email' => $data['email'] ?? null,
-                    'phone_number' => $data['phone_number'],
-                    'company_id' => $data['company_id']
-                ]);
-            }
-
-            // Gérer les montants selon le statut de paiement
             $amountPaid = $data['amount_paid'] ?? 0;
             $unpaidAmount = 0;
 
-            if ($data['payment_status'] === 'partially paid') {
+            if ($data['payment_status'] === 'paid') {
+                $amountPaid =$data['TTotal_TTC'] ;
+                $unpaidAmount =0 ;            }
+            elseif ($data['payment_status'] === 'partially paid') {
                 $unpaidAmount = $data['TTotal_TTC'] - $amountPaid;
-            } elseif ($data['payment_status'] === 'unpaid') {
+            }elseif ($data['payment_status'] === 'unpaid') {
                 $amountPaid = 0;
                 $unpaidAmount = $data['TTotal_TTC'];
+            } else {
+                // Si c’est un devis, pas de paiement
+                $amountPaid = null;
+                $unpaidAmount = null;
+                $data['payment_status'] = null;
             }
 
-            $invoice = Invoice::create(array_merge($data, [
+            $invoice = Invoice::create([
+                'type' => $data['type'],
+                'creation_date' => now(),
+                'additional_date_type' => $data['additional_date_type'] ?? null,
+                'additional_date' => $data['additional_date'] ?? null,
+                'number' => $data['number'] ?? null,
                 'client_id' => $client->id,
+                'payment_mode' => $data['payment_mode'] ?? null,
+                'due_date' => $data['due_date'] ?? null,
+                'payment_status' => $data['payment_status'],
+                'amount_paid' => $amountPaid,
+                'unpaid_amount' => $unpaidAmount,
+                'company_id' => $data['company_id'],
                 'total_ht' => $data['TTotal_HT'],
                 'total_tva' => $data['TTotal_TVA'],
                 'total_ttc' => $data['TTotal_TTC'],
-                'amount_paid' => $amountPaid,
-                'unpaid_amount' => $unpaidAmount,
-            ]));
+            ]);
 
             foreach ($data['services'] as $service) {
                 Service::create([
@@ -420,6 +442,7 @@ class InvoiceController extends Controller
                 ]);
             }
 
+            // Nettoyer les cookies après succès
             Cookie::queue(Cookie::forget('invoice_step1'));
             Cookie::queue(Cookie::forget('invoice_step2'));
             Cookie::queue(Cookie::forget('invoice_step3'));
@@ -437,6 +460,7 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
+
 
     public function downloadPdf($invoiceId)
     {

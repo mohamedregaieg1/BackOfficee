@@ -15,7 +15,7 @@ class ClientsTableSeeder extends Seeder
             'United Kingdom', 'Spain', 'Italy', 'Switzerland', 'Netherlands'
         ];
 
-        $civilities = ['Mr.', 'Mrs.', 'Ms.'];
+        $civilities = ['Mr', 'Mrs', 'Ms'];
         $firstNames = ['John', 'Jane', 'Alice', 'Bob', 'Charlie', 'Emma', 'Liam', 'Sophia', 'Noah', 'Olivia'];
         $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
 

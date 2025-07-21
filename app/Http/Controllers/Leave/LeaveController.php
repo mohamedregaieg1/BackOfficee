@@ -246,42 +246,43 @@ class LeaveController extends Controller
         }
     }
 
-    private function sendLeaveNotification($authUser, $leaveType, $otherType = null, $leaveEntries)
-    {
-        $title = 'New leave request';
-        if ($leaveType === 'other' && $otherType) {
-            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$otherType}.";
-        } else {
-            $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$leaveType}.";
-        }
+private function sendLeaveNotification($authUser, $leaveType, $otherType = null, $leaveEntries)
+{
+    $title = 'New leave request';
 
-        if ($authUser->role === 'employee') {
-            $receivers = User::whereIn('role', ['admin', 'hr'])->get();
-        } elseif ($authUser->role === 'hr') {
-            $receivers = User::where(function ($query) use ($authUser) {
-                $query->where('role', 'admin')
-                    ->orWhere(function ($query) use ($authUser) {
-                        $query->where('role', 'hr')
+    if ($leaveType === 'other' && $otherType) {
+        $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$otherType}.";
+    } else {
+        $message = "{$authUser->first_name} {$authUser->last_name} requested a type of leave: {$leaveType}.";
+    }
+
+    if ($authUser->role === 'employee') {
+        $receivers = User::whereIn('role', ['admin', 'hr'])->get();
+    } elseif ($authUser->role === 'hr') {
+        $receivers = User::where(function ($query) use ($authUser) {
+            $query->where('role', 'admin')
+                  ->orWhere(function ($query) use ($authUser) {
+                      $query->where('role', 'hr')
                             ->where('id', '!=', $authUser->id);
-                    });
-            })->get();
-        } else {
-            $receivers = collect();
-        }
+                  });
+        })->get();
+    } else {
+        $receivers = collect();
+    }
 
-        foreach ($leaveEntries as $leaveEntry) {
-            foreach ($receivers as $receiver) {
-                $notification = Notification::create([
-                    'sender_id' => $authUser->id,
-                    'receiver_id' => $receiver->id,
-                    'title' => $title,
-                    'message' => $message,
-                    'leave_id' => $leaveEntry->id,
-                ]);
-                broadcast(new NewNotificationEvent($notification))->toOthers();
-            }
+    foreach ($leaveEntries as $leaveEntry) {
+        foreach ($receivers as $receiver) {
+            Notification::create([
+                'sender_id' => $authUser->id,
+                'receiver_id' => $receiver->id,
+                'title' => $title,
+                'message' => $message,
+                'leave_id' => $leaveEntry->id,
+            ]);
         }
     }
+}
+
 
 
     private function notifyAdminOnLeaveRequest($authUser, $leaveType, $otherType, $leaveEntries)

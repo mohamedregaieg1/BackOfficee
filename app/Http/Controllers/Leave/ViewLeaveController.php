@@ -307,16 +307,15 @@ class ViewLeaveController extends Controller
         $title = "Update on your leave request";
         $message = "{$sender->first_name} {$sender->last_name} has {$statusText} your leave request for {$leave->leave_type}.";
 
-        $notification = Notification::create([
+        Notification::create([
             'sender_id' => $sender->id,
             'receiver_id' => $receiver->id,
             'leave_id' => $leave->id,
             'title' => $title,
             'message' => $message,
         ]);
-
-        broadcast(new NewNotificationEvent($notification))->toOthers();
     }
+
 
     protected function sendEmailToSender($leave)
     {

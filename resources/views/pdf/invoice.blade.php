@@ -315,7 +315,9 @@
                     <td><strong>TOTAL :</strong></td>
                     <td>{{ number_format($invoice->total_ttc, 2, '.', ',') }}</td>
                 </tr>
-                @if(isset($invoice->amount_paid) && $invoice->amount_paid > 0 || isset($invoice->unpaid_amount) && $invoice->unpaid_amount > 0)
+                @if($invoice->capture_type !== 'devis' &&
+                    ( (isset($invoice->amount_paid) && $invoice->amount_paid > 0) ||
+                    (isset($invoice->unpaid_amount) && $invoice->unpaid_amount > 0) ))
                     <tr>
                         <td><strong>Amount Paid :</strong></td>
                         <td>{{ number_format($invoice->amount_paid, 2, '.', ',') }}</td>
@@ -325,6 +327,7 @@
                         <td>{{ number_format($invoice->unpaid_amount, 2, '.', ',') }}</td>
                     </tr>
                 @endif
+
             </table>
         </div>
         <div class="clear"></div>
