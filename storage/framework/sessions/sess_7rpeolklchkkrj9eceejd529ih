@@ -1,0 +1,17 @@
+ PMA_token |s:32:"7e334379562d6b326f46323372514369"; HMAC_secret |s:16:"sjLw>@G*(Vh\s9|(";browser_access_time|a:1:{s:7:"default";i:1763145681;}Import_message|a:1:{s:7:"message";s:1388:"<div class="alert alert-danger" role="alert"><h1>Erreur</h1><p><strong>Requête SQL :</strong>  <a href="#" class="copyQueryBtn" data-text="CREATE DATABASE foton_backend;
+CREATE USER &#039;admin&#039;@&#039;localhost&#039; IDENTIFIED BY &#039;FotonSecure123!&#039;;
+GRANT ALL PRIVILEGES ON foton_backend.* TO &#039;foton_user&#039;@&#039;localhost&#039;;
+FLUSH PRIVILEGES;">Copier</a>
+<a href="index.php?route=/server/sql&sql_query=CREATE+DATABASE+foton_backend%3B%0ACREATE+USER+%27admin%27%40%27localhost%27+IDENTIFIED+BY+%27FotonSecure123%21%27%3B%0AGRANT+ALL+PRIVILEGES+ON+foton_backend.%2A+TO+%27foton_user%27%40%27localhost%27%3B%0AFLUSH+PRIVILEGES%3B&show_query=1&lang=fr"><span class="text-nowrap"><img src="themes/dot.gif" title="Éditer" alt="Éditer" class="icon ic_b_edit">&nbsp;Éditer</span></a>    </p>
+<p>
+<code class="sql"><pre>
+CREATE DATABASE foton_backend;
+CREATE USER 'admin'@'localhost' IDENTIFIED BY 'FotonSecure123!';
+GRANT ALL PRIVILEGES ON foton_backend.* TO 'foton_user'@'localhost';
+FLUSH PRIVILEGES;
+</pre></code>
+</p>
+<p>
+    <strong>MySQL a répondu : </strong><a href="./url.php?url=https%3A%2F%2Fdev.mysql.com%2Fdoc%2Frefman%2F5.7%2Fen%2Fserver-error-reference.html" target="mysql_doc"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+</p>
+<code>Connexion impossible : paramètres incorrects.</code><br></div>";}errors|a:0:{}

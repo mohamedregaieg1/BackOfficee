@@ -16,7 +16,7 @@ public function run(): void
     // Insérer des données initiales dans la table companies
     DB::table('companies')->insert([
         [
-            'name' => 'Procan',
+            'name' => 'company X',
             'image_path' => null,
             'tva_number' => null,
             'address' => null,
@@ -30,7 +30,7 @@ public function run(): void
             'updated_at' => now(),
         ],
         [
-            'name' => 'Adequate',
+            'name' => 'company XX ',
             'image_path' => null,
             'tva_number' => 123456789,
             'address' => '123 Rue de la République, Paris',

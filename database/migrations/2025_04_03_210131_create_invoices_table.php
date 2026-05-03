@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('number')->unique();
             $table->enum('additional_date_type', ['Date of sale', 'Expiry date', 'Withdrawal date until'])->nullable();
             $table->date('additional_date')->nullable();
-            $table->enum('company_name', ['procan', 'adequate']);
+            $table->enum('company_name', ['company X', 'company XX']);
             $table->foreignId('company_id')->constrained('companies')->default(1);
             $table->unsignedBigInteger('client_id');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');;

@@ -1,0 +1,11 @@
+ PMA_token |s:32:"55302558587c516b46246e307740353f"; HMAC_secret |s:16:"4"MJ>|7g7ViDL$Pe";browser_access_time|a:1:{s:7:"default";i:1763145722;}Import_message|a:1:{s:7:"message";s:842:"<div class="alert alert-danger" role="alert"><h1>Erreur</h1><p><strong>Requête SQL :</strong>  <a href="#" class="copyQueryBtn" data-text="CREATE DATABASE foton_backend;">Copier</a>
+<a href="index.php?route=/server/sql&sql_query=CREATE+DATABASE+foton_backend%3B&show_query=1&lang=fr"><span class="text-nowrap"><img src="themes/dot.gif" title="Éditer" alt="Éditer" class="icon ic_b_edit">&nbsp;Éditer</span></a>    </p>
+<p>
+<code class="sql"><pre>
+CREATE DATABASE foton_backend;
+</pre></code>
+</p>
+<p>
+    <strong>MySQL a répondu : </strong><a href="./url.php?url=https%3A%2F%2Fdev.mysql.com%2Fdoc%2Frefman%2F5.7%2Fen%2Fserver-error-reference.html" target="mysql_doc"><img src="themes/dot.gif" title="Documentation" alt="Documentation" class="icon ic_b_help"></a>
+</p>
+<code>Connexion impossible : paramètres incorrects.</code><br></div>";}errors|a:0:{}

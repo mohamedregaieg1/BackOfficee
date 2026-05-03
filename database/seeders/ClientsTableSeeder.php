@@ -5,40 +5,33 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class ClientsTableSeeder extends Seeder
 {
     public function run(): void
     {
         $countries = [
-            'France', 'Germany', 'Belgium', 'Canada', 'United States',
-            'United Kingdom', 'Spain', 'Italy', 'Switzerland', 'Netherlands'
+            'Tunisia', 'France', 'Germany', 'Belgium', 'Canada',
+            'United States', 'United Kingdom', 'Spain', 'Italy', 'Switzerland'
         ];
 
-        $civilities = ['Mr', 'Mrs', 'Ms'];
-        $firstNames = ['John', 'Jane', 'Alice', 'Bob', 'Charlie', 'Emma', 'Liam', 'Sophia', 'Noah', 'Olivia'];
-        $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-
-        $companyNames = [
-            'TechCorp', 'GlobalSoft', 'EcoSolutions', 'FinServe', 'MediPlus',
-            'BuildRight', 'GreenEnergy', 'DataWorks', 'LogiTrans', 'SecureNet'
-        ];
-
-        // 10 individuals
+        // 10 individus (clients particuliers)
         for ($i = 0; $i < 10; $i++) {
-            $civility = $civilities[array_rand($civilities)];
-            $firstName = $firstNames[array_rand($firstNames)];
-            $lastName = $lastNames[array_rand($lastNames)];
-            $fullName = trim("$civility $firstName $lastName");
+            $clientNumber = $i + 1;
+            $clientName = 'Client ' . $clientNumber;
             $country = $countries[array_rand($countries)];
-            $email = 'individual' . ($i + 1) . '@gmail.com';
-            $phone = '+33' . rand(600000000, 699999999);
-            $postalCode = str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT);
-            $address = rand(1, 100) . ' Rue de Exemple, ' . $country;
+            $email = 'client' . $clientNumber . '@test.com';
+            $phone = '+216' . rand(20000000, 99999999);
+            $postalCode = str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+            $address = rand(1, 200) . ' Rue de Client ' . $clientNumber . ', ' . $country;
+
+            // Date de création aléatoire entre 2024 et 2026
+            $createdAt = Carbon::create(rand(2024, 2026), rand(1, 12), rand(1, 28));
 
             DB::table('clients')->insert([
                 'client_type' => 'individual',
-                'name' => $fullName,
+                'name' => $clientName,
                 'tva_number_client' => null,
                 'address' => $address,
                 'postal_code' => $postalCode,
@@ -46,21 +39,30 @@ class ClientsTableSeeder extends Seeder
                 'country' => $country,
                 'email' => $email,
                 'phone_number' => $phone,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
             ]);
         }
 
-        // 10 professionals
+        // 10 professionnels (entreprises)
         for ($i = 0; $i < 10; $i++) {
-            $companyName = $companyNames[$i];
+            $societeNumber = $i + 1;
+            $companyName = 'Société ' . $societeNumber;
             $country = $countries[array_rand($countries)];
-            $email = 'professional' . ($i + 1) . '@gmail.com';
-            $phone = '+33' . rand(600000000, 699999999);
-            $postalCode = str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT);
-            $address = rand(1, 100) . ' Rue de Exemple, ' . $country;
-            $tvaNumber = 19;
-            $rib = 'FR76' . strtoupper(Str::random(23));
+            $email = 'societe' . $societeNumber . '@test.com';
+            $phone = '+216' . rand(70000000, 79999999);
+            $postalCode = str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+            $address = rand(1, 200) . ' Avenue de la Société ' . $societeNumber . ', ' . $country;
+
+            // TVA Number avec pourcentage 19%
+            $tvaNumber = 19 ;
+
+            // RIB format tunisien (20 chiffres)
+            $rib = 'TN59' . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT) .
+                   str_pad(rand(10000000000, 99999999999), 11, '0', STR_PAD_LEFT);
+
+            // Date de création aléatoire entre 2024 et 2026
+            $createdAt = Carbon::create(rand(2024, 2026), rand(1, 12), rand(1, 28));
 
             DB::table('clients')->insert([
                 'client_type' => 'professional',
@@ -72,8 +74,8 @@ class ClientsTableSeeder extends Seeder
                 'country' => $country,
                 'email' => $email,
                 'phone_number' => $phone,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
             ]);
         }
     }

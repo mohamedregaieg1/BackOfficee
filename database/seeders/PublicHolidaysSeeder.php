@@ -28,9 +28,14 @@ class PublicHolidaysSeeder extends Seeder
                 'end_date' => "$year-01-14",
             ],
             [
-                'name' => 'Fête de l’Indépendance',
+                'name' => 'Fête de l\'Indépendance',
                 'start_date' => "$year-03-20",
                 'end_date' => "$year-03-20",
+            ],
+            [
+                'name' => 'Fête des Martyrs',
+                'start_date' => "$year-04-09",
+                'end_date' => "$year-04-09",
             ],
             [
                 'name' => 'Fête du Travail',
@@ -43,27 +48,38 @@ class PublicHolidaysSeeder extends Seeder
                 'end_date' => "$year-07-25",
             ],
             [
-                'name' => 'Fête de la Femme',
+                'name' => 'Fête de la Femme et de la Famille',
                 'start_date' => "$year-08-13",
                 'end_date' => "$year-08-13",
             ],
+            [
+                'name' => 'Fête de l\'Évacuation',
+                'start_date' => "$year-10-15",
+                'end_date' => "$year-10-15",
+            ],
         ];
 
+        // Jours fériés mobiles en Tunisie (basés sur le calendrier hégire) - Estimations pour 2026
         $mobileHolidays = [
             [
                 'name' => 'Aïd el-Fitr',
-                'start_date' => "$year-04-21", // 21 avril 2025
-                'end_date' => "$year-04-21",
+                'start_date' => "$year-03-20", // Estimation 20 mars 2026 (1447 AH)
+                'end_date' => "$year-03-22",   // 3 jours de congé
             ],
             [
-                'name' => 'Aïd el-Adha',
-                'start_date' => "$year-06-27", // 27 juin 2025
-                'end_date' => "$year-06-27",
+                'name' => 'Aïd el-Adha (Aïd el-Kebir)',
+                'start_date' => "$year-05-27", // Estimation 27 mai 2026 (1447 AH)
+                'end_date' => "$year-05-29",   // 3 jours de congé
             ],
             [
-                'name' => 'Nouvel An Hégire',
-                'start_date' => "$year-07-17", // 17 juillet 2025
-                'end_date' => "$year-07-17",
+                'name' => 'Ras el-Am el-Hijri (Nouvel An Hégire)',
+                'start_date' => "$year-06-16", // Estimation 16 juin 2026 (1448 AH)
+                'end_date' => "$year-06-16",   // 1 jour
+            ],
+            [
+                'name' => 'Mouled (Naissance du Prophète)',
+                'start_date' => "$year-08-25", // Estimation 25 août 2026 (1448 AH)
+                'end_date' => "$year-08-25",   // 1 jour
             ],
         ];
 

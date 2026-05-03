@@ -1,16 +1,18 @@
 <?php
 
 namespace App\Http\Controllers\Authentificate;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Tymon\JWTAuth\JWTGuard;
 
 class AuthController extends Controller
 {
-
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['login']]);
@@ -20,8 +22,8 @@ class AuthController extends Controller
     {
         $credentials = $request->only('username', 'password');
 
-        // Validation avec format d’erreur uniforme
-        $validator = \Validator::make($credentials, [
+        // Validation avec format d'erreur uniforme
+        $validator = Validator::make($credentials, [
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
@@ -48,7 +50,7 @@ class AuthController extends Controller
             RateLimiter::hit($key, 300);
             return response()->json([
                 'success' => false,
-                'message' => 'Nom d’utilisateur invalide.'
+                'message' => 'Nom d\'utilisateur invalide.'
             ], 401);
         }
 
@@ -60,7 +62,10 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if (!$token = auth()->attempt($credentials)) {
+        /** @var JWTGuard $guard */
+        $guard = Auth::guard('api');
+
+        if (!$token = $guard->attempt($credentials)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Non autorisé.'
@@ -73,7 +78,7 @@ class AuthController extends Controller
             'success' => true,
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 1440,
+            'expires_in' => $guard->factory()->getTTL() * 1440,
             'id' => $user->id,
             'role' => $user->role,
             'gender' => $user->gender,
@@ -82,13 +87,14 @@ class AuthController extends Controller
         ]);
     }
 
-
     /**
      * Get the authenticated user.
      */
     public function me()
     {
-        return response()->json(auth()->user());
+        /** @var JWTGuard $guard */
+        $guard = Auth::guard('api');
+        return response()->json($guard->user());
     }
 
     /**
@@ -96,7 +102,9 @@ class AuthController extends Controller
      */
     public function logout()
     {
-        auth()->logout();
+        /** @var JWTGuard $guard */
+        $guard = Auth::guard('api');
+        $guard->logout();
         return response()->json(['message' => 'Successfully logged out.']);
     }
 
@@ -105,10 +113,13 @@ class AuthController extends Controller
      */
     public function refresh()
     {
+        /** @var JWTGuard $guard */
+        $guard = Auth::guard('api');
+
         return response()->json([
-            'access_token' => auth()->refresh(),
+            'access_token' => $guard->refresh(),
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'expires_in' => $guard->factory()->getTTL() * 60,
         ]);
     }
 }
